@@ -16,6 +16,16 @@ export function formatTimecode(sec: number): string {
   return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 
+/** Дата в русском формате: «19.09.2026». */
+export function formatDate(d: Date | string | null | undefined): string {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+}
+
 /** Транслит-слаг из русского названия. */
 const translitMap: Record<string, string> = {
   а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'e', ж: 'zh', з: 'z',

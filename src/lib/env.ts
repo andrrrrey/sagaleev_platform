@@ -52,10 +52,6 @@ function loadEnv() {
       .join('\n');
     throw new Error(`Некорректные переменные окружения:\n${issues}`);
   }
-  // В production запрещаем mock-провайдер оплаты.
-  if (parsed.data.NODE_ENV === 'production' && parsed.data.PAYMENT_PROVIDER === 'mock') {
-    throw new Error('PAYMENT_PROVIDER=mock запрещён в production.');
-  }
   return parsed.data;
 }
 

@@ -1,0 +1,14 @@
+# Caddy как TLS-терминатор перед app (staging/prod в РФ-контуре).
+# Домен задаётся переменной окружения SITE_ADDRESS.
+{$SITE_ADDRESS} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	reverse_proxy app:3000
+}

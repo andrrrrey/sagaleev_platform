@@ -16,6 +16,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "format": "prettier --write .",
+    "build:icons": "node scripts/build-icons.mjs",
     "db:up": "docker compose -f docker/compose.yml up -d postgres",
     "db:down": "docker compose -f docker/compose.yml down",
     "db:migrate": "prisma migrate dev",
@@ -31,6 +32,7 @@
     "@iconify-json/solar": "^1.2.2",
     "@prisma/client": "^6.1.0",
     "argon2": "^0.41.1",
+    "gsap": "^3.15.0",
     "iconify-icon": "^2.1.0",
     "next": "15.1.3",
     "next-auth": "5.0.0-beta.25",
@@ -40,11 +42,12 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@iconify/utils": "^3.1.7",
     "@playwright/test": "^1.49.1",
     "@types/node": "^22.10.5",
-    "autoprefixer": "^10.4.20",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
+    "autoprefixer": "^10.4.20",
     "eslint": "^9.17.0",
     "eslint-config-next": "15.1.3",
     "husky": "^9.1.7",
@@ -59,7 +62,15 @@
     "vitest": "^2.1.8"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["@prisma/client", "@prisma/engines", "prisma", "argon2", "esbuild", "sharp", "unrs-resolver"]
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "prisma",
+      "argon2",
+      "esbuild",
+      "sharp",
+      "unrs-resolver"
+    ]
   },
   "lint-staged": {
     "*.{ts,tsx}": [
