@@ -183,6 +183,193 @@ async function main() {
   for (const [slug, title] of TAGS) {
     await prisma.tag.upsert({ where: { slug }, create: { slug, title }, update: { title } });
   }
+  const tagRows = await prisma.tag.findMany({ select: { id: true, slug: true } });
+  const tagId = (slug: string) => tagRows.find((t) => t.slug === slug)?.id;
+
+  // ── Skills (12, из них 5 minPlan=SELF) ──
+  const skills: Array<{
+    slug: string;
+    title: string;
+    group: 'STRATEGY' | 'TRAFFIC' | 'CONTENT' | 'RETENTION' | 'AGENT_INFRA';
+    shortDesc: string;
+    inputs: string;
+    outputs: string;
+    timeToMaster: string;
+    minPlan: PlanCode;
+    prompt: string;
+    tags: string[];
+    fileName?: string;
+    fileKey?: string;
+  }> = [
+    {
+      slug: 'pozicionirovanie', title: 'Позиционирование за час', group: 'STRATEGY',
+      shortDesc: 'Формулирует чёткое позиционирование бренда на основе бизнес-профиля.',
+      inputs: 'Бизнес-профиль, ниша, конкуренты.', outputs: 'Позиционирование, УТП, 3 сообщения.',
+      timeToMaster: '30 минут', minPlan: 'SELF', tags: ['positioning', 'segmentation'],
+      prompt: 'Ты стратег-маркетолог. На основе бизнес-профиля сформулируй позиционирование:\n1) кто клиент, 2) какую боль решаем, 3) чем отличаемся, 4) УТП одним предложением.\n⏸ СТОП: согласуй УТП с владельцем перед использованием.',
+    },
+    {
+      slug: 'abcdx-segmentaciya', title: 'Сегментация ABCDX', group: 'STRATEGY',
+      shortDesc: 'Разбивает клиентскую базу по ценности и приоритезирует сегменты.',
+      inputs: 'Выгрузка клиентов/сделок.', outputs: 'Матрица ABCDX, приоритеты.',
+      timeToMaster: '45 минут', minPlan: 'SUPPORT', tags: ['segmentation', 'crm', 'analytics'],
+      prompt: 'Проведи ABCDX-сегментацию клиентской базы. Опиши профиль каждого сегмента и рекомендации по работе.',
+    },
+    {
+      slug: 'seo-audit', title: 'SEO-аудит выдачи', group: 'TRAFFIC',
+      shortDesc: 'Проводит экспресс-аудит сайта и выдачи по ключевым запросам.',
+      inputs: 'URL сайта, список запросов.', outputs: 'Список проблем и приоритетов по SEO.',
+      timeToMaster: '30 минут', minPlan: 'SELF', tags: ['seo', 'audit'],
+      prompt: 'Проведи SEO-аудит сайта по запросам. Дай приоритезированный список улучшений (3 слоя: SEO/AEO/GEO).',
+      fileName: 'seo-audit-checklist.md', fileKey: 'skills/seo-audit-checklist.md',
+    },
+    {
+      slug: 'direct-nastrojka', title: 'Настройка Яндекс.Директ', group: 'TRAFFIC',
+      shortDesc: 'Собирает структуру кампаний и минус-слова для Директа.',
+      inputs: 'Услуги, гео, бюджет.', outputs: 'Структура кампаний, ключи, объявления.',
+      timeToMaster: '1 час', minPlan: 'SUPPORT', tags: ['direct'],
+      prompt: 'Собери структуру рекламных кампаний в Яндекс.Директ: группы, ключи, минус-слова, тексты объявлений.',
+    },
+    {
+      slug: 'gis-2-kartochka', title: 'Карточка 2ГИС', group: 'TRAFFIC',
+      shortDesc: 'Оптимизирует карточку компании в 2ГИС для локального трафика.',
+      inputs: 'Данные компании, категории.', outputs: 'Оптимизированная карточка, чек-лист.',
+      timeToMaster: '20 минут', minPlan: 'SUPPORT', tags: ['2gis'],
+      prompt: 'Оптимизируй карточку 2ГИС: категории, описание, фото, ответы на отзывы.',
+    },
+    {
+      slug: 'kontent-plan', title: 'Контент-план на месяц', group: 'CONTENT',
+      shortDesc: 'Собирает контент-план под нишу и голос бренда.',
+      inputs: 'Бизнес-профиль, площадки.', outputs: 'Контент-план на 4 недели.',
+      timeToMaster: '40 минут', minPlan: 'SELF', tags: ['content'],
+      prompt: 'Составь контент-план на месяц с учётом голоса бренда из бизнес-профиля. Форматы, темы, CTA.',
+    },
+    {
+      slug: 'reels-scenarii', title: 'Сценарии Reels', group: 'CONTENT',
+      shortDesc: 'Пишет сценарии коротких видео с хуками.',
+      inputs: 'Темы, продукт.', outputs: '5 сценариев с хуками.',
+      timeToMaster: '30 минут', minPlan: 'SUPPORT', tags: ['reels', 'content'],
+      prompt: 'Напиши 5 сценариев Reels с сильными хуками под нишу клиента.',
+    },
+    {
+      slug: 'stati-seo', title: 'SEO-статьи движком', group: 'CONTENT',
+      shortDesc: 'Генерирует SEO-оптимизированные статьи ≥ 82/100.',
+      inputs: 'Ключи, тема.', outputs: 'Статья с оценкой и разметкой.',
+      timeToMaster: '1 час', minPlan: 'SUPPORT', tags: ['seo', 'content'],
+      prompt: 'Напиши SEO-статью по теме, цель ≥ 82/100. Структура, заголовки, внутренние ссылки.',
+    },
+    {
+      slug: 'reaktivaciya-bazy', title: 'Реактивация базы', group: 'RETENTION',
+      shortDesc: 'Готовит сценарий возврата «спящих» клиентов.',
+      inputs: 'База контактов, история покупок.', outputs: 'Сегменты и цепочка сообщений.',
+      timeToMaster: '30 минут', minPlan: 'SELF', tags: ['reactivation', 'crm'],
+      prompt: 'Составь сценарий реактивации базы: сегменты, поводы, тексты сообщений.',
+    },
+    {
+      slug: 'crm-voronka', title: 'Воронка в CRM', group: 'RETENTION',
+      shortDesc: 'Проектирует этапы воронки и триггеры в CRM.',
+      inputs: 'Процесс продаж.', outputs: 'Этапы, поля, автозадачи.',
+      timeToMaster: '50 минут', minPlan: 'SUPPORT', tags: ['crm', 'funnel'],
+      prompt: 'Спроектируй воронку продаж в CRM: этапы, критерии перехода, автозадачи.',
+    },
+    {
+      slug: 'agent-pamyat', title: 'Память агента', group: 'AGENT_INFRA',
+      shortDesc: 'Настраивает память агента между сессиями.',
+      inputs: 'Бизнес-профиль, наработки.', outputs: 'Структура памяти агента.',
+      timeToMaster: '20 минут', minPlan: 'SELF', tags: ['agent', 'automation'],
+      prompt: 'Настрой память агента: что хранить, как структурировать, как обновлять.',
+    },
+    {
+      slug: 'agent-telegram', title: 'Агент в Telegram', group: 'AGENT_INFRA',
+      shortDesc: 'Выводит агента в Telegram-бота студента.',
+      inputs: 'Токен бота студента.', outputs: 'Рабочий агент в мессенджере.',
+      timeToMaster: '40 минут', minPlan: 'SUPPORT', tags: ['agent', 'telegram', 'automation'],
+      prompt: 'Пошагово выведи агента в Telegram: создание бота, вебхук, команды. Ключи не передавай платформе.',
+    },
+  ];
+
+  for (const s of skills) {
+    const created = await prisma.skill.upsert({
+      where: { slug: s.slug },
+      create: {
+        slug: s.slug, title: s.title, group: s.group, shortDesc: s.shortDesc,
+        inputs: s.inputs, outputs: s.outputs, timeToMaster: s.timeToMaster,
+        prompt: s.prompt, minPlan: s.minPlan, state: 'PUBLISHED',
+        fileName: s.fileName ?? null, fileKey: s.fileKey ?? null,
+      },
+      update: {
+        title: s.title, group: s.group, shortDesc: s.shortDesc, inputs: s.inputs,
+        outputs: s.outputs, timeToMaster: s.timeToMaster, prompt: s.prompt,
+        minPlan: s.minPlan, state: 'PUBLISHED',
+        fileName: s.fileName ?? null, fileKey: s.fileKey ?? null,
+      },
+    });
+    await prisma.skillTag.deleteMany({ where: { skillId: created.id } });
+    const ids = s.tags.map(tagId).filter((x): x is string => Boolean(x));
+    if (ids.length) {
+      await prisma.skillTag.createMany({
+        data: ids.map((id) => ({ skillId: created.id, tagId: id })),
+        skipDuplicates: true,
+      });
+    }
+  }
+
+  const skillIdBySlug = async (slug: string) =>
+    (await prisma.skill.findUnique({ where: { slug }, select: { id: true } }))?.id ?? null;
+
+  // ── Маршрут «Агент за 3 дня» ──
+  const routeDays = [
+    {
+      dayNumber: 1, title: 'Фундамент', artifact: 'Агент, который знает твой бизнес',
+      summary: 'Окружение, личность агента и загрузка бизнеса в память.',
+      steps: [
+        { sort: 0, title: 'Поставь окружение (Claude Code)', body: '<p>Установи окружение и проверь доступ.</p>', commands: [{ label: 'Проверка', text: 'claude --version', kind: 'command' }], artifactRequired: true, artifactHint: 'скрин версии', linkedSlug: null },
+        { sort: 1, title: 'Задай личность агента', body: '<p>Опиши роль и тон агента.</p>', commands: [{ label: 'Личность', text: 'Ты — маркетинговый агент моего бизнеса...', kind: 'prompt' }], artifactRequired: true, artifactHint: 'файл личности', linkedSlug: null },
+        { sort: 2, title: 'Загрузи бизнес-профиль в память', body: '<p>Скопируй бизнес-профиль из кабинета и загрузи агенту.</p>', commands: [], artifactRequired: true, artifactHint: 'подтверждение загрузки', linkedSlug: 'agent-pamyat' },
+      ],
+    },
+    {
+      dayNumber: 2, title: 'Первая боевая работа', artifact: 'Агент делает маркетинг, а не болтает',
+      summary: 'Подключение 2–3 маркетинг-скиллов: аудит и позиционирование/контент.',
+      steps: [
+        { sort: 0, title: 'Подключи SEO-аудит', body: '<p>Отправь агенту скилл SEO-аудита.</p>', commands: [], artifactRequired: true, artifactHint: 'результат аудита', linkedSlug: 'seo-audit' },
+        { sort: 1, title: 'Собери позиционирование', body: '<p>Используй скилл позиционирования.</p>', commands: [], artifactRequired: true, artifactHint: 'УТП', linkedSlug: 'pozicionirovanie' },
+        { sort: 2, title: 'Сделай контент-план', body: '<p>Сгенерируй контент-план на месяц.</p>', commands: [], artifactRequired: true, artifactHint: 'план', linkedSlug: 'kontent-plan' },
+      ],
+    },
+    {
+      dayNumber: 3, title: 'Агент в кармане + автоматизация', artifact: 'Маркетинговый агент 24/7 в мессенджере',
+      summary: 'Вывод в Telegram, память между сессиями, первый крон.',
+      steps: [
+        { sort: 0, title: 'Выведи агента в Telegram', body: '<p>Создай бота и подключи агента. Платформа ключи не хранит.</p>', commands: [], artifactRequired: true, artifactHint: 'скрин чата с ботом', linkedSlug: 'agent-telegram' },
+        { sort: 1, title: 'Настрой память между сессиями', body: '<p>Проверь, что агент помнит контекст.</p>', commands: [], artifactRequired: true, artifactHint: 'подтверждение', linkedSlug: 'agent-pamyat' },
+        { sort: 2, title: 'Запусти первый крон', body: '<p>Настрой регулярную задачу агента.</p>', commands: [{ label: 'Пример', text: '0 9 * * 1 напомни план на неделю', kind: 'command' }], artifactRequired: true, artifactHint: 'расписание', linkedSlug: null },
+      ],
+    },
+  ];
+
+  for (const d of routeDays) {
+    const day = await prisma.routeDay.upsert({
+      where: { dayNumber: d.dayNumber },
+      create: { dayNumber: d.dayNumber, title: d.title, summary: d.summary, artifact: d.artifact },
+      update: { title: d.title, summary: d.summary, artifact: d.artifact },
+    });
+    for (const st of d.steps) {
+      const linkedSkillId = st.linkedSlug ? await skillIdBySlug(st.linkedSlug) : null;
+      await prisma.routeStep.upsert({
+        where: { dayId_sort: { dayId: day.id, sort: st.sort } },
+        create: {
+          dayId: day.id, sort: st.sort, title: st.title, body: st.body,
+          commands: st.commands, artifactRequired: st.artifactRequired,
+          artifactHint: st.artifactHint, linkedSkillId,
+        },
+        update: {
+          title: st.title, body: st.body, commands: st.commands,
+          artifactRequired: st.artifactRequired, artifactHint: st.artifactHint, linkedSkillId,
+        },
+      });
+    }
+  }
 
   // ── Legal drafts ──
   await prisma.legalDocument.upsert({
@@ -206,7 +393,7 @@ async function main() {
   });
 
   // eslint-disable-next-line no-console
-  console.log('Seed завершён: 3 тарифа, admin/editor, 3 демо-студента, теги, легал-черновики.');
+  console.log('Seed завершён: тарифы, admin/editor, демо-студенты, теги, 12 скиллов, маршрут 3 дня, легал.');
 }
 
 main()
