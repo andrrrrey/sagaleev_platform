@@ -371,6 +371,154 @@ async function main() {
     }
   }
 
+  // ── Контент-юниты: эталонный юзкейс, уроки, эфиры ──
+  type UnitSeed = {
+    slug: string;
+    type: 'LESSON' | 'USECASE' | 'STREAM';
+    title: string;
+    summary?: string;
+    minPlan: PlanCode;
+    partialFreePreview?: boolean;
+    kinescopeId?: string;
+    timeToMaster?: string;
+    tags: string[];
+    prompt?: string;
+    promptNote?: string;
+    timecodes?: { t: number; label: string }[];
+    block?: number;
+    orderInBlock?: number;
+    methodTag?: string;
+    caseClient?: string;
+    goal?: string;
+    result?: string;
+    kpis?: { label: string; value: string; hint?: string }[];
+    descriptionHtml?: string;
+    repoLinks?: { title: string; url: string }[];
+    articleHtml?: string;
+    transcript?: string;
+    steps?: { title: string; body?: string; command?: string }[];
+    airedAt?: Date;
+    sort?: number;
+  };
+
+  const units: UnitSeed[] = [
+    {
+      slug: 'seo-dvizhok-na-agentah', type: 'USECASE', title: 'SEO-движок на агентах',
+      summary: 'Как агент собирает SEO-статьи с оценкой ≥ 82/100 и тремя слоями SEO/AEO/GEO.',
+      minPlan: 'SELF', timeToMaster: '1 час', kinescopeId: 'demo-seo-engine',
+      tags: ['seo', 'content', 'agent', 'analytics'], caseClient: 'Клиника Ешидоржиева',
+      methodTag: 'воронка контента',
+      timecodes: [
+        { t: 0, label: 'Обзор кейса' },
+        { t: 125, label: 'Аудит выдачи' },
+        { t: 320, label: 'Сборка статьи агентом' },
+        { t: 540, label: 'IndexNow и публикация' },
+      ],
+      goal: 'Поставить поток SEO-статей, которые реально ранжируются и приводят заявки.',
+      result: 'Агент готовит статьи ≥ 82/100 с доскроллом 75%, IndexNow-пинг и покрытие 3 слоёв (SEO/AEO/GEO).',
+      kpis: [
+        { label: 'Оценка статьи', value: '≥ 82/100', hint: 'внутренний скоринг' },
+        { label: 'Доскролл', value: '75%', hint: 'глубина чтения' },
+        { label: 'Индексация', value: 'IndexNow', hint: 'мгновенный пинг' },
+        { label: 'Слои', value: '3 · SEO/AEO/GEO' },
+      ],
+      descriptionHtml:
+        '<p>Разбираем, как собрать <strong>SEO-движок</strong> на агентах: от аудита выдачи до публикации с IndexNow.</p><h3>Что внутри</h3><ul><li>Аудит по запросам</li><li>Генерация статьи с самопроверкой</li><li>Разметка и внутренние ссылки</li></ul>',
+      repoLinks: [{ title: 'Открытый репозиторий кейса', url: 'https://github.com/example/seo-engine' }],
+      articleHtml:
+        '<h2>SEO-движок: полная методология</h2><p>Статья описывает пошаговую сборку движка и критерии качества.</p><h3>3 слоя</h3><p>SEO — под поиск, AEO — под ответы, GEO — под гео-запросы.</p>',
+      transcript: 'Полный транскрипт эфира по SEO-движку. [00:00] Вступление. [02:05] Аудит выдачи. [05:20] Сборка статьи...',
+      steps: [
+        { title: 'Собери семантику', body: 'Выгрузи ключи и сгруппируй.', command: 'агент: собери семантику по нише клиники' },
+        { title: 'Сгенерируй статью', body: 'Дай агенту скилл SEO-статей.', command: 'агент: напиши статью, цель ≥ 82/100' },
+        { title: 'Опубликуй и пингани IndexNow', body: 'Публикация и мгновенная индексация.', command: 'агент: отправь IndexNow-пинг' },
+      ],
+      prompt: 'Ты SEO-агент. Собери статью по теме, цель ≥ 82/100.\n1) семантика, 2) структура, 3) текст, 4) самопроверка.\n⏸ СТОП: согласуй тему и оффер с владельцем.',
+      promptNote: 'Многошаговый промпт со стопом на согласование.',
+      sort: 1,
+    },
+    {
+      slug: 'urok-1-1-vvedenie', type: 'LESSON', title: 'Введение в цифровой отдел маркетинга',
+      summary: 'Зачем собственнику ИИ-агент и как устроена программа.', minPlan: 'SELF',
+      timeToMaster: '12 минут', kinescopeId: 'lesson-1-1', block: 1, orderInBlock: 1,
+      methodTag: 'основы метода', tags: ['agent'],
+      timecodes: [{ t: 0, label: 'О программе' }, { t: 180, label: 'Роли агента' }],
+    },
+    {
+      slug: 'urok-1-2-okruzhenie', type: 'LESSON', title: 'Окружение и первый запуск агента',
+      summary: 'Ставим окружение и запускаем агента.', minPlan: 'SELF',
+      timeToMaster: '18 минут', kinescopeId: 'lesson-1-2', block: 1, orderInBlock: 2,
+      tags: ['agent', 'automation'],
+      prompt: 'Проверь окружение и представься как маркетинговый агент моего бизнеса.',
+    },
+    {
+      slug: 'urok-2-1-segmentaciya', type: 'LESSON', title: 'Сегментация клиентов ABCDX',
+      summary: 'Разбиваем базу и приоритезируем.', minPlan: 'SELF',
+      timeToMaster: '22 минут', kinescopeId: 'lesson-2-1', block: 2, orderInBlock: 1,
+      methodTag: 'сегментация ABCDX', tags: ['segmentation', 'crm'],
+    },
+    {
+      slug: 'efir-2026-09-01-seo', type: 'STREAM', title: 'Эфир: разбор SEO-движка клиники',
+      summary: 'Живой разбор кейса участника.', minPlan: 'SUPPORT', partialFreePreview: true,
+      timeToMaster: '1 час', kinescopeId: 'stream-1', tags: ['seo', 'content'],
+      airedAt: new Date('2026-09-01T09:00:00Z'),
+      articleHtml: '<h2>Конспект эфира</h2><p>Ключевые тезисы разбора.</p>',
+      transcript: 'Транскрипт эфира [00:00] ...',
+    },
+    {
+      slug: 'efir-2026-09-08-direct', type: 'STREAM', title: 'Эфир: связка Директ + агент',
+      summary: 'Как агент ведёт рекламные кампании.', minPlan: 'SUPPORT',
+      timeToMaster: '1 час', kinescopeId: 'stream-2', tags: ['direct', 'agent'],
+      airedAt: new Date('2026-09-08T09:00:00Z'),
+    },
+  ];
+
+  for (const u of units) {
+    const created = await prisma.contentUnit.upsert({
+      where: { slug: u.slug },
+      create: {
+        slug: u.slug, type: u.type, title: u.title, summary: u.summary ?? null,
+        minPlan: u.minPlan, partialFreePreview: u.partialFreePreview ?? false, state: 'PUBLISHED',
+        publishedAt: new Date(), kinescopeId: u.kinescopeId ?? null, timeToMaster: u.timeToMaster ?? null,
+        timecodes: u.timecodes ?? [], prompt: u.prompt ?? null, promptNote: u.promptNote ?? null,
+        block: u.block ?? null, orderInBlock: u.orderInBlock ?? null, methodTag: u.methodTag ?? null,
+        caseClient: u.caseClient ?? null, goal: u.goal ?? null, result: u.result ?? null,
+        kpis: u.kpis ?? [], description: u.descriptionHtml ? { html: u.descriptionHtml } : undefined,
+        repoLinks: u.repoLinks ?? [], article: u.articleHtml ? { html: u.articleHtml } : undefined,
+        transcript: u.transcript ?? null, steps: u.steps ?? [], airedAt: u.airedAt ?? null, sort: u.sort ?? 0,
+      },
+      update: {
+        type: u.type, title: u.title, summary: u.summary ?? null, minPlan: u.minPlan,
+        partialFreePreview: u.partialFreePreview ?? false, state: 'PUBLISHED',
+        kinescopeId: u.kinescopeId ?? null, timeToMaster: u.timeToMaster ?? null,
+        timecodes: u.timecodes ?? [], prompt: u.prompt ?? null, promptNote: u.promptNote ?? null,
+        block: u.block ?? null, orderInBlock: u.orderInBlock ?? null, methodTag: u.methodTag ?? null,
+        caseClient: u.caseClient ?? null, goal: u.goal ?? null, result: u.result ?? null,
+        kpis: u.kpis ?? [], description: u.descriptionHtml ? { html: u.descriptionHtml } : undefined,
+        repoLinks: u.repoLinks ?? [], article: u.articleHtml ? { html: u.articleHtml } : undefined,
+        transcript: u.transcript ?? null, steps: u.steps ?? [], airedAt: u.airedAt ?? null, sort: u.sort ?? 0,
+      },
+    });
+    await prisma.unitTag.deleteMany({ where: { unitId: created.id } });
+    const uids = u.tags.map(tagId).filter((x): x is string => Boolean(x));
+    if (uids.length) {
+      await prisma.unitTag.createMany({
+        data: uids.map((id) => ({ unitId: created.id, tagId: id })),
+        skipDuplicates: true,
+      });
+    }
+  }
+
+  // ── Баннеры Главной ──
+  const banners = [
+    { title: 'Новый юзкейс: SEO-движок на агентах', subtitle: 'Статьи ≥ 82/100 и IndexNow', href: '/usecases/seo-dvizhok-na-agentah', sort: 1 },
+    { title: 'Ближайший эфир: связка Директ + агент', subtitle: 'Разбор рекламных кампаний', href: '/streams/efir-2026-09-08-direct', sort: 2 },
+  ];
+  const bannerCount = await prisma.banner.count();
+  if (bannerCount === 0) {
+    for (const b of banners) await prisma.banner.create({ data: b });
+  }
+
   // ── Legal drafts ──
   await prisma.legalDocument.upsert({
     where: { kind_version: { kind: 'PRIVACY', version: CONSENT_VERSION } },
@@ -393,7 +541,7 @@ async function main() {
   });
 
   // eslint-disable-next-line no-console
-  console.log('Seed завершён: тарифы, admin/editor, демо-студенты, теги, 12 скиллов, маршрут 3 дня, легал.');
+  console.log('Seed завершён: тарифы, admin/editor, студенты, теги, 12 скиллов, маршрут, контент, баннеры, легал.');
 }
 
 main()
