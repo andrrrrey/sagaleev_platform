@@ -1,0 +1,477 @@
+// Целевая схема Фазы 1 — см. docs/03-data-model.md.
+// Сущности Фазы 2 не создаются (комментарий-заглушка в конце файла).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ───────── Enums ─────────
+enum Role {
+  STUDENT
+  ADMIN
+  EDITOR
+  CONTRACTOR // Ф2, не используется
+}
+
+enum PlanCode {
+  SELF // level 1
+  SUPPORT // level 2
+  VIP // level 3
+}
+
+enum EnrollStatus {
+  PENDING
+  ACTIVE
+  EXPIRED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  CANCELED
+  FAILED
+  REFUNDED
+}
+
+enum PaymentKind {
+  PURCHASE
+  UPGRADE
+}
+
+enum UnitType {
+  LESSON
+  USECASE
+  STREAM
+}
+
+enum ProgressStatus {
+  NONE // 0
+  VIEWED // 1
+  SUBMITTED // 2
+  IMPLEMENTED // 5
+  RESULT // 10
+}
+
+enum SkillGroup {
+  STRATEGY
+  TRAFFIC
+  CONTENT
+  RETENTION
+  AGENT_INFRA
+}
+
+enum PublishState {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+// ───────── Пользователи ─────────
+model User {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  passwordHash      String?
+  name              String
+  phone             String?
+  avatarUrl         String?
+  role              Role      @default(STUDENT)
+  emailVerifiedAt   DateTime?
+  consentAt         DateTime? // согласие на обработку ПДн
+  consentVersion    String?
+  telegramChatId    String?   @unique
+  telegramUsername  String?
+  notifyEmail       Boolean   @default(true)
+  notifyTelegram    Boolean   @default(true)
+  showInLeaderboard Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  deletedAt         DateTime?
+
+  businessProfile BusinessProfile?
+  enrollments     Enrollment[]
+  payments        Payment[]
+  progress        Progress[]
+  routeProgress   RouteStepProgress[]
+  cohortId        String?
+  cohort          Cohort?             @relation(fields: [cohortId], references: [id])
+  moneyEntries    MoneyEntry[]
+  weeklyReports   WeeklyReport[]
+  curatorNotes    CuratorNote[]
+  leaderboard     LeaderboardEntry?
+  auditLogs       AuditLog[]
+  notifications   Notification[]
+  authTokens      AuthToken[]
+}
+
+model BusinessProfile {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName        String
+  niche              String
+  whoAmI             String   @db.Text
+  product            String   @db.Text
+  audience           String   @db.Text
+  brandVoice         String   @db.Text
+  goals              String?  @db.Text
+  monthlyRevenueBand String?
+  websiteUrl         String?
+  updatedAt          DateTime @updatedAt
+}
+
+model Cohort {
+  id       String    @id @default(cuid())
+  title    String
+  startsAt DateTime
+  endsAt   DateTime?
+  users    User[]
+}
+
+// email verification / password reset / telegram link tokens
+model AuthToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      String // EMAIL_VERIFY | PASSWORD_RESET | TELEGRAM_LINK
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId, kind])
+}
+
+// ───────── Тарифы, платежи ─────────
+model Plan {
+  code        PlanCode     @id
+  title       String
+  priceKopeks Int
+  level       Int
+  features    Json
+  active      Boolean      @default(true)
+  sort        Int          @default(0)
+  enrollments Enrollment[]
+}
+
+model Enrollment {
+  id             String       @id @default(cuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planCode       PlanCode
+  plan           Plan         @relation(fields: [planCode], references: [code])
+  status         EnrollStatus @default(PENDING)
+  activatedAt    DateTime?
+  expiresAt      DateTime?
+  grantedByAdmin Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  payments       Payment[]
+
+  @@index([userId, status])
+}
+
+// Инвариант: максимум один ACTIVE Enrollment на пользователя
+// (частичный уникальный индекс добавляется SQL-миграцией).
+
+model Payment {
+  id                String        @id @default(cuid())
+  userId            String
+  user              User          @relation(fields: [userId], references: [id])
+  enrollmentId      String?
+  enrollment        Enrollment?   @relation(fields: [enrollmentId], references: [id])
+  kind              PaymentKind
+  targetPlan        PlanCode
+  amountKopeks      Int
+  currency          String        @default("RUB")
+  status            PaymentStatus @default(PENDING)
+  provider          String
+  providerPaymentId String?       @unique
+  confirmationUrl   String?
+  idempotenceKey    String        @unique
+  rawWebhook        Json?
+  createdAt         DateTime      @default(now())
+  paidAt            DateTime?
+
+  @@index([userId, status])
+}
+
+// ───────── Маршрут «агент за 3 дня» ─────────
+model RouteDay {
+  id        String      @id @default(cuid())
+  dayNumber Int         @unique
+  title     String
+  summary   String      @db.Text
+  artifact  String
+  steps     RouteStep[]
+}
+
+model RouteStep {
+  id               String              @id @default(cuid())
+  dayId            String
+  day              RouteDay            @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  sort             Int
+  title            String
+  body             String              @db.Text
+  commands         Json // [{ label, text, kind: 'command'|'prompt' }]
+  artifactRequired Boolean             @default(true)
+  artifactHint     String?
+  linkedSkillId    String?
+  linkedSkill      Skill?              @relation(fields: [linkedSkillId], references: [id])
+  progress         RouteStepProgress[]
+
+  @@unique([dayId, sort])
+}
+
+model RouteStepProgress {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stepId       String
+  step         RouteStep @relation(fields: [stepId], references: [id], onDelete: Cascade)
+  done         Boolean   @default(false)
+  doneAt       DateTime?
+  artifactNote String?   @db.Text
+  artifactUrl  String?
+
+  @@unique([userId, stepId])
+}
+
+// ───────── Скиллы ─────────
+model Tag {
+  id     String     @id @default(cuid())
+  slug   String     @unique
+  title  String
+  skills SkillTag[]
+  units  UnitTag[]
+}
+
+model Skill {
+  id           String       @id @default(cuid())
+  slug         String       @unique
+  title        String
+  group        SkillGroup
+  shortDesc    String       @db.Text
+  inputs       String       @db.Text
+  outputs      String       @db.Text
+  timeToMaster String
+  demoUnitId   String?
+  demoUnit     ContentUnit? @relation(fields: [demoUnitId], references: [id])
+  demoVideoId  String?
+  prompt       String       @db.Text
+  fileKey      String?
+  fileName     String?
+  minPlan      PlanCode     @default(SUPPORT)
+  state        PublishState @default(DRAFT)
+  sort         Int          @default(0)
+  tags         SkillTag[]
+  routeSteps   RouteStep[]
+  progress     Progress[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model SkillTag {
+  skillId String
+  tagId   String
+  skill   Skill  @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  tag     Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([skillId, tagId])
+}
+
+// ───────── Контент-юнит: уроки, юзкейсы, эфиры ─────────
+model ContentUnit {
+  id                 String       @id @default(cuid())
+  type               UnitType
+  slug               String       @unique
+  title              String
+  summary            String?      @db.Text
+  coverUrl           String?
+  timeToMaster       String?
+  minPlan            PlanCode     @default(SELF)
+  partialFreePreview Boolean      @default(false)
+  state              PublishState @default(DRAFT)
+  publishedAt        DateTime?
+  sort               Int          @default(0)
+
+  // Видео
+  kinescopeId String?
+  durationSec Int?
+  timecodes   Json    @default("[]")
+
+  // Промпт-блок
+  prompt     String? @db.Text
+  promptNote String?
+
+  // LESSON
+  block        Int?
+  orderInBlock Int?
+  routeDayId   String?
+  methodTag    String?
+
+  // USECASE
+  goal        String? @db.Text
+  result      String? @db.Text
+  kpis        Json    @default("[]")
+  description Json?
+  repoLinks   Json    @default("[]")
+  article     Json?
+  transcript  String? @db.Text
+  steps       Json    @default("[]")
+  caseClient  String?
+
+  // STREAM
+  airedAt DateTime?
+
+  tags       UnitTag[]
+  skillsDemo Skill[]
+  progress   Progress[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@index([type, state, sort])
+}
+
+model UnitTag {
+  unitId String
+  tagId  String
+  unit   ContentUnit @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  tag    Tag         @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([unitId, tagId])
+}
+
+// ───────── Прогресс и лидерборд ─────────
+model Progress {
+  id            String         @id @default(cuid())
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  unitId        String?
+  unit          ContentUnit?   @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  skillId       String?
+  skill         Skill?         @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  status        ProgressStatus @default(NONE)
+  viewedAt      DateTime?
+  submittedAt   DateTime?
+  implementedAt DateTime?
+  resultAt      DateTime?
+  proofNote     String?        @db.Text
+  proofUrl      String?
+  updatedAt     DateTime       @updatedAt
+
+  @@unique([userId, unitId])
+  @@unique([userId, skillId])
+  // CHECK (unitId IS NOT NULL) <> (skillId IS NOT NULL) — добавляется SQL-миграцией
+}
+
+model MoneyEntry {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  progressId   String?
+  amountKopeks Int
+  kind         String // REVENUE | LEADS | SAVINGS
+  note         String?   @db.Text
+  periodFrom   DateTime?
+  periodTo     DateTime?
+  createdAt    DateTime  @default(now())
+}
+
+model LeaderboardEntry {
+  userId           String   @id
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  points           Int      @default(0)
+  viewedCount      Int      @default(0)
+  submittedCount   Int      @default(0)
+  implementedCount Int      @default(0)
+  resultCount      Int      @default(0)
+  moneyTotalKopeks BigInt   @default(0)
+  updatedAt        DateTime @updatedAt
+
+  @@index([points(sort: Desc)])
+}
+
+// ───────── Куратор ─────────
+model WeeklyReport {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weekStart DateTime
+  text      String?  @db.Text
+  createdAt DateTime @default(now())
+
+  @@unique([userId, weekStart])
+}
+
+model CuratorNote {
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weekStart       DateTime
+  summary         String    @db.Text
+  methodPrinciple String?
+  nextSteps       Json
+  model           String
+  tokensIn        Int?
+  tokensOut       Int?
+  status          String    @default("OK") // OK | FAILED | SKIPPED | DRAFT
+  createdAt       DateTime  @default(now())
+  readAt          DateTime?
+
+  @@unique([userId, weekStart])
+}
+
+// ───────── Прочее ─────────
+model Banner {
+  id       String    @id @default(cuid())
+  title    String
+  subtitle String?
+  imageUrl String?
+  href     String?
+  sort     Int       @default(0)
+  active   Boolean   @default(true)
+  startsAt DateTime?
+  endsAt   DateTime?
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      String // CURATOR_NOTE | NEW_CONTENT | PAYMENT | STREAM_SOON
+  title     String
+  body      String?
+  href      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, readAt])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String
+  actor     User     @relation(fields: [actorId], references: [id])
+  action    String
+  entity    String
+  entityId  String?
+  meta      Json?
+  createdAt DateTime @default(now())
+}
+
+model LegalDocument {
+  id          String   @id @default(cuid())
+  kind        String // PRIVACY | OFFER
+  version     String
+  bodyHtml    String   @db.Text
+  publishedAt DateTime @default(now())
+
+  @@unique([kind, version])
+}
+
+// [Ф2 — НЕ СОЗДАВАТЬ]: Contractor, Order, Subscription, MarketplaceTransaction
