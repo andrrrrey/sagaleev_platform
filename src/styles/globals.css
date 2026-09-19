@@ -3,8 +3,95 @@
 @tailwind utilities;
 
 @layer base {
+  /* ─── Светлая тема (значения 1:1 с эталоном) ─── */
   :root {
     color-scheme: light;
+
+    --c-page: 17 17 16; /* #111110 */
+    --c-paper: 246 245 239; /* #f6f5ef */
+    --c-paper-panel: 251 250 246; /* #fbfaf6 */
+    --c-paper-tint: 239 237 230; /* #efede6 */
+    --c-paper-hover: 234 231 223; /* #eae7df */
+    --c-surface: 255 255 255; /* #ffffff */
+    --c-line: 224 220 208; /* #e0dcd0 */
+    --c-ink: 26 26 25; /* #1a1a19 */
+    --c-ink-hover: 0 0 0; /* #000000 */
+    --c-accent: 217 83 33; /* #d95321 */
+
+    --c-t900: 24 24 27; /* zinc-900 */
+    --c-t800: 39 39 42; /* zinc-800 */
+    --c-t700: 63 63 70; /* zinc-700 */
+    --c-t600: 82 82 91; /* zinc-600 */
+    --c-t500: 113 113 122; /* zinc-500 */
+    --c-t400: 161 161 170; /* zinc-400 */
+    --c-t300: 212 212 216; /* zinc-300 */
+
+    /* Декоративные наложения */
+    --c-line-solid: 224 220 208;
+    --hatch-rgb: 0 0 0;
+    --hatch-alpha: 0.015;
+    --grid-rgb: 0 0 0;
+  }
+
+  /* ─── Тёмная тема ─── */
+  /* Явный выбор пользователя */
+  :root[data-theme='dark'] {
+    color-scheme: dark;
+
+    --c-page: 10 10 9;
+    --c-paper: 26 26 25;
+    --c-paper-panel: 32 31 29;
+    --c-paper-tint: 36 35 31;
+    --c-paper-hover: 42 41 38;
+    --c-surface: 38 37 34;
+    --c-line: 58 56 51;
+    --c-ink: 237 237 234; /* светлая кнопка на тёмном */
+    --c-ink-hover: 255 255 255;
+    --c-accent: 217 83 33;
+
+    --c-t900: 244 243 239;
+    --c-t800: 231 229 223;
+    --c-t700: 201 198 189;
+    --c-t600: 176 173 163;
+    --c-t500: 146 143 134;
+    --c-t400: 111 109 101;
+    --c-t300: 74 72 66;
+
+    --c-line-solid: 58 56 51;
+    --hatch-rgb: 255 255 255;
+    --hatch-alpha: 0.02;
+    --grid-rgb: 255 255 255;
+  }
+
+  /* Системная тёмная тема, если пользователь не выбрал светлую явно */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']):not([data-theme='dark']) {
+      color-scheme: dark;
+
+      --c-page: 10 10 9;
+      --c-paper: 26 26 25;
+      --c-paper-panel: 32 31 29;
+      --c-paper-tint: 36 35 31;
+      --c-paper-hover: 42 41 38;
+      --c-surface: 38 37 34;
+      --c-line: 58 56 51;
+      --c-ink: 237 237 234;
+      --c-ink-hover: 255 255 255;
+      --c-accent: 217 83 33;
+
+      --c-t900: 244 243 239;
+      --c-t800: 231 229 223;
+      --c-t700: 201 198 189;
+      --c-t600: 176 173 163;
+      --c-t500: 146 143 134;
+      --c-t400: 111 109 101;
+      --c-t300: 74 72 66;
+
+      --c-line-solid: 58 56 51;
+      --hatch-rgb: 255 255 255;
+      --hatch-alpha: 0.02;
+      --grid-rgb: 255 255 255;
+    }
   }
 
   html,
@@ -12,13 +99,11 @@
     height: 100%;
   }
 
-  /* Единый фокус-стиль (доступность): акцентное кольцо эталона. */
   :where(a, button, input, textarea, select, [tabindex]):focus-visible {
-    outline: 1px solid #d95321;
+    outline: 1px solid rgb(var(--c-accent));
     outline-offset: 2px;
   }
 
-  /* iconify web-component по умолчанию inline. */
   iconify-icon {
     display: inline-block;
     vertical-align: -0.125em;
@@ -26,28 +111,40 @@
 }
 
 @layer utilities {
-  /* Штриховка мастер-контейнера (repeating-linear-gradient из эталона). */
+  /* Штриховка мастер-контейнера. */
   .bg-hatch {
     background-image: repeating-linear-gradient(
       -45deg,
       transparent,
       transparent 3px,
-      rgba(0, 0, 0, 0.015) 3px,
-      rgba(0, 0, 0, 0.015) 4px
+      rgb(var(--hatch-rgb) / var(--hatch-alpha)) 3px,
+      rgb(var(--hatch-rgb) / var(--hatch-alpha)) 4px
     );
   }
 
-  /* «Линованная бумага» для терминальных блоков (leading-[28px]). */
+  /* «Линованная бумага» (leading-[28px]). */
   .bg-lined {
-    background-image: linear-gradient(transparent 27px, #e0dcd0 28px);
+    background-image: linear-gradient(transparent 27px, rgb(var(--c-line-solid)) 28px);
     background-size: 100% 28px;
   }
 
   /* Нижняя мерная лента. */
   .bg-tick {
     background-image:
-      repeating-linear-gradient(to right, #e0dcd0, #e0dcd0 1px, transparent 1px, transparent 100px),
-      repeating-linear-gradient(to right, #e0dcd0, #e0dcd0 1px, transparent 1px, transparent 10px);
+      repeating-linear-gradient(
+        to right,
+        rgb(var(--c-line-solid)),
+        rgb(var(--c-line-solid)) 1px,
+        transparent 1px,
+        transparent 100px
+      ),
+      repeating-linear-gradient(
+        to right,
+        rgb(var(--c-line-solid)),
+        rgb(var(--c-line-solid)) 1px,
+        transparent 1px,
+        transparent 10px
+      );
     background-size:
       100% 100%,
       100% 20%;
@@ -55,10 +152,11 @@
     background-position: bottom;
   }
 
-  /* Техническая сетка-оверлей для hero-блоков. */
+  /* Техническая сетка-оверлей. */
   .bg-grid {
     background-image:
-      linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px);
+      linear-gradient(rgb(var(--grid-rgb)) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(var(--grid-rgb)) 1px, transparent 1px);
     background-size: 40px 40px;
   }
 }

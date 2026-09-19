@@ -40,13 +40,13 @@ export function AuthHero({
             {title}
           </Heading>
           {description ? (
-            <p className="mb-8 text-base font-light leading-relaxed text-zinc-600">{description}</p>
+            <p className="mb-8 text-base font-light leading-relaxed text-t600">{description}</p>
           ) : null}
           {children}
         </div>
       </div>
 
-      <div className="relative flex min-h-[320px] items-center justify-center border-t border-[#e0dcd0]/70 bg-[#efede6]/40 p-6 lg:min-h-full lg:border-l lg:border-t-0 lg:p-12">
+      <div className="relative flex min-h-[320px] items-center justify-center border-t border-line/70 bg-paper-tint/40 p-6 lg:min-h-full lg:border-l lg:border-t-0 lg:p-12">
         <div className="bg-grid pointer-events-none absolute inset-0 opacity-[0.03]" />
         <Panel
           className="z-10 w-full max-w-md"

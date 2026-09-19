@@ -51,15 +51,15 @@ export default async function ProfilePage() {
         <div className="flex flex-col gap-4 p-6">
           <div>
             <Label>Имя</Label>
-            <div className="text-sm font-light text-zinc-800">{user.name}</div>
+            <div className="text-sm font-light text-t800">{user.name}</div>
           </div>
           <div>
             <Label>Email</Label>
-            <div className="font-mono text-sm text-zinc-800">{user.email}</div>
+            <div className="font-mono text-sm text-t800">{user.email}</div>
           </div>
           <div>
             <Label>Телефон</Label>
-            <div className="font-mono text-sm text-zinc-800">{user.phone ?? '—'}</div>
+            <div className="font-mono text-sm text-t800">{user.phone ?? '—'}</div>
           </div>
           <Link href="/forgot" className={buttonClass('secondary', 'self-start')}>
             <Icon name="shield-check-linear" />
@@ -106,8 +106,8 @@ export default async function ProfilePage() {
         <div className="flex flex-col gap-4 p-6">
           {enrollment ? (
             <>
-              <div className="font-mono text-2xl text-zinc-900">{enrollment.plan.title}</div>
-              <div className="text-sm font-light text-zinc-600">
+              <div className="font-mono text-2xl text-t900">{enrollment.plan.title}</div>
+              <div className="text-sm font-light text-t600">
                 Активирован: {formatDate(enrollment.activatedAt)}
               </div>
               <Link href="/pay" className={buttonClass('primary', 'self-start')}>
@@ -126,7 +126,7 @@ export default async function ProfilePage() {
       <Panel title="История платежей">
         <div className="p-2">
           {payments.length === 0 ? (
-            <p className="p-4 font-mono text-xs text-zinc-500">Платежей пока нет.</p>
+            <p className="p-4 font-mono text-xs text-t500">Платежей пока нет.</p>
           ) : (
             <Table>
               <THead>
@@ -159,14 +159,14 @@ export default async function ProfilePage() {
   const privacyTab = (
     <div className="flex flex-col gap-4">
       <Panel title="Согласия // 152-ФЗ">
-        <div className="flex flex-col gap-3 p-6 text-sm font-light text-zinc-700">
+        <div className="flex flex-col gap-3 p-6 text-sm font-light text-t700">
           <div>
             Согласие на обработку ПДн:{' '}
-            <span className="font-mono text-zinc-900">
+            <span className="font-mono text-t900">
               {user.consentAt ? `${formatDate(user.consentAt)} (v${user.consentVersion})` : '—'}
             </span>
           </div>
-          <Link href="/legal/privacy" className="font-mono text-xs text-[#d95321] underline">
+          <Link href="/legal/privacy" className="font-mono text-xs text-accent underline">
             Политика обработки ПДн
           </Link>
         </div>

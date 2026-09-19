@@ -25,18 +25,18 @@ export function RegisterForm({ invite }: { invite?: string }) {
   if (state.ok) {
     return (
       <div className="flex flex-col gap-4">
-        <p className="border border-[#e0dcd0] bg-white px-4 py-3 font-mono text-xs text-zinc-700">
+        <p className="border border-line bg-surface px-4 py-3 font-mono text-xs text-t700">
           {state.message}
         </p>
         {state.meta?.verifyUrl ? (
           <a
             href={state.meta.verifyUrl}
-            className="break-all font-mono text-[11px] text-[#d95321] underline"
+            className="break-all font-mono text-[11px] text-accent underline"
           >
             [dev] Подтвердить email: {state.meta.verifyUrl}
           </a>
         ) : null}
-        <Link href="/login" className="font-mono text-xs text-zinc-500 hover:text-zinc-900">
+        <Link href="/login" className="font-mono text-xs text-t500 hover:text-t900">
           ← К входу
         </Link>
       </div>
@@ -45,7 +45,7 @@ export function RegisterForm({ invite }: { invite?: string }) {
 
   return (
     <form action={action} className="flex flex-col gap-5">
-      {state.message ? <p className="font-mono text-[11px] text-[#d95321]">{state.message}</p> : null}
+      {state.message ? <p className="font-mono text-[11px] text-accent">{state.message}</p> : null}
       {invite ? <input type="hidden" name="invite" value={invite} /> : null}
 
       <div>
@@ -79,12 +79,12 @@ export function RegisterForm({ invite }: { invite?: string }) {
         <FieldError>{state.fieldErrors?.password}</FieldError>
       </div>
 
-      <div className="flex flex-col gap-3 border-t border-[#e0dcd0]/60 pt-4">
+      <div className="flex flex-col gap-3 border-t border-line/60 pt-4">
         <Checkbox id="consent" name="consent" required
           label={
             <>
               Согласен на обработку персональных данных (
-              <Link href="/legal/privacy" className="text-[#d95321] underline">
+              <Link href="/legal/privacy" className="text-accent underline">
                 политика
               </Link>
               )
@@ -96,7 +96,7 @@ export function RegisterForm({ invite }: { invite?: string }) {
           label={
             <>
               Принимаю условия{' '}
-              <Link href="/legal/offer" className="text-[#d95321] underline">
+              <Link href="/legal/offer" className="text-accent underline">
                 оферты
               </Link>
             </>

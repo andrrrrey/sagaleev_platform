@@ -5,13 +5,13 @@ export function ProgressBar({ value, className }: { value: number; className?: s
   const pct = Math.max(0, Math.min(100, value));
   return (
     <div
-      className={cn('h-1.5 w-full bg-[#e0dcd0]', className)}
+      className={cn('h-1.5 w-full bg-line', className)}
       role="progressbar"
       aria-valuenow={pct}
       aria-valuemin={0}
       aria-valuemax={100}
     >
-      <div className="h-full bg-[#d95321]" style={{ width: `${pct}%` }} />
+      <div className="h-full bg-accent" style={{ width: `${pct}%` }} />
     </div>
   );
 }
@@ -31,7 +31,7 @@ export function SegmentedProgress({
       {Array.from({ length: total }).map((_, i) => (
         <span
           key={i}
-          className={cn('h-2 w-2 border border-zinc-300', i < filled ? 'bg-zinc-800' : 'bg-transparent')}
+          className={cn('h-2 w-2 border border-t300', i < filled ? 'bg-t800' : 'bg-transparent')}
         />
       ))}
     </div>

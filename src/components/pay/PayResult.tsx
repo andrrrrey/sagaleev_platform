@@ -37,11 +37,11 @@ export function PayResult({ paymentId }: { paymentId: string }) {
   if (status === 'SUCCEEDED') {
     return (
       <div className="flex flex-col items-start gap-6">
-        <div className="flex items-center gap-2 font-mono text-sm text-[#d95321]">
+        <div className="flex items-center gap-2 font-mono text-sm text-accent">
           <Icon name="check-circle-linear" className="text-lg" />
           Доступ открыт
         </div>
-        <p className="text-sm font-light text-zinc-600">
+        <p className="text-sm font-light text-t600">
           Оплата подтверждена. Заполните бизнес-профиль, чтобы собрать агента.
         </p>
         <Link href="/onboarding" className={buttonClass('primary')}>
@@ -55,7 +55,7 @@ export function PayResult({ paymentId }: { paymentId: string }) {
   if (status === 'CANCELED' || status === 'FAILED') {
     return (
       <div className="flex flex-col items-start gap-6">
-        <div className="flex items-center gap-2 font-mono text-sm text-[#d95321]">
+        <div className="flex items-center gap-2 font-mono text-sm text-accent">
           <Icon name="danger-triangle-linear" className="text-lg" />
           Оплата не прошла
         </div>
@@ -69,7 +69,7 @@ export function PayResult({ paymentId }: { paymentId: string }) {
   return (
     <LinedBlock label="Status">
       <div className="flex items-center gap-3">
-        <span className="h-2 w-2 animate-pulse bg-[#d95321]" />
+        <span className="h-2 w-2 animate-pulse bg-accent" />
         {timedOut ? 'Подтверждение занимает больше времени, чем обычно…' : 'Ожидаем подтверждение…'}
       </div>
     </LinedBlock>

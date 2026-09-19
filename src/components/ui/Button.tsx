@@ -6,14 +6,14 @@ export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'action' | 'icon
 const VARIANTS: Record<ButtonVariant, string> = {
   // Точно по эталону (docs/02 §3.1).
   primary:
-    'bg-[#1a1a19] text-[#f6f5ef] px-6 py-3 border border-[#1a1a19] text-sm font-normal hover:bg-black transition-colors shadow-sm flex items-center justify-center gap-2',
+    'bg-ink text-paper px-6 py-3 border border-ink text-sm font-normal hover:bg-ink-hover transition-colors shadow-sm flex items-center justify-center gap-2',
   secondary:
-    'bg-[#fbfaf6] text-zinc-700 border border-[#e0dcd0] px-6 py-3 text-sm font-normal shadow-sm hover:bg-white hover:text-zinc-900 transition-colors flex items-center justify-center gap-2',
+    'bg-paper-panel text-t700 border border-line px-6 py-3 text-sm font-normal shadow-sm hover:bg-surface hover:text-t900 transition-colors flex items-center justify-center gap-2',
   ghost:
-    'text-xs font-mono px-4 py-2 bg-transparent border border-[#e0dcd0] text-zinc-700 hover:bg-[#eae7df] hover:border-zinc-300 transition-all shadow-sm flex items-center gap-2',
+    'text-xs font-mono px-4 py-2 bg-transparent border border-line text-t700 hover:bg-paper-hover hover:border-t300 transition-all shadow-sm flex items-center gap-2',
   action:
-    'flex items-center gap-2 bg-white border border-[#e0dcd0] px-4 py-2 text-[11px] font-mono tracking-wide text-zinc-700 hover:text-[#d95321] hover:border-[#d95321]/30 transition-colors shadow-sm group',
-  icon: 'w-8 h-8 flex items-center justify-center text-zinc-400 hover:text-zinc-700 transition-colors',
+    'flex items-center gap-2 bg-surface border border-line px-4 py-2 text-[11px] font-mono tracking-wide text-t700 hover:text-accent hover:border-accent/30 transition-colors shadow-sm group',
+  icon: 'w-8 h-8 flex items-center justify-center text-t400 hover:text-t700 transition-colors',
 };
 
 /** Классы варианта кнопки для применения к <Link> (Next). */

@@ -43,15 +43,15 @@ export default async function HomePage() {
         {TILES.map((tile) => (
           <Link key={tile.href} href={tile.href} className="group">
             <Panel
-              className="h-full transition-colors group-hover:border-[#d95321]/30"
+              className="h-full transition-colors group-hover:border-accent/30"
               bodyClassName="p-6 gap-3"
             >
               <div className="flex items-center justify-between">
-                <Icon name={tile.icon} className="text-2xl text-zinc-700 transition-colors group-hover:text-[#d95321]" />
-                <Icon name="arrow-right-linear" className="text-zinc-300 transition-colors group-hover:text-[#d95321]" />
+                <Icon name={tile.icon} className="text-2xl text-t700 transition-colors group-hover:text-accent" />
+                <Icon name="arrow-right-linear" className="text-t300 transition-colors group-hover:text-accent" />
               </div>
-              <div className="mt-2 text-lg font-normal tracking-tight text-zinc-900">{tile.label}</div>
-              <p className="text-sm font-light text-zinc-600">{tile.desc}</p>
+              <div className="mt-2 text-lg font-normal tracking-tight text-t900">{tile.label}</div>
+              <p className="text-sm font-light text-t600">{tile.desc}</p>
             </Panel>
           </Link>
         ))}
@@ -84,9 +84,9 @@ export default async function HomePage() {
       </section>
 
       {/* Плейсхолдер верхнего меню (для полноты навигации) */}
-      <nav className="mt-10 flex flex-wrap gap-3 border-t border-[#e0dcd0]/60 pt-6 font-mono text-[10px] uppercase tracking-widest text-zinc-400">
+      <nav className="mt-10 flex flex-wrap gap-3 border-t border-line/60 pt-6 font-mono text-[10px] uppercase tracking-widest text-t400">
         {STUDENT_NAV.map((i) => (
-          <Link key={i.href} href={i.href} className="hover:text-[#d95321]">
+          <Link key={i.href} href={i.href} className="hover:text-accent">
             {i.label}
           </Link>
         ))}

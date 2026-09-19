@@ -31,7 +31,7 @@ export function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-[70] flex items-center justify-center bg-[#111110]/60 p-4"
+      className="fixed inset-0 z-[70] flex items-center justify-center bg-page/60 p-4"
       role="dialog"
       aria-modal="true"
       onClick={onClose}
@@ -44,7 +44,7 @@ export function Modal({
               type="button"
               onClick={onClose}
               aria-label="Закрыть"
-              className="flex h-6 w-6 items-center justify-center text-zinc-400 hover:text-zinc-700"
+              className="flex h-6 w-6 items-center justify-center text-t400 hover:text-t700"
             >
               <Icon name="close-circle-linear" className="text-lg" />
             </button>

@@ -38,7 +38,7 @@ export function CopyButton({
 
   return (
     <Button variant={variant} onClick={copy} type="button">
-      <Icon name="copy-linear" className="text-sm text-[#d95321] transition-transform group-hover:scale-110" />
+      <Icon name="copy-linear" className="text-sm text-accent transition-transform group-hover:scale-110" />
       {label}
     </Button>
   );

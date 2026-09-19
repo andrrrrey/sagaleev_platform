@@ -27,7 +27,7 @@ export function ExportProfileButton() {
 
   return (
     <Button variant="action" type="button" onClick={copy} disabled={pending}>
-      <Icon name="copy-linear" className="text-sm text-[#d95321] group-hover:scale-110" />
+      <Icon name="copy-linear" className="text-sm text-accent group-hover:scale-110" />
       Скопировать для агента
     </Button>
   );

@@ -5,11 +5,11 @@ export function Kicker({ children, className }: { children: React.ReactNode; cla
   return (
     <div
       className={cn(
-        'flex items-center gap-3 font-mono text-xs uppercase tracking-widest text-[#d95321]',
+        'flex items-center gap-3 font-mono text-xs uppercase tracking-widest text-accent',
         className,
       )}
     >
-      <span className="h-px w-6 bg-[#d95321]" />
+      <span className="h-px w-6 bg-accent" />
       {children}
     </div>
   );

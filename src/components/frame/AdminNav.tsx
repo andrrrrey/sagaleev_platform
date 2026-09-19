@@ -28,8 +28,8 @@ export function AdminNav({ role }: { role: Role }) {
             className={cn(
               'flex items-center gap-3 border-l-2 px-3 py-2 font-mono text-xs transition-colors',
               active
-                ? 'border-[#d95321] bg-white text-zinc-900'
-                : 'border-transparent text-zinc-500 hover:bg-[#eae7df] hover:text-zinc-900',
+                ? 'border-accent bg-surface text-t900'
+                : 'border-transparent text-t500 hover:bg-paper-hover hover:text-t900',
             )}
           >
             <Icon name={item.icon} className="text-sm" />

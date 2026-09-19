@@ -35,10 +35,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className="pointer-events-auto flex items-center gap-2 border border-[#e0dcd0] bg-[#fbfaf6] px-3 py-2 font-mono text-xs text-zinc-700 shadow-sm"
+            className="pointer-events-auto flex items-center gap-2 border border-line bg-paper-panel px-3 py-2 font-mono text-xs text-t700 shadow-sm"
           >
-            <span className="h-1.5 w-1.5 bg-[#d95321]" />
-            <Icon name="check-circle-linear" className="text-sm text-[#d95321]" />
+            <span className="h-1.5 w-1.5 bg-accent" />
+            <Icon name="check-circle-linear" className="text-sm text-accent" />
             {t.message}
           </div>
         ))}

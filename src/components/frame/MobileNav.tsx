@@ -16,7 +16,7 @@ export function MobileNav() {
   const pathname = usePathname();
   return (
     <nav
-      className="relative z-30 flex h-14 w-full border-t border-[#e0dcd0] bg-[#f6f5ef] md:hidden"
+      className="relative z-30 flex h-14 w-full border-t border-line bg-paper md:hidden"
       aria-label="Основная навигация"
     >
       {MOBILE_NAV.map((item) => {
@@ -27,7 +27,7 @@ export function MobileNav() {
             href={item.href}
             className={cn(
               'flex flex-1 flex-col items-center justify-center gap-1 transition-colors',
-              active ? 'text-[#d95321]' : 'text-zinc-400 hover:text-zinc-600',
+              active ? 'text-accent' : 'text-t400 hover:text-t600',
             )}
           >
             <Icon name={item.icon} className="text-lg" />

@@ -15,8 +15,8 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   return (
     <AppFrame topLabel="sys_admin_01" nav={<AccountNav brand={`${env.NEXT_PUBLIC_BRAND_NAME} · Admin`} />}>
       <div className="grid grid-cols-1 md:grid-cols-[220px_1fr]">
-        <aside className="border-b border-[#e0dcd0]/70 p-4 md:border-b-0 md:border-r">
-          <div className="mb-3 font-mono text-[10px] uppercase tracking-widest text-zinc-400">
+        <aside className="border-b border-line/70 p-4 md:border-b-0 md:border-r">
+          <div className="mb-3 font-mono text-[10px] uppercase tracking-widest text-t400">
             {user?.name} · {actor.role}
           </div>
           <AdminNav role={actor.role} />

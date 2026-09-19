@@ -14,15 +14,15 @@ export function ForgotForm() {
   if (state.ok) {
     return (
       <div className="flex flex-col gap-4">
-        <p className="border border-[#e0dcd0] bg-white px-4 py-3 font-mono text-xs text-zinc-700">
+        <p className="border border-line bg-surface px-4 py-3 font-mono text-xs text-t700">
           {state.message}
         </p>
         {state.meta?.resetUrl ? (
-          <a href={state.meta.resetUrl} className="break-all font-mono text-[11px] text-[#d95321] underline">
+          <a href={state.meta.resetUrl} className="break-all font-mono text-[11px] text-accent underline">
             [dev] Сбросить пароль: {state.meta.resetUrl}
           </a>
         ) : null}
-        <Link href="/login" className="font-mono text-xs text-zinc-500 hover:text-zinc-900">
+        <Link href="/login" className="font-mono text-xs text-t500 hover:text-t900">
           ← К входу
         </Link>
       </div>
@@ -31,7 +31,7 @@ export function ForgotForm() {
 
   return (
     <form action={action} className="flex flex-col gap-5">
-      {state.message ? <p className="font-mono text-[11px] text-[#d95321]">{state.message}</p> : null}
+      {state.message ? <p className="font-mono text-[11px] text-accent">{state.message}</p> : null}
       <div>
         <Label htmlFor="email">Email</Label>
         <Input id="email" name="email" type="email" autoComplete="email" required />

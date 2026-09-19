@@ -13,7 +13,7 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="relative border border-[#e0dcd0]">
+    <div className="relative border border-line">
       <Crosshair className="absolute right-4 top-4" />
       <Crosshair className="absolute bottom-4 left-4" />
       <LinedBlock label={label}>

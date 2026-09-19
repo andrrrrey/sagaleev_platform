@@ -14,8 +14,8 @@ export const metadata: Metadata = { title: 'Админ — обзор' };
 function Metric({ label, value }: { label: string; value: string | number }) {
   return (
     <Panel bodyClassName="p-5 gap-2">
-      <div className="font-mono text-2xl text-zinc-900">{value}</div>
-      <div className="font-mono text-[10px] uppercase tracking-widest text-zinc-500">{label}</div>
+      <div className="font-mono text-2xl text-t900">{value}</div>
+      <div className="font-mono text-[10px] uppercase tracking-widest text-t500">{label}</div>
     </Panel>
   );
 }
@@ -90,13 +90,13 @@ export default async function AdminOverviewPage() {
         <Panel title="Последние регистрации">
           <div className="p-2">
             {recentUsers.length === 0 ? (
-              <p className="p-4 font-mono text-xs text-zinc-500">Пока пусто.</p>
+              <p className="p-4 font-mono text-xs text-t500">Пока пусто.</p>
             ) : (
-              <ul className="divide-y divide-[#e0dcd0]/60">
+              <ul className="divide-y divide-line/60">
                 {recentUsers.map((u) => (
                   <li key={u.id} className="flex items-center justify-between px-4 py-3 text-sm">
-                    <span className="font-light text-zinc-800">{u.name}</span>
-                    <span className="font-mono text-xs text-zinc-500">
+                    <span className="font-light text-t800">{u.name}</span>
+                    <span className="font-mono text-xs text-t500">
                       {showMoney ? u.email : '•••'} · {formatDate(u.createdAt)}
                     </span>
                   </li>

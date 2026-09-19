@@ -31,7 +31,7 @@ export default async function AdminPaymentsPage() {
       <Panel title="Платежи // Все">
         <div className="p-2">
           {payments.length === 0 ? (
-            <p className="p-4 font-mono text-xs text-zinc-500">Платежей пока нет.</p>
+            <p className="p-4 font-mono text-xs text-t500">Платежей пока нет.</p>
           ) : (
             <Table>
               <THead>

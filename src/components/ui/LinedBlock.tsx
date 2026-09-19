@@ -17,11 +17,11 @@ export function LinedBlock({
   return (
     <div className={cn('bg-lined relative overflow-hidden p-6 md:p-8', className)}>
       {label ? (
-        <span className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-zinc-400">
+        <span className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-t400">
           {label}
         </span>
       ) : null}
-      <div className="font-mono text-sm leading-[28px] text-zinc-800">{children}</div>
+      <div className="font-mono text-sm leading-[28px] text-t800">{children}</div>
     </div>
   );
 }

@@ -31,10 +31,10 @@ export function Tabs({
               type="button"
               onClick={() => setActive(item.key)}
               className={cn(
-                '-ml-px border border-[#e0dcd0] px-4 py-2 font-mono text-xs transition-colors',
+                '-ml-px border border-line px-4 py-2 font-mono text-xs transition-colors',
                 isActive
-                  ? 'border-b-[#d95321] bg-white text-zinc-900'
-                  : 'bg-transparent text-zinc-500 hover:bg-[#eae7df]',
+                  ? 'border-b-accent bg-surface text-t900'
+                  : 'bg-transparent text-t500 hover:bg-paper-hover',
               )}
             >
               {item.label}

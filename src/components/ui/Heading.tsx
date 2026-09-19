@@ -29,7 +29,7 @@ export function Heading({
     <Tag
       ref={ref}
       className={cn(
-        'js-masked-reveal font-sans font-normal tracking-tight text-zinc-900',
+        'js-masked-reveal font-sans font-normal tracking-tight text-t900',
         SIZES[size ?? as],
         className,
       )}

@@ -15,12 +15,12 @@ export function LoginForm({ notice }: { notice?: string }) {
   return (
     <form action={action} className="flex flex-col gap-5">
       {notice ? (
-        <p className="border border-[#e0dcd0] bg-white px-4 py-3 font-mono text-xs text-zinc-600">
+        <p className="border border-line bg-surface px-4 py-3 font-mono text-xs text-t600">
           {notice}
         </p>
       ) : null}
       {state.message ? (
-        <p className="font-mono text-[11px] text-[#d95321]">{state.message}</p>
+        <p className="font-mono text-[11px] text-accent">{state.message}</p>
       ) : null}
 
       <div>
@@ -43,7 +43,7 @@ export function LoginForm({ notice }: { notice?: string }) {
             type="button"
             onClick={() => setShowPassword((v) => !v)}
             aria-label={showPassword ? 'Скрыть пароль' : 'Показать пароль'}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-t400 hover:text-t700"
           >
             <Icon name={showPassword ? 'eye-closed-linear' : 'eye-linear'} />
           </button>
@@ -51,11 +51,11 @@ export function LoginForm({ notice }: { notice?: string }) {
         <FieldError>{state.fieldErrors?.password}</FieldError>
       </div>
 
-      <div className="flex items-center justify-between font-mono text-xs text-zinc-500">
-        <Link href="/forgot" className="hover:text-zinc-900">
+      <div className="flex items-center justify-between font-mono text-xs text-t500">
+        <Link href="/forgot" className="hover:text-t900">
           Забыли пароль?
         </Link>
-        <Link href="/register" className="hover:text-zinc-900">
+        <Link href="/register" className="hover:text-t900">
           Регистрация
         </Link>
       </div>

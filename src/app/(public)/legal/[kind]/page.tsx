@@ -34,7 +34,7 @@ export default async function LegalPage({ params }: { params: Promise<{ kind: st
       <div className="max-w-3xl">
         {doc ? (
           <article
-            className="prose-sm text-sm font-light leading-relaxed text-zinc-700 [&_h2]:mt-6 [&_h2]:font-normal [&_h2]:text-zinc-900"
+            className="prose-sm text-sm font-light leading-relaxed text-t700 [&_h2]:mt-6 [&_h2]:font-normal [&_h2]:text-t900"
             dangerouslySetInnerHTML={{ __html: doc.bodyHtml }}
           />
         ) : (

@@ -21,20 +21,20 @@ export function StatusPill({
   return (
     <div
       className={cn(
-        'flex items-center gap-2 border border-[#e0dcd0] bg-white px-2.5 py-1 font-mono text-[10px] text-zinc-500 shadow-sm',
+        'flex items-center gap-2 border border-line bg-surface px-2.5 py-1 font-mono text-[10px] text-t500 shadow-sm',
         className,
       )}
     >
       <span
         className={cn(
           'h-1.5 w-1.5 rounded-none',
-          muted ? 'bg-zinc-300' : 'bg-[#d95321]',
+          muted ? 'bg-t300' : 'bg-accent',
           pulse && !muted && 'animate-pulse',
         )}
       />
       {children}
       {trailing ? (
-        <div className="ml-2 flex items-center gap-1 border-l border-[#e0dcd0] pl-2">{trailing}</div>
+        <div className="ml-2 flex items-center gap-1 border-l border-line pl-2">{trailing}</div>
       ) : null}
     </div>
   );

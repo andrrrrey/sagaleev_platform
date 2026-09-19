@@ -20,7 +20,7 @@ export function PageHeader({
         <Kicker className="mb-6">{kicker}</Kicker>
         <Heading as="h1">{title}</Heading>
         {description ? (
-          <p className="mt-6 max-w-md text-base font-light leading-relaxed text-zinc-600 md:text-lg">
+          <p className="mt-6 max-w-md text-base font-light leading-relaxed text-t600 md:text-lg">
             {description}
           </p>
         ) : null}

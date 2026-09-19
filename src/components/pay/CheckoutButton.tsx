@@ -41,7 +41,7 @@ export function CheckoutButton({
         <Icon name="card-linear" />
         {pending ? 'Переходим к оплате…' : label}
       </Button>
-      {error ? <p className="font-mono text-[11px] text-[#d95321]">{error}</p> : null}
+      {error ? <p className="font-mono text-[11px] text-accent">{error}</p> : null}
     </div>
   );
 }

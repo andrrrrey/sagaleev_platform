@@ -12,9 +12,9 @@ const PLAN_TITLE: Record<PlanCode, string> = {
 /** Замок закрытого контента (docs/02 §3.12) — без размытия и градиентов. */
 export function LockedPanel({ requiredPlan }: { requiredPlan: PlanCode }) {
   return (
-    <div className="flex flex-col items-center gap-4 border border-[#e0dcd0] bg-white/60 p-8 text-center">
-      <Icon name="lock-linear" className="text-lg text-zinc-400" />
-      <p className="max-w-xs text-sm font-light text-zinc-600">
+    <div className="flex flex-col items-center gap-4 border border-line bg-surface/60 p-8 text-center">
+      <Icon name="lock-linear" className="text-lg text-t400" />
+      <p className="max-w-xs text-sm font-light text-t600">
         Доступно на тарифе «{PLAN_TITLE[requiredPlan]}». Улучшите тариф, чтобы открыть промпт,
         файлы и видео.
       </p>
@@ -22,7 +22,7 @@ export function LockedPanel({ requiredPlan }: { requiredPlan: PlanCode }) {
         href={{ pathname: '/pay', query: { upgrade: requiredPlan } }}
         className={buttonClass('action')}
       >
-        <Icon name="lock-keyhole-linear" className="text-sm text-[#d95321]" />
+        <Icon name="lock-keyhole-linear" className="text-sm text-accent" />
         Открыть на тарифе {PLAN_TITLE[requiredPlan]}
       </Link>
     </div>

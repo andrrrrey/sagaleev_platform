@@ -100,10 +100,10 @@ export function OnboardingWizard({
         </div>
 
         {state.message && !state.ok ? (
-          <p className="font-mono text-[11px] text-[#d95321]">{state.message}</p>
+          <p className="font-mono text-[11px] text-accent">{state.message}</p>
         ) : null}
 
-        <div className="flex items-center justify-between border-t border-[#e0dcd0]/60 pt-5">
+        <div className="flex items-center justify-between border-t border-line/60 pt-5">
           <Button
             type="button"
             variant="secondary"

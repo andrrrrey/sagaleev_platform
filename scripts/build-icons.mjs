@@ -26,6 +26,8 @@ const NAMES = [
   'trash-bin-minimalistic-linear', 'pen-linear', 'export-linear', 'refresh-linear',
   'calendar-linear', 'shield-check-linear', 'wallet-money-linear', 'graph-new-linear',
   'diploma-verified-linear', 'notebook-linear', 'point-on-map-linear',
+  // переключатель темы
+  'sun-2-linear', 'moon-linear', 'monitor-smartphone-linear',
 ];
 
 const subset = getIcons(solar, NAMES);

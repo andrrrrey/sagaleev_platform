@@ -19,7 +19,7 @@ import { Label, Input, Textarea, Select, Checkbox, FieldError } from '@/componen
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="border-t border-[#e0dcd0]/60 pt-8">
+    <section className="border-t border-line/60 pt-8">
       <Kicker className="mb-6">{title}</Kicker>
       <div className="flex flex-col gap-6">{children}</div>
     </section>
@@ -41,7 +41,7 @@ export function UiShowcase() {
             Ghost <Icon name="arrow-right-linear" />
           </Button>
           <Button variant="action">
-            <Icon name="play-circle-linear" className="text-sm text-[#d95321] group-hover:scale-110" />
+            <Icon name="play-circle-linear" className="text-sm text-accent group-hover:scale-110" />
             Отправить агенту
           </Button>
           <Button variant="icon" aria-label="icon">
@@ -61,8 +61,8 @@ export function UiShowcase() {
           <StatusPill
             trailing={
               <>
-                <Icon name="programming-linear" className="text-zinc-700" />
-                <Icon name="database-linear" className="text-zinc-400" />
+                <Icon name="programming-linear" className="text-t700" />
+                <Icon name="database-linear" className="text-t400" />
               </>
             }
           >

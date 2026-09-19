@@ -30,17 +30,17 @@ export default async function AdminPlansPage() {
               status={plan.active ? <StatusPill>Активен</StatusPill> : <StatusPill muted>Скрыт</StatusPill>}
             >
               <div className="flex flex-col gap-4 p-6">
-                <div className="text-lg font-normal tracking-tight text-zinc-900">{plan.title}</div>
-                <div className="font-mono text-2xl text-zinc-900">{formatRubles(plan.priceKopeks)}</div>
-                <ul className="flex flex-col gap-2 text-sm font-light text-zinc-700">
+                <div className="text-lg font-normal tracking-tight text-t900">{plan.title}</div>
+                <div className="font-mono text-2xl text-t900">{formatRubles(plan.priceKopeks)}</div>
+                <ul className="flex flex-col gap-2 text-sm font-light text-t700">
                   {features.map((f, i) => (
                     <li key={i} className="flex items-start gap-2">
-                      <Icon name="check-circle-linear" className="mt-0.5 text-[#d95321]" />
+                      <Icon name="check-circle-linear" className="mt-0.5 text-accent" />
                       {f}
                     </li>
                   ))}
                 </ul>
-                <p className="font-mono text-[10px] uppercase tracking-widest text-zinc-400">
+                <p className="font-mono text-[10px] uppercase tracking-widest text-t400">
                   Редактирование цен — на форме (Этап 1+)
                 </p>
               </div>

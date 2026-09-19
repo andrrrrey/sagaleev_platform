@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { cn } from '@/lib/utils';
 import { signOutAction } from '@/server/auth/actions';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { STUDENT_NAV } from './nav-config';
 
 const PRIMARY = STUDENT_NAV.slice(0, 4); // Главная · Маршрут · Скиллы · Юзкейсы
@@ -21,16 +22,16 @@ export function Nav({ brand, userName }: { brand: string; userName?: string }) {
   const [moreOpen, setMoreOpen] = useState(false);
 
   return (
-    <nav className="relative z-50 flex w-full items-center justify-between border-b border-[#e0dcd0]/70 px-6 py-5 md:px-10 md:py-6">
+    <nav className="relative z-50 flex w-full items-center justify-between border-b border-line/70 px-6 py-5 md:px-10 md:py-6">
       <div className="flex items-center gap-8">
         <Link href="/" className="group flex cursor-pointer items-center gap-3">
-          <div className="flex h-6 w-6 items-center justify-center border border-zinc-300 bg-white transition-colors group-hover:border-[#d95321]">
-            <div className="h-2 w-2 bg-zinc-800 transition-colors group-hover:bg-[#d95321]" />
+          <div className="flex h-6 w-6 items-center justify-center border border-t300 bg-surface transition-colors group-hover:border-accent">
+            <div className="h-2 w-2 bg-t800 transition-colors group-hover:bg-accent" />
           </div>
-          <span className="text-base font-normal tracking-tight text-zinc-900">{brand}</span>
+          <span className="text-base font-normal tracking-tight text-t900">{brand}</span>
         </Link>
 
-        <div className="hidden items-center gap-8 font-mono text-xs text-zinc-500 md:flex">
+        <div className="hidden items-center gap-8 font-mono text-xs text-t500 md:flex">
           {PRIMARY.map((item) => {
             const active = isActive(pathname, item.href);
             return (
@@ -38,8 +39,8 @@ export function Nav({ brand, userName }: { brand: string; userName?: string }) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'transition-colors hover:text-zinc-900',
-                  active && 'border-b border-[#d95321] pb-1 text-zinc-900',
+                  'transition-colors hover:text-t900',
+                  active && 'border-b border-accent pb-1 text-t900',
                 )}
               >
                 {item.label}
@@ -54,7 +55,7 @@ export function Nav({ brand, userName }: { brand: string; userName?: string }) {
           >
             <button
               type="button"
-              className="flex items-center gap-1.5 transition-colors hover:text-zinc-900"
+              className="flex items-center gap-1.5 transition-colors hover:text-t900"
               onClick={() => setMoreOpen((v) => !v)}
               aria-expanded={moreOpen}
             >
@@ -62,14 +63,14 @@ export function Nav({ brand, userName }: { brand: string; userName?: string }) {
               <Icon name="alt-arrow-down-linear" className="text-[10px]" />
             </button>
             {moreOpen && (
-              <div className="absolute left-0 top-full z-50 flex min-w-[160px] flex-col border border-[#e0dcd0] bg-[#fbfaf6] shadow-panel">
+              <div className="absolute left-0 top-full z-50 flex min-w-[160px] flex-col border border-line bg-paper-panel shadow-panel">
                 {MORE.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      'flex items-center gap-2 px-4 py-2.5 transition-colors hover:bg-[#eae7df] hover:text-zinc-900',
-                      isActive(pathname, item.href) && 'text-[#d95321]',
+                      'flex items-center gap-2 px-4 py-2.5 transition-colors hover:bg-paper-hover hover:text-t900',
+                      isActive(pathname, item.href) && 'text-accent',
                     )}
                   >
                     <Icon name={item.icon} className="text-sm" />
@@ -82,21 +83,22 @@ export function Nav({ brand, userName }: { brand: string; userName?: string }) {
         </div>
       </div>
 
-      <div className="flex items-center gap-5">
+      <div className="flex items-center gap-3 sm:gap-5">
+        <ThemeToggle />
         <Link
           href="/profile/notifications"
-          className="flex h-8 w-8 items-center justify-center text-zinc-400 transition-colors hover:text-zinc-700"
+          className="flex h-8 w-8 items-center justify-center text-t400 transition-colors hover:text-t700"
           aria-label="Уведомления"
         >
           <Icon name="bell-linear" className="text-lg" />
         </Link>
         {userName ? (
-          <span className="hidden font-mono text-xs text-zinc-500 sm:block">{userName}</span>
+          <span className="hidden font-mono text-xs text-t500 sm:block">{userName}</span>
         ) : null}
         <form action={signOutAction}>
           <button
             type="submit"
-            className="flex items-center gap-2 border border-[#e0dcd0] bg-transparent px-4 py-2 font-mono text-xs text-zinc-700 shadow-sm transition-all hover:border-zinc-300 hover:bg-[#eae7df]"
+            className="flex items-center gap-2 border border-line bg-transparent px-4 py-2 font-mono text-xs text-t700 shadow-sm transition-all hover:border-t300 hover:bg-paper-hover"
           >
             Выйти
             <Icon name="logout-2-linear" />

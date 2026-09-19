@@ -68,25 +68,25 @@ export default async function PayPage({
               className="flex flex-col"
             >
               <div className="flex flex-1 flex-col gap-5 p-6">
-                <div className="font-mono text-2xl text-zinc-900">
+                <div className="font-mono text-2xl text-t900">
                   {formatRubles(plan.priceKopeks)}
                 </div>
 
-                <ul className="flex flex-1 flex-col gap-3 text-sm font-light text-zinc-700">
+                <ul className="flex flex-1 flex-col gap-3 text-sm font-light text-t700">
                   {features.map((f, i) => (
                     <li key={i} className="flex items-start gap-3">
-                      <Icon name="check-circle-linear" className="mt-0.5 text-[#d95321]" />
+                      <Icon name="check-circle-linear" className="mt-0.5 text-accent" />
                       {f}
                     </li>
                   ))}
                 </ul>
 
                 {isCurrent ? (
-                  <p className="border border-[#e0dcd0] bg-white px-3 py-2 text-center font-mono text-[11px] text-zinc-500">
+                  <p className="border border-line bg-surface px-3 py-2 text-center font-mono text-[11px] text-t500">
                     Ваш активный тариф
                   </p>
                 ) : isDowngrade ? (
-                  <p className="border border-[#e0dcd0] bg-white px-3 py-2 text-center font-mono text-[11px] text-zinc-400">
+                  <p className="border border-line bg-surface px-3 py-2 text-center font-mono text-[11px] text-t400">
                     Понижение недоступно
                   </p>
                 ) : (

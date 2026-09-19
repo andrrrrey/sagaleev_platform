@@ -12,7 +12,7 @@ export function Table({ children, className }: { children: ReactNode; className?
 
 export function THead({ children }: { children: ReactNode }) {
   return (
-    <thead className="border-b border-[#e0dcd0] bg-[#f6f5ef] font-mono text-[10px] uppercase tracking-widest text-zinc-500">
+    <thead className="border-b border-line bg-paper font-mono text-[10px] uppercase tracking-widest text-t500">
       {children}
     </thead>
   );
@@ -24,7 +24,7 @@ export function Th({ children, className }: { children?: ReactNode; className?: 
 
 export function TRow({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <tr className={cn('border-b border-[#e0dcd0]/60 hover:bg-[#eae7df]/40', className)}>
+    <tr className={cn('border-b border-line/60 hover:bg-paper-hover/40', className)}>
       {children}
     </tr>
   );
