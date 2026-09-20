@@ -34,10 +34,16 @@ export function Td({
   children,
   mono = false,
   className,
+  colSpan,
 }: {
   children?: ReactNode;
   mono?: boolean;
   className?: string;
+  colSpan?: number;
 }) {
-  return <td className={cn('px-4 py-3 font-light', mono && 'font-mono', className)}>{children}</td>;
+  return (
+    <td colSpan={colSpan} className={cn('px-4 py-3 font-light', mono && 'font-mono', className)}>
+      {children}
+    </td>
+  );
 }

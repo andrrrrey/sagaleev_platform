@@ -2,6 +2,7 @@ import type { Prisma, PlanCode, ProgressStatus, SkillGroup } from '@prisma/clien
 import { prisma } from '@/server/db';
 import { canAccess, redactLocked, assertAccess, type Actor } from '@/server/access';
 import { canTransition } from '@/server/progress/scoring';
+import { rebuildLeaderboardEntry } from '@/server/progress/leaderboard';
 import { HttpError } from '@/server/access/errors';
 
 export type SkillCard = {
@@ -188,6 +189,7 @@ export async function sendToAgent(actor: Actor, slug: string): Promise<void> {
     create: { userId: actor.id, skillId: s.id, status: 'VIEWED', viewedAt: new Date() },
     update: { status: 'VIEWED', viewedAt: new Date() },
   });
+  await rebuildLeaderboardEntry(actor.id);
 }
 
 /** Смена статуса скилла студентом (SUBMITTED/IMPLEMENTED/RESULT) с proof. */
@@ -224,6 +226,7 @@ export async function setSkillProgress(
     create: { userId: actor.id, skillId: s.id, status, proofNote: proofNote ?? null, ...stamps },
     update: { status, proofNote: proofNote ?? null, ...stamps },
   });
+  await rebuildLeaderboardEntry(actor.id);
 }
 
 /** Проверка доступа к файлу скилла (для presigned URL). */
