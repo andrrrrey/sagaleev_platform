@@ -1,9 +1,15 @@
 import { createHash, createHmac } from 'node:crypto';
-import { env } from '@/lib/env';
+import { getSetting } from '@/server/settings/store';
 
 /** Настроено ли S3-хранилище. */
-export function isStorageConfigured(): boolean {
-  return Boolean(env.S3_ENDPOINT && env.S3_BUCKET && env.S3_ACCESS_KEY && env.S3_SECRET_KEY);
+export async function isStorageConfigured(): Promise<boolean> {
+  const [endpoint, bucket, accessKey, secretKey] = await Promise.all([
+    getSetting('S3_ENDPOINT'),
+    getSetting('S3_BUCKET'),
+    getSetting('S3_ACCESS_KEY'),
+    getSetting('S3_SECRET_KEY'),
+  ]);
+  return Boolean(endpoint && bucket && accessKey && secretKey);
 }
 
 function sha256Hex(data: string): string {
@@ -23,15 +29,23 @@ function encodeRfc3986(str: string): string {
  * Presigned GET URL (AWS SigV4, path-style) для S3-совместимого хранилища.
  * TTL по умолчанию 5 минут (docs/01 §4). Возвращает null, если S3 не настроен.
  */
-export function presignGetUrl(key: string, ttlSeconds = 300): string | null {
-  if (!isStorageConfigured()) return null;
+export async function presignGetUrl(key: string, ttlSeconds = 300): Promise<string | null> {
+  const [endpointUrl, regionSetting, accessKeySetting, secretKeySetting, bucketSetting] =
+    await Promise.all([
+      getSetting('S3_ENDPOINT'),
+      getSetting('S3_REGION'),
+      getSetting('S3_ACCESS_KEY'),
+      getSetting('S3_SECRET_KEY'),
+      getSetting('S3_BUCKET'),
+    ]);
+  if (!endpointUrl || !bucketSetting || !accessKeySetting || !secretKeySetting) return null;
 
-  const endpoint = new URL(env.S3_ENDPOINT!);
+  const endpoint = new URL(endpointUrl);
   const host = endpoint.host;
-  const region = env.S3_REGION || 'ru-central1';
-  const accessKey = env.S3_ACCESS_KEY!;
-  const secretKey = env.S3_SECRET_KEY!;
-  const bucket = env.S3_BUCKET!;
+  const region = regionSetting || 'ru-central1';
+  const accessKey = accessKeySetting;
+  const secretKey = secretKeySetting;
+  const bucket = bucketSetting;
 
   const now = new Date();
   const amzDate = now.toISOString().replace(/[:-]|\.\d{3}/g, ''); // YYYYMMDDТHHMMSSZ

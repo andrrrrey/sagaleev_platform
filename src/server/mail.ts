@@ -1,4 +1,5 @@
 import { env } from '@/lib/env';
+import { getSetting } from '@/server/settings/store';
 
 export type MailMessage = { to: string; subject: string; text: string };
 
@@ -8,7 +9,8 @@ export type MailMessage = { to: string; subject: string; text: string };
  * Логи без ПДн-содержимого писем в production.
  */
 export async function sendMail(msg: MailMessage): Promise<void> {
-  if (!env.SMTP_URL) {
+  const smtpUrl = await getSetting('SMTP_URL');
+  if (!smtpUrl) {
     if (env.NODE_ENV !== 'production') {
       // eslint-disable-next-line no-console
       console.info(`[mail:dev] → ${msg.to} :: ${msg.subject}\n${msg.text}`);

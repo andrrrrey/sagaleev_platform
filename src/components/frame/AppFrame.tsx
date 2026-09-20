@@ -24,7 +24,7 @@ export function AppFrame({
     <div className="bg-hatch relative mx-auto flex w-full max-w-[1440px] flex-1 flex-col overflow-hidden rounded-2xl bg-paper shadow-2xl ring-1 ring-white/10 md:rounded-[2rem]">
       <CornerBrackets topLabel={topLabel} bottomLabel={bottomLabel} />
       {nav}
-      <main className="relative z-10 flex w-full flex-1 flex-col">{children}</main>
+      <main className="relative z-10 flex w-full min-h-0 flex-1 flex-col overflow-y-auto">{children}</main>
       {mobileNav}
       <TickBorder />
     </div>

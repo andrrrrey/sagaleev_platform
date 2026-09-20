@@ -37,6 +37,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
         if (!user || !user.passwordHash || user.deletedAt) return null;
+        if (user.blockedAt) return null; // доступ заблокирован админом
         if (!user.emailVerifiedAt) return null; // email обязателен до входа
 
         const ok = await argon2.verify(user.passwordHash, password);

@@ -1,30 +1,40 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { requireRole } from '@/server/access/guard';
 import { prisma } from '@/server/db';
 import { env } from '@/lib/env';
 import { CURATOR_SYSTEM_DEFAULT } from '@/server/curator/prompt';
 import { rebuildLeaderboard } from '@/server/admin/settings';
+import { describeSettings } from '@/server/settings/store';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Panel } from '@/components/ui/Panel';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { CuratorPromptForm } from '@/components/admin/CuratorPromptForm';
+import { IntegrationSettingsForm } from '@/components/admin/IntegrationSettingsForm';
 
 export const metadata: Metadata = { title: 'Админ — настройки' };
 
 export default async function AdminSettingsPage() {
   await requireRole(['ADMIN']);
-  const curatorDoc = await prisma.legalDocument.findFirst({
-    where: { kind: 'CURATOR_SYSTEM' },
-    orderBy: { publishedAt: 'desc' },
-  });
+  const [curatorDoc, settings] = await Promise.all([
+    prisma.legalDocument.findFirst({
+      where: { kind: 'CURATOR_SYSTEM' },
+      orderBy: { publishedAt: 'desc' },
+    }),
+    describeSettings(),
+  ]);
+
+  const byKey = Object.fromEntries(settings.map((s) => [s.key, s]));
+  const isSet = (key: string) => Boolean(byKey[key]?.isSet);
+  const curatorEnabled = byKey['CURATOR_ENABLED']?.value === 'true';
 
   const statuses: { label: string; ok: boolean; note: string }[] = [
     { label: 'Провайдер оплаты', ok: env.PAYMENT_PROVIDER === 'yookassa', note: env.PAYMENT_PROVIDER },
-    { label: 'Telegram-бот', ok: Boolean(env.TELEGRAM_BOT_TOKEN), note: env.TELEGRAM_BOT_TOKEN ? 'токен задан' : 'не настроен' },
-    { label: 'Куратор (LLM)', ok: env.CURATOR_ENABLED && Boolean(env.ANTHROPIC_API_KEY), note: env.CURATOR_ENABLED ? 'включён' : 'выключен' },
-    { label: 'Хранилище S3', ok: Boolean(env.S3_BUCKET), note: env.S3_BUCKET ? 'настроено' : 'не настроено' },
+    { label: 'Telegram-бот', ok: isSet('TELEGRAM_BOT_TOKEN'), note: isSet('TELEGRAM_BOT_TOKEN') ? 'токен задан' : 'не настроен' },
+    { label: 'Куратор (LLM)', ok: curatorEnabled && isSet('ANTHROPIC_API_KEY'), note: curatorEnabled ? 'включён' : 'выключен' },
+    { label: 'Хранилище S3', ok: isSet('S3_BUCKET'), note: isSet('S3_BUCKET') ? 'настроено' : 'не настроено' },
   ];
 
   return (
@@ -40,6 +50,12 @@ export default async function AdminSettingsPage() {
           </Panel>
         ))}
       </section>
+
+      <div className="mb-6">
+        <Panel title="Интеграции // API-ключи">
+          <IntegrationSettingsForm settings={settings} />
+        </Panel>
+      </div>
 
       <div className="mb-6">
         <Panel title="Куратор // Системный промпт">
@@ -58,6 +74,13 @@ export default async function AdminSettingsPage() {
           </Button>
         </form>
       </Panel>
+
+      <p className="mt-6 font-mono text-[10px] uppercase tracking-widest text-t400">
+        Инструкция по работе с платформой →{' '}
+        <Link href="/admin/help" className="text-accent hover:underline">
+          /admin/help
+        </Link>
+      </p>
     </div>
   );
 }

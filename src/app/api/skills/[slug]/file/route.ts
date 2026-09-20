@@ -20,13 +20,13 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
   const { slug } = await params;
   try {
     const { fileKey, fileName } = await assertSkillFileAccess(actor, slug);
-    const url = presignGetUrl(fileKey);
+    const url = await presignGetUrl(fileKey);
     if (!url) {
       return NextResponse.json(
         {
           error: {
             code: 'STORAGE_NOT_CONFIGURED',
-            message: isStorageConfigured() ? 'Не удалось сформировать ссылку' : 'Хранилище файлов не настроено (dev)',
+            message: (await isStorageConfigured()) ? 'Не удалось сформировать ссылку' : 'Хранилище файлов не настроено (dev)',
           },
         },
         { status: 503 },

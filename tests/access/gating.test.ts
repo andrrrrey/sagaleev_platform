@@ -11,6 +11,7 @@ import {
   canReadPayments,
   canReadStudentPII,
   canEditContent,
+  canManageUsers,
 } from '@/server/access/staff';
 
 const selfActor: Actor = { id: 'u1', role: 'STUDENT', plan: 'SELF', enrollmentActive: true };
@@ -135,5 +136,14 @@ describe('05 §2.6 — EDITOR не видит оплат и ПДн', () => {
     expect(canReadPayments('ADMIN')).toBe(true);
     expect(canReadStudentPII('ADMIN')).toBe(true);
     expect(canEditContent('ADMIN')).toBe(true);
+  });
+});
+
+describe('управление пользователями (создание/пароль/блокировка)', () => {
+  it('только ADMIN управляет пользователями', () => {
+    expect(canManageUsers('ADMIN')).toBe(true);
+    expect(canManageUsers('EDITOR')).toBe(false);
+    expect(canManageUsers('STUDENT')).toBe(false);
+    expect(canManageUsers('CONTRACTOR')).toBe(false);
   });
 });

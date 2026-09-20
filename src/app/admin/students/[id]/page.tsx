@@ -11,6 +11,7 @@ import { Table, THead, Th, TRow, Td } from '@/components/ui/Table';
 import { Label, Select, Input } from '@/components/ui/Field';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
+import { UserRowActions } from '@/components/admin/UserRowActions';
 
 export const metadata: Metadata = { title: 'Студент' };
 
@@ -78,6 +79,25 @@ export default async function StudentCardPage({ params }: { params: Promise<{ id
               Выдать тариф
             </Button>
           </form>
+        </Panel>
+      </div>
+
+      <div className="mt-6">
+        <Panel
+          title="Доступ // Пароль и блокировка"
+          status={
+            <StatusPill muted={Boolean(user.blockedAt)}>
+              {user.blockedAt ? 'Заблокирован' : 'Активен'}
+            </StatusPill>
+          }
+        >
+          <div className="flex flex-col gap-3 p-6">
+            <p className="text-sm font-light text-t600">
+              Блокировка мгновенно закрывает вход и текущие сессии. Смена пароля не уведомляет
+              студента — сообщите новый пароль отдельно.
+            </p>
+            <UserRowActions userId={user.id} name={user.name} blocked={Boolean(user.blockedAt)} />
+          </div>
         </Panel>
       </div>
 

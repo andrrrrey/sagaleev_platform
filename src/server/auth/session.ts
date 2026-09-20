@@ -11,6 +11,14 @@ export const getActor = cache(async (): Promise<Actor | null> => {
   const session = await auth();
   if (!session?.user?.id) return null;
 
+  // Заблокированные/удалённые пользователи теряют доступ немедленно,
+  // даже при живой JWT-сессии (её достаточно, чтобы выйти на /login).
+  const account = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { blockedAt: true, deletedAt: true },
+  });
+  if (!account || account.blockedAt || account.deletedAt) return null;
+
   const enrollment = await prisma.enrollment.findFirst({
     where: {
       userId: session.user.id,

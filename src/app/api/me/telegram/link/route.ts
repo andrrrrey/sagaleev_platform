@@ -11,7 +11,7 @@ export async function POST() {
   const actor = await getActor();
   if (!actor) return errorResponse(new HttpError('UNAUTHENTICATED'));
   const token = await issueToken(actor.id, 'TELEGRAM_LINK');
-  return NextResponse.json({ token, link: telegramStartLink(token) });
+  return NextResponse.json({ token, link: await telegramStartLink(token) });
 }
 
 /** Отвязать Telegram. */

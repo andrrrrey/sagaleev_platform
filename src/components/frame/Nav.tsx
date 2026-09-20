@@ -10,7 +10,7 @@ import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { STUDENT_NAV } from './nav-config';
 
 const PRIMARY = STUDENT_NAV.slice(0, 4); // Главная · Маршрут · Скиллы · Юзкейсы
-const MORE = STUDENT_NAV.slice(4, 7); // Уроки · Эфиры · Лидерборд
+const MORE = STUDENT_NAV.slice(4, 8); // Уроки · Эфиры · Лидерборд · Инструкция
 
 function isActive(pathname: string, href: string): boolean {
   if (href === '/') return pathname === '/';
