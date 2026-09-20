@@ -14,6 +14,7 @@ import { Button, buttonClass } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { OnboardingWizard } from '@/components/profile/OnboardingWizard';
 import { ExportProfileButton } from '@/components/profile/ExportProfileButton';
+import { TelegramPanel } from '@/components/profile/TelegramPanel';
 import { setLeaderboardVisibility, setNotifyPrefs } from '@/server/profile/settings-actions';
 
 export const metadata: Metadata = { title: 'Профиль' };
@@ -156,6 +157,14 @@ export default async function ProfilePage() {
     </div>
   );
 
+  const telegramTab = (
+    <div className="flex flex-col gap-4">
+      <Panel title="Telegram // Привязка">
+        <TelegramPanel linked={Boolean(user.telegramChatId)} username={user.telegramUsername} />
+      </Panel>
+    </div>
+  );
+
   const privacyTab = (
     <div className="flex flex-col gap-4">
       <Panel title="Согласия // 152-ФЗ">
@@ -211,6 +220,7 @@ export default async function ProfilePage() {
           { key: 'profile', label: 'Профиль', content: profileTab },
           { key: 'business', label: 'Бизнес-профиль', content: businessTab },
           { key: 'billing', label: 'Тариф и оплата', content: billingTab },
+          { key: 'telegram', label: 'Telegram', content: telegramTab },
           { key: 'privacy', label: 'Приватность', content: privacyTab },
         ]}
       />

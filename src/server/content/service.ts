@@ -3,6 +3,7 @@ import { prisma } from '@/server/db';
 import { canAccess, assertAccess, type Actor } from '@/server/access';
 import { HttpError } from '@/server/access/errors';
 import { canTransition } from '@/server/progress/scoring';
+import { rebuildLeaderboardEntry } from '@/server/progress/leaderboard';
 import {
   parseTimecodes,
   parseKpis,
@@ -247,6 +248,7 @@ async function markViewedOnce(userId: string, unitId: string): Promise<void> {
     create: { userId, unitId, status: 'VIEWED', viewedAt: new Date() },
     update: { status: 'VIEWED', viewedAt: new Date() },
   });
+  await rebuildLeaderboardEntry(userId);
 }
 
 /** Смена статуса юнита студентом с proof. RESULT требует ≥ 1 MoneyEntry. */
@@ -280,4 +282,5 @@ export async function setContentProgress(
     create: { userId: actor.id, unitId: u.id, status, proofNote: proofNote ?? null, ...stamps },
     update: { status, proofNote: proofNote ?? null, ...stamps },
   });
+  await rebuildLeaderboardEntry(actor.id);
 }

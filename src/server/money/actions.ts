@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { prisma } from '@/server/db';
 import { getActor } from '@/server/auth/session';
+import { rebuildLeaderboardEntry } from '@/server/progress/leaderboard';
 import { type ActionState, fieldErrorsFromZod } from '@/lib/action-state';
 
 const moneySchema = z.object({
@@ -29,8 +30,10 @@ export async function addMoneyEntry(_prev: ActionState, formData: FormData): Pro
       note: parsed.data.note || null,
     },
   });
+  await rebuildLeaderboardEntry(actor.id);
 
   revalidatePath('/');
+  revalidatePath('/leaderboard');
   revalidatePath('/profile');
   return { ok: true, message: 'Запись добавлена' };
 }

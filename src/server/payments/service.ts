@@ -80,6 +80,38 @@ export async function createCheckout(input: {
 }
 
 /**
+ * Дочитать PENDING-платежи старше 15 минут у провайдера (джоба
+ * payments.reconcile, docs/05 §9). Возвращает число обработанных.
+ */
+export async function reconcilePendingPayments(): Promise<number> {
+  const cutoff = new Date(Date.now() - 15 * 60_000);
+  const pending = await prisma.payment.findMany({
+    where: { status: 'PENDING', providerPaymentId: { not: null }, createdAt: { lt: cutoff } },
+    select: { providerPaymentId: true },
+    take: 100,
+  });
+  const provider = getPaymentProvider();
+  let handled = 0;
+  for (const p of pending) {
+    if (!p.providerPaymentId) continue;
+    try {
+      const fresh = await provider.getPayment(p.providerPaymentId);
+      if (fresh.status !== 'pending') {
+        await applyPaymentConfirmation({
+          providerPaymentId: p.providerPaymentId,
+          status: fresh.status,
+          raw: fresh.raw,
+        });
+        handled += 1;
+      }
+    } catch {
+      /* пропускаем, попробуем в следующий раз */
+    }
+  }
+  return handled;
+}
+
+/**
  * Идемпотентная обработка подтверждения платежа. Активация Enrollment
  * происходит ТОЛЬКО здесь (не по редиректу пользователя). docs/05 §4.2.
  */
