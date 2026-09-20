@@ -92,6 +92,7 @@ model User {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
   deletedAt         DateTime?
+  blockedAt         DateTime? // блокировка доступа админом
 
   businessProfile BusinessProfile?
   enrollments     Enrollment[]
@@ -472,6 +473,15 @@ model LegalDocument {
   publishedAt DateTime @default(now())
 
   @@unique([kind, version])
+}
+
+/// Значения конфигурации/интеграций, редактируемые в админке (API-ключи и т.п.).
+/// Пустое/отсутствующее значение → fallback на переменную окружения.
+model AppSetting {
+  key       String   @id
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt
+  updatedBy String?
 }
 
 // [Ф2 — НЕ СОЗДАВАТЬ]: Contractor, Order, Subscription, MarketplaceTransaction
