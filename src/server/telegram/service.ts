@@ -1,5 +1,5 @@
 import { prisma } from '@/server/db';
-import { env } from '@/lib/env';
+import { getSetting } from '@/server/settings/store';
 
 const API = 'https://api.telegram.org';
 
@@ -8,9 +8,10 @@ const API = 'https://api.telegram.org';
  * очищаем telegramChatId (docs/05 §7). Возвращает успех.
  */
 export async function sendTelegramMessage(chatId: string, text: string): Promise<boolean> {
-  if (!env.TELEGRAM_BOT_TOKEN) return false;
+  const token = await getSetting('TELEGRAM_BOT_TOKEN');
+  if (!token) return false;
   try {
-    const res = await fetch(`${API}/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+    const res = await fetch(`${API}/bot${token}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML', disable_web_page_preview: true }),
@@ -36,7 +37,8 @@ export async function notifyTelegram(userId: string, text: string): Promise<void
 }
 
 /** Deeplink привязки: t.me/<bot>?start=<token>. */
-export function telegramStartLink(token: string): string | null {
-  if (!env.TELEGRAM_BOT_USERNAME) return null;
-  return `https://t.me/${env.TELEGRAM_BOT_USERNAME}?start=${token}`;
+export async function telegramStartLink(token: string): Promise<string | null> {
+  const username = await getSetting('TELEGRAM_BOT_USERNAME');
+  if (!username) return null;
+  return `https://t.me/${username}?start=${token}`;
 }

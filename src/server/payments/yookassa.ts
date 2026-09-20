@@ -1,4 +1,4 @@
-import { env } from '@/lib/env';
+import { getSetting } from '@/server/settings/store';
 import type {
   CreatePaymentInput,
   CreatePaymentResult,
@@ -31,9 +31,11 @@ function toStatus(s: YookassaPayment['status']): ProviderStatus {
 export class YookassaProvider implements PaymentProvider {
   readonly name = 'yookassa';
 
-  private authHeader(): string {
-    const shopId = env.YOOKASSA_SHOP_ID;
-    const secret = env.YOOKASSA_SECRET_KEY;
+  private async authHeader(): Promise<string> {
+    const [shopId, secret] = await Promise.all([
+      getSetting('YOOKASSA_SHOP_ID'),
+      getSetting('YOOKASSA_SECRET_KEY'),
+    ]);
     if (!shopId || !secret) throw new Error('ЮKassa не сконфигурирована (SHOP_ID/SECRET_KEY).');
     return `Basic ${Buffer.from(`${shopId}:${secret}`).toString('base64')}`;
   }
@@ -43,7 +45,7 @@ export class YookassaProvider implements PaymentProvider {
     const res = await fetch(`${API}/payments`, {
       method: 'POST',
       headers: {
-        Authorization: this.authHeader(),
+        Authorization: await this.authHeader(),
         'Idempotence-Key': input.idempotenceKey,
         'Content-Type': 'application/json',
       },
@@ -79,7 +81,7 @@ export class YookassaProvider implements PaymentProvider {
 
   async getPayment(providerPaymentId: string): Promise<GetPaymentResult> {
     const res = await fetch(`${API}/payments/${providerPaymentId}`, {
-      headers: { Authorization: this.authHeader() },
+      headers: { Authorization: await this.authHeader() },
     });
     if (!res.ok) throw new Error(`ЮKassa getPayment: ${res.status}`);
     const data = (await res.json()) as YookassaPayment;

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/server/db';
-import { env } from '@/lib/env';
+import { getSetting } from '@/server/settings/store';
 import { consumeToken } from '@/server/auth/tokens';
 import { sendTelegramMessage } from '@/server/telegram/service';
 
@@ -9,9 +9,10 @@ import { sendTelegramMessage } from '@/server/telegram/service';
  * Проверка секрета через заголовок X-Telegram-Bot-Api-Secret-Token.
  */
 export async function POST(req: Request) {
-  if (env.TELEGRAM_WEBHOOK_SECRET) {
+  const webhookSecret = await getSetting('TELEGRAM_WEBHOOK_SECRET');
+  if (webhookSecret) {
     const secret = req.headers.get('x-telegram-bot-api-secret-token');
-    if (secret !== env.TELEGRAM_WEBHOOK_SECRET) {
+    if (secret !== webhookSecret) {
       return NextResponse.json({ error: { code: 'FORBIDDEN' } }, { status: 403 });
     }
   }

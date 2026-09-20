@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/server/db';
-import { env } from '@/lib/env';
+import { getSetting, getSettingBool } from '@/server/settings/store';
 import { planLevel } from '@/server/access/plans';
 import {
   CURATOR_SYSTEM_DEFAULT,
@@ -67,7 +67,8 @@ export async function collectCuratorContext(userId: string): Promise<CuratorCont
 }
 
 async function callCurator(system: string, user: string): Promise<CuratorResponse> {
-  const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+  const apiKey = await getSetting('ANTHROPIC_API_KEY');
+  const client = new Anthropic({ apiKey });
   const response = await client.messages.create({
     model: CURATOR_MODEL,
     max_tokens: 1500,
@@ -96,7 +97,11 @@ async function callCurator(system: string, user: string): Promise<CuratorRespons
  * Гейт: CURATOR_ENABLED + ключ + активный тариф уровня ≥ 2 (SUPPORT).
  */
 export async function runCuratorForUser(userId: string): Promise<'OK' | 'SKIPPED' | 'FAILED'> {
-  if (!env.CURATOR_ENABLED || !env.ANTHROPIC_API_KEY) return 'SKIPPED';
+  const [curatorEnabled, apiKey] = await Promise.all([
+    getSettingBool('CURATOR_ENABLED'),
+    getSetting('ANTHROPIC_API_KEY'),
+  ]);
+  if (!curatorEnabled || !apiKey) return 'SKIPPED';
 
   const enrollment = await prisma.enrollment.findFirst({
     where: { userId, status: 'ACTIVE' },
