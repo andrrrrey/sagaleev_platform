@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { requireRole } from '@/server/access/guard';
 import { prisma } from '@/server/db';
-import { grantPlanManual } from '@/server/admin/students';
+import { grantPlanManual, revokePlan } from '@/server/admin/students';
 import { formatDate, formatRubles } from '@/lib/utils';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Panel } from '@/components/ui/Panel';
@@ -76,9 +76,18 @@ export default async function StudentCardPage({ params }: { params: Promise<{ id
             </div>
             <Button type="submit" className="self-start">
               <Icon name="wallet-money-linear" />
-              Выдать тариф
+              {activePlan ? 'Сменить тариф' : 'Включить тариф'}
             </Button>
           </form>
+          {activePlan ? (
+            <form action={revokePlan} className="border-t border-line p-6">
+              <input type="hidden" name="userId" value={user.id} />
+              <Button type="submit" variant="secondary" className="self-start">
+                <Icon name="close-circle-linear" />
+                Отключить доступ
+              </Button>
+            </form>
+          ) : null}
         </Panel>
       </div>
 
