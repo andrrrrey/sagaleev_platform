@@ -62,10 +62,16 @@ export default async function ProfilePage() {
             <Label>Телефон</Label>
             <div className="font-mono text-sm text-t800">{user.phone ?? '—'}</div>
           </div>
-          <Link href="/forgot" className={buttonClass('secondary', 'self-start')}>
-            <Icon name="shield-check-linear" />
-            Сменить пароль
-          </Link>
+          <div className="flex flex-wrap gap-3">
+            <Link href="/forgot" className={buttonClass('secondary', 'self-start')}>
+              <Icon name="shield-check-linear" />
+              Сменить пароль
+            </Link>
+            <Link href="/help" className={buttonClass('secondary', 'self-start')}>
+              <Icon name="notebook-linear" />
+              Инструкция
+            </Link>
+          </div>
         </div>
       </Panel>
     </div>
