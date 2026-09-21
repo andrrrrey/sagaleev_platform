@@ -29,9 +29,26 @@ export default async function RoutePage() {
     <div className="px-6 py-8 md:px-10 md:py-12">
       <PageHeader
         kicker="Маршрут"
-        title="Твой маркетинговый агент за 3 дня"
-        description="Спина портала: от окружения до вывода агента в Telegram. Отмечай шаги и фиксируй артефакты."
+        title="Твой бизнес-агент за 3 дня"
+        description="Production-маршрут: от одного измеримого процесса и безопасного VPS до Hermes-агента 24/7 в Telegram."
       />
+
+      <div className="mb-8 max-w-3xl border border-line bg-paper-panel p-5 text-sm font-light leading-relaxed text-t700">
+        <p>
+          За 15 шагов ты соберёшь агента на Ubuntu VPS, задашь ему личность,
+          бизнес-память и границы, проверишь первый workflow и запустишь Telegram gateway
+          с allowlist и автозапуском.
+        </p>
+        <a
+          href="https://github.com/andrrrrey/agent"
+          target="_blank"
+          rel="noreferrer"
+          className="mt-3 inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-accent hover:underline"
+        >
+          Исходная подробная инструкция
+          <Icon name="arrow-right-linear" />
+        </a>
+      </div>
 
       {days.length === 0 ? (
         <div className="max-w-xl">
