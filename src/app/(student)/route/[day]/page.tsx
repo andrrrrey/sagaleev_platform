@@ -70,6 +70,13 @@ export default async function RouteDayPage({ params }: { params: Promise<{ day: 
         </div>
       </div>
 
+      <div className="mb-6 border border-accent/30 bg-accent/[0.04] p-4 text-sm font-light leading-relaxed text-t700">
+        <strong className="font-medium text-t900">Если стало непонятно — не оставайся один.</strong>{' '}
+        Скопируй название шага и безопасный текст ошибки в ChatGPT/Codex и попроси: «Объясни только одно следующее действие и назови окно, куда это вводить». Пароли, токены, API-ключи, IP и данные клиентов не копируй. Можно также{' '}
+        <Link href="/profile?tab=codex" className="text-accent underline">подключить Codex к маршруту через MCP</Link>{' '}
+        или <Link href="/help" className="text-accent underline">написать в поддержку</Link>.
+      </div>
+
       <div className="flex flex-col gap-3">
         {view.steps.map((step, i) => (
           <RouteStepItem key={step.id} step={step} dayNumber={view.dayNumber} index={i} />

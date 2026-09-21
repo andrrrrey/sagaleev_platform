@@ -15,6 +15,8 @@ import { Icon } from '@/components/ui/Icon';
 import { OnboardingWizard } from '@/components/profile/OnboardingWizard';
 import { ExportProfileButton } from '@/components/profile/ExportProfileButton';
 import { TelegramPanel } from '@/components/profile/TelegramPanel';
+import { CodexMcpPanel } from '@/components/profile/CodexMcpPanel';
+import { getMcpTokenStatus } from '@/server/mcp/auth';
 import { setLeaderboardVisibility, setNotifyPrefs } from '@/server/profile/settings-actions';
 
 export const metadata: Metadata = { title: 'Профиль' };
@@ -27,13 +29,18 @@ const STATUS_LABEL: Record<string, string> = {
   REFUNDED: 'Возврат',
 };
 
-export default async function ProfilePage() {
+export default async function ProfilePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const { tab } = await searchParams;
   const actor = await getActor();
   if (!actor) redirect('/login');
   const user = await getCurrentUser();
   if (!user) redirect('/login');
 
-  const [profile, enrollment, payments] = await Promise.all([
+  const [profile, enrollment, payments, mcpToken] = await Promise.all([
     prisma.businessProfile.findUnique({ where: { userId: user.id } }),
     prisma.enrollment.findFirst({
       where: { userId: user.id, status: 'ACTIVE' },
@@ -44,6 +51,7 @@ export default async function ProfilePage() {
       orderBy: { createdAt: 'desc' },
       take: 20,
     }),
+    getMcpTokenStatus(user.id),
   ]);
 
   const profileTab = (
@@ -171,6 +179,17 @@ export default async function ProfilePage() {
     </div>
   );
 
+  const codexTab = (
+    <Panel title="Codex / ChatGPT // Помощник по маршруту">
+      <div className="p-6">
+        <CodexMcpPanel
+          initialActive={mcpToken.active}
+          initialExpiresAt={mcpToken.expiresAt?.toISOString() ?? null}
+        />
+      </div>
+    </Panel>
+  );
+
   const privacyTab = (
     <div className="flex flex-col gap-4">
       <Panel title="Согласия // 152-ФЗ">
@@ -222,11 +241,13 @@ export default async function ProfilePage() {
     <div className="px-6 py-8 md:px-10 md:py-12">
       <PageHeader kicker="Кабинет" title="Профиль" />
       <Tabs
+        initialKey={tab === 'codex' ? 'codex' : undefined}
         items={[
           { key: 'profile', label: 'Профиль', content: profileTab },
           { key: 'business', label: 'Бизнес-профиль', content: businessTab },
           { key: 'billing', label: 'Тариф и оплата', content: billingTab },
           { key: 'telegram', label: 'Telegram', content: telegramTab },
+          { key: 'codex', label: 'Codex / MCP', content: codexTab },
           { key: 'privacy', label: 'Приватность', content: privacyTab },
         ]}
       />

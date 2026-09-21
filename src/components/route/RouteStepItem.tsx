@@ -87,6 +87,10 @@ export function RouteStepItem({
             </Link>
           ) : null}
 
+          <div className="border border-line/70 bg-surface px-4 py-3 text-xs font-light leading-relaxed text-t600">
+            <strong className="font-medium text-t900">Застрял на этом шаге?</strong> Скопируй название шага и безопасный текст ошибки в ChatGPT/Codex. Попроси объяснить одно следующее действие и указать нужное окно. Не копируй секреты. Если не помогло — <Link href="/help" className="text-accent underline">обратись в поддержку</Link>.
+          </div>
+
           {/* Фиксация артефакта */}
           <form action={action} className="flex flex-col gap-4 border-t border-line/60 pt-4">
             <input type="hidden" name="stepId" value={step.id} />
