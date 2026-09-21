@@ -52,7 +52,7 @@ export function RouteStepItem({
         <div className="flex flex-col gap-5 border-t border-line/60 p-4 md:p-6">
           {step.body ? (
             <div
-              className="text-sm font-light leading-relaxed text-t700 [&_a]:text-accent [&_a]:underline"
+              className="text-sm font-light leading-relaxed text-t700 [&_a]:text-accent [&_a]:underline [&_p+p]:mt-3 [&_strong]:font-medium [&_strong]:text-t900"
               dangerouslySetInnerHTML={{ __html: step.body }}
             />
           ) : null}
