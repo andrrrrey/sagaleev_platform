@@ -59,7 +59,13 @@ export function RouteStepItem({
 
           {step.commands.map((c, i) => (
             <div key={i} className="flex flex-col gap-2">
-              <LinedBlock label={c.kind === 'prompt' ? `Промпт · ${c.label}` : `Команда · ${c.label}`}>
+              <LinedBlock
+                label={
+                  c.kind === 'prompt'
+                    ? `Текст для ИИ · ${c.label}`
+                    : `Команда для терминала · ${c.label}`
+                }
+              >
                 <pre className="whitespace-pre-wrap break-words font-mono text-sm leading-[28px]">
                   {c.text}
                 </pre>
@@ -92,14 +98,14 @@ export function RouteStepItem({
             />
             <div>
               <Label htmlFor={`note-${step.id}`}>
-                Что получилось{step.artifactHint ? ` — ${step.artifactHint}` : ''}
+                Что сохранить после шага{step.artifactHint ? ` — ${step.artifactHint}` : ''}
               </Label>
               <Textarea
                 id={`note-${step.id}`}
                 name="artifactNote"
                 rows={2}
                 defaultValue={step.artifactNote ?? ''}
-                placeholder="Опиши результат или вставь текст"
+                placeholder="Вставь только безопасный результат. Пароли, токены и API-ключи сюда не добавляй."
               />
               <FieldError>{state.fieldErrors?.artifactNote}</FieldError>
             </div>

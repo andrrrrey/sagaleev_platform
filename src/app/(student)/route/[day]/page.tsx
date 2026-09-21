@@ -55,6 +55,21 @@ export default async function RouteDayPage({ params }: { params: Promise<{ day: 
         <ProgressBar value={pct} />
       </div>
 
+      <div className="mb-6 grid gap-3 text-xs font-light leading-relaxed text-t700 md:grid-cols-3">
+        <div className="border border-line bg-paper-panel p-4">
+          <strong className="font-medium text-t900">Текст для ИИ</strong>
+          <p className="mt-1">Нажми «Скопировать», открой ChatGPT или Codex, вставь в новое сообщение и отправь.</p>
+        </div>
+        <div className="border border-line bg-paper-panel p-4">
+          <strong className="font-medium text-t900">Команда для терминала</strong>
+          <p className="mt-1">Вставляй только в указанное окно: свой Terminal/PowerShell или окно SSH с сервером.</p>
+        </div>
+        <div className="border border-line bg-paper-panel p-4">
+          <strong className="font-medium text-t900">Что сохранить после шага</strong>
+          <p className="mt-1">Сюда внеси безопасный итог. Никогда не сохраняй пароль, токен бота или API-ключ.</p>
+        </div>
+      </div>
+
       <div className="flex flex-col gap-3">
         {view.steps.map((step, i) => (
           <RouteStepItem key={step.id} step={step} dayNumber={view.dayNumber} index={i} />
