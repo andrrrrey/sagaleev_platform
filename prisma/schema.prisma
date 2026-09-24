@@ -42,6 +42,7 @@ enum PaymentStatus {
 enum PaymentKind {
   PURCHASE
   UPGRADE
+  RENEWAL
 }
 
 enum UnitType {
@@ -136,14 +137,14 @@ model Cohort {
 
 // email verification / password reset / telegram link tokens
 model AuthToken {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   kind      String // EMAIL_VERIFY | PASSWORD_RESET | TELEGRAM_LINK
-  tokenHash String   @unique
+  tokenHash String    @unique
   expiresAt DateTime
   usedAt    DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
   @@index([userId, kind])
 }
@@ -161,17 +162,20 @@ model Plan {
 }
 
 model Enrollment {
-  id             String       @id @default(cuid())
-  userId         String
-  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  planCode       PlanCode
-  plan           Plan         @relation(fields: [planCode], references: [code])
-  status         EnrollStatus @default(PENDING)
-  activatedAt    DateTime?
-  expiresAt      DateTime?
-  grantedByAdmin Boolean      @default(false)
-  createdAt      DateTime     @default(now())
-  payments       Payment[]
+  id              String       @id @default(cuid())
+  userId          String
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planCode        PlanCode
+  plan            Plan         @relation(fields: [planCode], references: [code])
+  status          EnrollStatus @default(PENDING)
+  activatedAt     DateTime?
+  expiresAt       DateTime?
+  paymentMethodId String?
+  autoRenew       Boolean      @default(false)
+  canceledAt      DateTime?
+  grantedByAdmin  Boolean      @default(false)
+  createdAt       DateTime     @default(now())
+  payments        Payment[]
 
   @@index([userId, status])
 }
@@ -364,10 +368,10 @@ model Progress {
   proofNote     String?        @db.Text
   proofUrl      String?
   updatedAt     DateTime       @updatedAt
+  // CHECK (unitId IS NOT NULL) <> (skillId IS NOT NULL) — добавляется SQL-миграцией
 
   @@unique([userId, unitId])
   @@unique([userId, skillId])
-  // CHECK (unitId IS NOT NULL) <> (skillId IS NOT NULL) — добавляется SQL-миграцией
 }
 
 model MoneyEntry {

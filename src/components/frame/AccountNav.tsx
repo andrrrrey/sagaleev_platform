@@ -15,6 +15,13 @@ export function AccountNav({ brand }: { brand: string }) {
       </Link>
       <div className="flex items-center gap-3 sm:gap-5">
         <ThemeToggle />
+        <Link
+          href="/profile"
+          className="flex items-center gap-2 font-mono text-xs text-t500 transition-colors hover:text-accent"
+        >
+          <Icon name="user-linear" />
+          <span className="hidden sm:inline">Личный кабинет</span>
+        </Link>
         <form action={signOutAction}>
           <button
             type="submit"

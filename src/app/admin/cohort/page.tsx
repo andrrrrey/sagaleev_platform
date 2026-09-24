@@ -15,9 +15,7 @@ export const metadata: Metadata = { title: 'Админ — поток' };
 
 const PLAN_TABS: { key: string; label: string; plan?: PlanCode }[] = [
   { key: 'all', label: 'Все' },
-  { key: 'SELF', label: 'SELF', plan: 'SELF' },
-  { key: 'SUPPORT', label: 'SUPPORT', plan: 'SUPPORT' },
-  { key: 'VIP', label: 'VIP', plan: 'VIP' },
+  { key: 'SUPPORT', label: 'Единая подписка', plan: 'SUPPORT' },
 ];
 
 export default async function AdminCohortPage({

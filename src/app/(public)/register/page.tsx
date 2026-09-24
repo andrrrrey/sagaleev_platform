@@ -19,7 +19,7 @@ export default async function RegisterPage({
         label: 'Registry // New',
         lines: [
           'Поток-1 стартует в ноябре 2026.',
-          '3 тарифа: SELF / SUPPORT / VIP.',
+          'Одна подписка: весь контент и агент-куратор за 5 000 ₽ в месяц.',
           'Данные хранятся в РФ-контуре (152-ФЗ).',
         ],
       }}

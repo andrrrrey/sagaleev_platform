@@ -2,6 +2,8 @@ import { randomUUID } from 'node:crypto';
 import type {
   CreatePaymentInput,
   CreatePaymentResult,
+  CreateRecurringPaymentInput,
+  CreateRecurringPaymentResult,
   GetPaymentResult,
   PaymentProvider,
   VerifyWebhookResult,
@@ -23,8 +25,35 @@ export class MockProvider implements PaymentProvider {
     return { providerPaymentId, confirmationUrl: url.toString() };
   }
 
+  async createRecurringPayment(
+    input: CreateRecurringPaymentInput,
+  ): Promise<CreateRecurringPaymentResult> {
+    const providerPaymentId = `mock_${randomUUID()}`;
+    return {
+      providerPaymentId,
+      status: 'succeeded',
+      paid: true,
+      savedPaymentMethodId: input.paymentMethodId,
+      raw: {
+        id: providerPaymentId,
+        status: 'succeeded',
+        paid: true,
+        payment_method: { id: input.paymentMethodId, saved: true },
+      },
+    };
+  }
+
   async getPayment(providerPaymentId: string): Promise<GetPaymentResult> {
-    return { status: 'succeeded', paid: true, raw: { providerPaymentId, mock: true } };
+    return {
+      status: 'succeeded',
+      paid: true,
+      raw: {
+        providerPaymentId,
+        mock: true,
+        payment_method: { id: `saved_${providerPaymentId}`, saved: true },
+      },
+      savedPaymentMethodId: `saved_${providerPaymentId}`,
+    };
   }
 
   async verifyWebhook(req: Request): Promise<VerifyWebhookResult> {

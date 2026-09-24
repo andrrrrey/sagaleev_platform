@@ -76,10 +76,8 @@ export default async function AdminStudentsPage() {
                           <form action={quickGrantPlan} className="flex items-center gap-2">
                             <input type="hidden" name="userId" value={s.id} />
                             <div className="w-28">
-                              <Select name="planCode" defaultValue={activeCode ?? 'SELF'}>
-                                <option value="SELF">SELF</option>
-                                <option value="SUPPORT">SUPPORT</option>
-                                <option value="VIP">VIP</option>
+                              <Select name="planCode" defaultValue="SUPPORT">
+                                <option value="SUPPORT">Единая подписка</option>
                               </Select>
                             </div>
                             <Button type="submit" variant="ghost">

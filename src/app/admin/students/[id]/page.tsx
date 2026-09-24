@@ -64,10 +64,8 @@ export default async function StudentCardPage({ params }: { params: Promise<{ id
             <input type="hidden" name="userId" value={user.id} />
             <div>
               <Label htmlFor="planCode">Тариф</Label>
-              <Select id="planCode" name="planCode" defaultValue={activePlan ?? 'SELF'}>
-                <option value="SELF">SELF</option>
-                <option value="SUPPORT">SUPPORT</option>
-                <option value="VIP">VIP</option>
+              <Select id="planCode" name="planCode" defaultValue="SUPPORT">
+                <option value="SUPPORT">Единая подписка</option>
               </Select>
             </div>
             <div>

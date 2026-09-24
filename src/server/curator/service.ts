@@ -163,10 +163,14 @@ export async function runCuratorForUser(userId: string): Promise<'OK' | 'SKIPPED
   return 'OK';
 }
 
-/** Джоба недели: разбор всех SUPPORT/VIP с активным доступом. */
+/** Джоба недели: разбор всех студентов с активной единой подпиской. */
 export async function runCuratorWeekly(): Promise<{ ok: number; failed: number; skipped: number }> {
   const enrollments = await prisma.enrollment.findMany({
-    where: { status: 'ACTIVE', planCode: { in: ['SUPPORT', 'VIP'] } },
+    where: {
+      status: 'ACTIVE',
+      planCode: 'SUPPORT',
+      OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+    },
     select: { userId: true },
     distinct: ['userId'],
   });

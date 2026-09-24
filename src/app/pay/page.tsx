@@ -1,9 +1,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import type { PlanCode } from '@prisma/client';
 import { getActor } from '@/server/auth/session';
 import { prisma } from '@/server/db';
-import { planLevel } from '@/server/access/plans';
 import { formatRubles } from '@/lib/utils';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Panel } from '@/components/ui/Panel';
@@ -22,87 +20,63 @@ export default async function PayPage({
   if (!actor) redirect('/login');
   await searchParams; // upgrade-хинт учитываем визуально позже
 
-  const plans = await prisma.plan.findMany({
-    where: { active: true },
-    orderBy: { sort: 'asc' },
-  });
+  const plan = await prisma.plan.findUnique({ where: { code: 'SUPPORT' } });
 
   const currentPlan = actor.plan ?? null;
-  const currentLevel = planLevel(currentPlan);
+  if (!plan || !plan.active) {
+    throw new Error('Единая подписка временно недоступна.');
+  }
+  const features = Array.isArray(plan.features) ? (plan.features as string[]) : [];
 
   return (
     <div className="px-6 py-8 md:px-10 md:py-12">
       <PageHeader
         kicker="Оплата"
-        title={currentPlan ? 'Улучшить тариф' : 'Выберите тариф'}
+        title={currentPlan ? 'Ваша подписка' : 'Единая подписка'}
         description={
           currentPlan
-            ? 'При апгрейде списывается только разница в цене.'
-            : 'Доступ к контенту открывается после подтверждения оплаты.'
+            ? 'Весь контент и агент-куратор уже включены.'
+            : 'Один понятный тариф без уровней и скрытых доплат.'
         }
       />
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        {plans.map((plan) => {
-          const level = planLevel(plan.code as PlanCode);
-          const isCurrent = plan.code === currentPlan;
-          const isTarget = level === 2; // SUPPORT — целевой
-          const isDowngrade = currentPlan !== null && level <= currentLevel;
-          const priceKopeks =
-            currentPlan && level > currentLevel
-              ? plan.priceKopeks - (plans.find((p) => p.code === currentPlan)?.priceKopeks ?? 0)
-              : plan.priceKopeks;
-          const features = Array.isArray(plan.features) ? (plan.features as string[]) : [];
-
-          return (
-            <Panel
-              key={plan.code}
-              title={`${plan.title} // Тариф`}
-              status={
-                isCurrent ? (
-                  <StatusPill muted>Текущий</StatusPill>
-                ) : isTarget ? (
-                  <StatusPill pulse>Целевой</StatusPill>
-                ) : undefined
-              }
-              className="flex flex-col"
-            >
-              <div className="flex flex-1 flex-col gap-5 p-6">
-                <div className="font-mono text-2xl text-t900">
-                  {formatRubles(plan.priceKopeks)}
-                </div>
-
-                <ul className="flex flex-1 flex-col gap-3 text-sm font-light text-t700">
-                  {features.map((f, i) => (
-                    <li key={i} className="flex items-start gap-3">
-                      <Icon name="check-circle-linear" className="mt-0.5 text-accent" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-
-                {isCurrent ? (
-                  <p className="border border-line bg-surface px-3 py-2 text-center font-mono text-[11px] text-t500">
-                    Ваш активный тариф
-                  </p>
-                ) : isDowngrade ? (
-                  <p className="border border-line bg-surface px-3 py-2 text-center font-mono text-[11px] text-t400">
-                    Понижение недоступно
-                  </p>
-                ) : (
-                  <CheckoutButton
-                    planCode={plan.code as PlanCode}
-                    label={
-                      currentPlan
-                        ? `Доплата ${formatRubles(priceKopeks)}`
-                        : `Оплатить ${formatRubles(priceKopeks)}`
-                    }
-                  />
-                )}
-              </div>
-            </Panel>
-          );
-        })}
+      <div className="max-w-2xl">
+        <Panel
+          title={`${plan.title} // Ежемесячно`}
+          status={currentPlan ? <StatusPill>Активна</StatusPill> : <StatusPill pulse>Всё включено</StatusPill>}
+          className="flex flex-col"
+        >
+          <div className="flex flex-1 flex-col gap-5 p-6 md:p-8">
+            <div>
+              <span className="font-mono text-3xl text-t900">{formatRubles(plan.priceKopeks)}</span>
+              <span className="ml-2 text-sm font-light text-t500">в месяц</span>
+            </div>
+            <ul className="flex flex-col gap-3 text-sm font-light text-t700">
+              {features.map((feature, index) => (
+                <li key={index} className="flex items-start gap-3">
+                  <Icon name="check-circle-linear" className="mt-0.5 text-accent" />
+                  {feature}
+                </li>
+              ))}
+            </ul>
+            {currentPlan ? (
+              <p className="border border-line bg-surface px-4 py-3 text-center font-mono text-xs text-t600">
+                Подписка уже активна
+              </p>
+            ) : (
+              <>
+                <CheckoutButton
+                  planCode="SUPPORT"
+                  label={`Подписаться за ${formatRubles(plan.priceKopeks)}`}
+                />
+                <p className="text-xs font-light leading-relaxed text-t500">
+                  Нажимая кнопку, вы соглашаетесь на ежемесячное автопродление. Отключить его
+                  можно в любой момент в профиле; оплаченный период сохранится.
+                </p>
+              </>
+            )}
+          </div>
+        </Panel>
       </div>
     </div>
   );

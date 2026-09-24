@@ -136,7 +136,7 @@ export default async function HomePage() {
           </div>
         </Panel>
 
-        <Panel title="Curator // Weekly" status={<StatusPill muted>SUPPORT+</StatusPill>}>
+        <Panel title="Curator // Weekly" status={<StatusPill muted>В подписке</StatusPill>}>
           <div className="p-6">
             {curatorAccess.ok ? (
               <LinedBlock label="Разбор">

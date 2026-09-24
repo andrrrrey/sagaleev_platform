@@ -12,6 +12,7 @@ export type CreatePaymentInput = {
   idempotenceKey: string;
   metadata: { paymentId: string; userId: string };
   receipt?: { customerEmail: string; items: ReceiptItem[] };
+  savePaymentMethod?: boolean;
 };
 
 export type CreatePaymentResult = {
@@ -25,6 +26,18 @@ export type GetPaymentResult = {
   status: ProviderStatus;
   paid: boolean;
   raw: unknown;
+  savedPaymentMethodId?: string;
+};
+
+export type CreateRecurringPaymentInput = Omit<
+  CreatePaymentInput,
+  'returnUrl' | 'savePaymentMethod'
+> & {
+  paymentMethodId: string;
+};
+
+export type CreateRecurringPaymentResult = GetPaymentResult & {
+  providerPaymentId: string;
 };
 
 export type VerifyWebhookResult = {
@@ -38,6 +51,7 @@ export type VerifyWebhookResult = {
 export interface PaymentProvider {
   readonly name: string;
   createPayment(input: CreatePaymentInput): Promise<CreatePaymentResult>;
+  createRecurringPayment(input: CreateRecurringPaymentInput): Promise<CreateRecurringPaymentResult>;
   getPayment(providerPaymentId: string): Promise<GetPaymentResult>;
   verifyWebhook(req: Request): Promise<VerifyWebhookResult>;
 }

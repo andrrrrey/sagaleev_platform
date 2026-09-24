@@ -11,6 +11,7 @@ const PLANS: Array<{
   priceKopeks: number;
   level: number;
   sort: number;
+  active: boolean;
   features: string[];
 }> = [
   {
@@ -26,20 +27,22 @@ const PLANS: Array<{
       'Юзкейсы с реальными цифрами',
       'Эфиры частично',
     ],
+    active: false,
   },
   {
     code: 'SUPPORT',
-    title: 'Сопровождение',
-    priceKopeks: 20_000_000,
+    title: 'Единая подписка',
+    priceKopeks: 500_000,
     level: 2,
-    sort: 2,
+    sort: 1,
     features: [
-      'Всё из «Самостоятельно»',
-      'Вся библиотека скиллов',
-      'Эфиры полностью',
-      'Разбор агента куратором',
-      'Еженедельные Zoom-разборы',
+      'Весь маршрут и все материалы',
+      'Полная библиотека скиллов',
+      'Уроки, юзкейсы и эфиры',
+      'Персональный агент-куратор',
+      'Новые материалы без доплаты',
     ],
+    active: true,
   },
   {
     code: 'VIP',
@@ -52,6 +55,7 @@ const PLANS: Array<{
       'Внедрение скиллов под ключ в команду',
       'Приоритетная поддержка',
     ],
+    active: false,
   },
 ];
 
@@ -106,9 +110,10 @@ async function main() {
         priceKopeks: p.priceKopeks,
         level: p.level,
         sort: p.sort,
+        active: p.active,
         features: p.features,
       },
-      update: { title: p.title, priceKopeks: p.priceKopeks, level: p.level, sort: p.sort, features: p.features },
+      update: { title: p.title, priceKopeks: p.priceKopeks, level: p.level, sort: p.sort, active: p.active, features: p.features },
     });
   }
 
@@ -151,9 +156,9 @@ async function main() {
 
   // ── Demo students (dev/staging only) ──
   const demo: Array<{ email: string; name: string; plan: PlanCode }> = [
-    { email: 'student-self@example.ru', name: 'Аюна (SELF)', plan: 'SELF' },
-    { email: 'student-support@example.ru', name: 'Баир (SUPPORT)', plan: 'SUPPORT' },
-    { email: 'student-vip@example.ru', name: 'Сэсэг (VIP)', plan: 'VIP' },
+    { email: 'student-self@example.ru', name: 'Аюна (подписка)', plan: 'SUPPORT' },
+    { email: 'student-support@example.ru', name: 'Баир (подписка)', plan: 'SUPPORT' },
+    { email: 'student-vip@example.ru', name: 'Сэсэг (подписка)', plan: 'SUPPORT' },
   ];
   for (const d of demo) {
     const user = await prisma.user.upsert({

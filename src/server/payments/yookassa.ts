@@ -2,6 +2,8 @@ import { getSetting } from '@/server/settings/store';
 import type {
   CreatePaymentInput,
   CreatePaymentResult,
+  CreateRecurringPaymentInput,
+  CreateRecurringPaymentResult,
   GetPaymentResult,
   PaymentProvider,
   ProviderStatus,
@@ -15,6 +17,7 @@ type YookassaPayment = {
   status: 'pending' | 'waiting_for_capture' | 'succeeded' | 'canceled';
   paid: boolean;
   confirmation?: { confirmation_url?: string };
+  payment_method?: { id?: string; saved?: boolean };
 };
 
 function toStatus(s: YookassaPayment['status']): ProviderStatus {
@@ -55,6 +58,7 @@ export class YookassaProvider implements PaymentProvider {
         confirmation: { type: 'redirect', return_url: input.returnUrl },
         description: input.description,
         metadata: input.metadata,
+        save_payment_method: input.savePaymentMethod ?? false,
         ...(input.receipt
           ? {
               receipt: {
@@ -79,13 +83,69 @@ export class YookassaProvider implements PaymentProvider {
     return { providerPaymentId: data.id, confirmationUrl };
   }
 
+  async createRecurringPayment(
+    input: CreateRecurringPaymentInput,
+  ): Promise<CreateRecurringPaymentResult> {
+    const amount = (input.amountKopeks / 100).toFixed(2);
+    const res = await fetch(`${API}/payments`, {
+      method: 'POST',
+      headers: {
+        Authorization: await this.authHeader(),
+        'Idempotence-Key': input.idempotenceKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        amount: { value: amount, currency: 'RUB' },
+        capture: true,
+        payment_method_id: input.paymentMethodId,
+        description: input.description,
+        metadata: input.metadata,
+        ...(input.receipt
+          ? {
+              receipt: {
+                customer: { email: input.receipt.customerEmail },
+                items: input.receipt.items.map((i) => ({
+                  description: i.description,
+                  quantity: i.quantity.toString(),
+                  amount: { value: (i.amountKopeks / 100).toFixed(2), currency: 'RUB' },
+                  vat_code: i.vatCode,
+                })),
+              },
+            }
+          : {}),
+      }),
+    });
+    if (!res.ok) {
+      throw new Error(`ЮKassa recurringPayment: ${res.status} ${await res.text()}`);
+    }
+    const data = (await res.json()) as YookassaPayment;
+    return {
+      providerPaymentId: data.id,
+      status: toStatus(data.status),
+      paid: data.paid,
+      raw: data,
+      savedPaymentMethodId:
+        data.payment_method?.saved && data.payment_method.id
+          ? data.payment_method.id
+          : undefined,
+    };
+  }
+
   async getPayment(providerPaymentId: string): Promise<GetPaymentResult> {
     const res = await fetch(`${API}/payments/${providerPaymentId}`, {
       headers: { Authorization: await this.authHeader() },
     });
     if (!res.ok) throw new Error(`ЮKassa getPayment: ${res.status}`);
     const data = (await res.json()) as YookassaPayment;
-    return { status: toStatus(data.status), paid: data.paid, raw: data };
+    return {
+      status: toStatus(data.status),
+      paid: data.paid,
+      raw: data,
+      savedPaymentMethodId:
+        data.payment_method?.saved && data.payment_method.id
+          ? data.payment_method.id
+          : undefined,
+    };
   }
 
   async verifyWebhook(req: Request): Promise<VerifyWebhookResult> {

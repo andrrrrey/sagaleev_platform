@@ -10,7 +10,7 @@ const SIZES = {
   h3: 'text-lg md:text-xl leading-[1.1]',
 } as const;
 
-/** Заголовок с masked reveal (Inter 400, не жирный). docs/02 §1.3, §5. */
+/** Заголовок с masked reveal (SF Pro Display 400, не жирный). */
 export function Heading({
   as = 'h1',
   size,
@@ -29,7 +29,7 @@ export function Heading({
     <Tag
       ref={ref}
       className={cn(
-        'js-masked-reveal font-sans font-normal tracking-tight text-t900',
+        'js-masked-reveal font-display font-normal tracking-tight text-t900',
         SIZES[size ?? as],
         className,
       )}

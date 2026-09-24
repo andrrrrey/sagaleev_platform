@@ -26,6 +26,11 @@ export default {
         line: withAlpha('--c-line'),
         ink: { DEFAULT: withAlpha('--c-ink'), hover: withAlpha('--c-ink-hover') },
         accent: withAlpha('--c-accent'),
+        brand: {
+          sky: withAlpha('--c-brand-sky'),
+          pink: withAlpha('--c-brand-pink'),
+          navy: withAlpha('--c-brand-navy'),
+        },
         // Текстовая шкала (в светлой теме = точные zinc из эталона).
         t900: withAlpha('--c-t900'),
         t800: withAlpha('--c-t800'),
@@ -36,8 +41,28 @@ export default {
         t300: withAlpha('--c-t300'),
       },
       fontFamily: {
-        sans: ['var(--font-inter)', 'Inter', 'sans-serif'],
-        mono: ['var(--font-jetbrains)', 'JetBrains Mono', 'monospace'],
+        display: [
+          '"SF Pro Display"',
+          '-apple-system',
+          'BlinkMacSystemFont',
+          '"Segoe UI"',
+          'sans-serif',
+        ],
+        sans: [
+          '-apple-system',
+          'BlinkMacSystemFont',
+          '"SF Pro Text"',
+          '"SF Pro Display"',
+          '"Segoe UI"',
+          'sans-serif',
+        ],
+        mono: [
+          '"SFMono-Regular"',
+          '"SF Mono"',
+          'Consolas',
+          '"Liberation Mono"',
+          'monospace',
+        ],
       },
       boxShadow: {
         frame: '0 25px 50px -12px rgb(0 0 0 / 0.25)',

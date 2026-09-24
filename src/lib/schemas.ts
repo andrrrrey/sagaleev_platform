@@ -40,5 +40,12 @@ export const businessProfileSchema = z.object({
   websiteUrl: z.string().url('Некорректная ссылка').optional().or(z.literal('')),
 });
 
+export const accountSettingsSchema = z.object({
+  name: z.string().trim().min(2, 'Укажите имя').max(100, 'Слишком длинное имя'),
+  email: z.string().trim().email('Некорректный email').transform((value) => value.toLowerCase()),
+  phone: z.string().trim().max(30, 'Слишком длинный номер').optional(),
+  currentPassword: z.string().min(1, 'Введите текущий пароль'),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type BusinessProfileInput = z.infer<typeof businessProfileSchema>;

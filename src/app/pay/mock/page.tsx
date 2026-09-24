@@ -23,7 +23,11 @@ export default async function MockPayPage({
   await applyPaymentConfirmation({
     providerPaymentId,
     status: 'succeeded',
-    raw: { mock: true, providerPaymentId },
+    raw: {
+      mock: true,
+      providerPaymentId,
+      payment_method: { id: `saved_${providerPaymentId}`, saved: true },
+    },
   });
 
   redirect(`/pay/result?paymentId=${paymentId}`);

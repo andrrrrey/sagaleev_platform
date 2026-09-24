@@ -13,7 +13,7 @@ import { PgBoss } from 'pg-boss';
 import { env } from '@/lib/env';
 import { recomputeAllLeaderboard } from '@/server/progress/leaderboard';
 import { runCuratorWeekly } from '@/server/curator/service';
-import { reconcilePendingPayments } from '@/server/payments/service';
+import { reconcilePendingPayments, renewDueSubscriptions } from '@/server/payments/service';
 import { sendStreamReminders } from './tasks';
 import { prisma } from '@/server/db';
 
@@ -27,6 +27,7 @@ const QUEUES = {
   curator: 'curator.weekly',
   streams: 'notify.stream-reminder',
   payments: 'payments.reconcile',
+  renewals: 'payments.renew-subscriptions',
   cleanup: 'auth.cleanup',
 } as const;
 
@@ -55,6 +56,10 @@ async function main() {
     const n = await reconcilePendingPayments();
     console.log(`[payments.reconcile] обработано: ${n}`);
   });
+  await boss.work(QUEUES.renewals, async () => {
+    const result = await renewDueSubscriptions();
+    console.log('[payments.renew-subscriptions]', result);
+  });
   await boss.work(QUEUES.cleanup, async () => {
     const n = await cleanupTokens();
     console.log(`[auth.cleanup] удалено токенов: ${n}`);
@@ -64,6 +69,7 @@ async function main() {
   await boss.schedule(QUEUES.curator, '0 6 * * 1');
   await boss.schedule(QUEUES.streams, '0 * * * *');
   await boss.schedule(QUEUES.payments, '*/10 * * * *');
+  await boss.schedule(QUEUES.renewals, '15 * * * *');
   await boss.schedule(QUEUES.cleanup, '0 1 * * *');
 
   console.log('Worker запущен: очереди и расписания зарегистрированы.');

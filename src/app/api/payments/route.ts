@@ -4,7 +4,7 @@ import { getCurrentUser } from '@/server/auth/session';
 import { createCheckout } from '@/server/payments/service';
 import { rateLimit } from '@/server/rate-limit';
 
-const bodySchema = z.object({ planCode: z.enum(['SELF', 'SUPPORT', 'VIP']) });
+const bodySchema = z.object({ planCode: z.literal('SUPPORT') });
 
 export async function POST(req: Request) {
   const user = await getCurrentUser();

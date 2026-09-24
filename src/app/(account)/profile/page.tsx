@@ -9,15 +9,21 @@ import { Panel } from '@/components/ui/Panel';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { Tabs } from '@/components/ui/Tabs';
 import { Table, THead, Th, TRow, Td } from '@/components/ui/Table';
-import { Label, Checkbox } from '@/components/ui/Field';
+import { Checkbox } from '@/components/ui/Field';
 import { Button, buttonClass } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { OnboardingWizard } from '@/components/profile/OnboardingWizard';
 import { ExportProfileButton } from '@/components/profile/ExportProfileButton';
 import { TelegramPanel } from '@/components/profile/TelegramPanel';
 import { CodexMcpPanel } from '@/components/profile/CodexMcpPanel';
+import { AccountSettingsForm } from '@/components/profile/AccountSettingsForm';
 import { getMcpTokenStatus } from '@/server/mcp/auth';
-import { setLeaderboardVisibility, setNotifyPrefs } from '@/server/profile/settings-actions';
+import {
+  cancelSubscription,
+  resumeSubscription,
+  setLeaderboardVisibility,
+  setNotifyPrefs,
+} from '@/server/profile/settings-actions';
 
 export const metadata: Metadata = { title: 'Профиль' };
 
@@ -58,18 +64,10 @@ export default async function ProfilePage({
     <div className="flex flex-col gap-4">
       <Panel title="Аккаунт // Профиль">
         <div className="flex flex-col gap-4 p-6">
-          <div>
-            <Label>Имя</Label>
-            <div className="text-sm font-light text-t800">{user.name}</div>
-          </div>
-          <div>
-            <Label>Email</Label>
-            <div className="font-mono text-sm text-t800">{user.email}</div>
-          </div>
-          <div>
-            <Label>Телефон</Label>
-            <div className="font-mono text-sm text-t800">{user.phone ?? '—'}</div>
-          </div>
+          <p className="text-sm font-light text-t600">
+            Это ваш личный кабинет. Здесь собраны настройки аккаунта, оплаты, уведомлений и
+            подключений.
+          </p>
           <div className="flex flex-wrap gap-3">
             <Link href="/forgot" className={buttonClass('secondary', 'self-start')}>
               <Icon name="shield-check-linear" />
@@ -81,6 +79,13 @@ export default async function ProfilePage({
             </Link>
           </div>
         </div>
+      </Panel>
+      <Panel title="Личные данные // Редактирование">
+        <AccountSettingsForm
+          name={user.name}
+          email={user.email}
+          phone={user.phone}
+        />
       </Panel>
     </div>
   );
@@ -125,10 +130,38 @@ export default async function ProfilePage({
               <div className="text-sm font-light text-t600">
                 Активирован: {formatDate(enrollment.activatedAt)}
               </div>
-              <Link href="/pay" className={buttonClass('primary', 'self-start')}>
-                <Icon name="wallet-money-linear" />
-                Улучшить тариф
-              </Link>
+              {enrollment.expiresAt ? (
+                <div className="text-sm font-light text-t600">
+                  {enrollment.autoRenew ? 'Следующее списание' : 'Доступ оплачен до'}:{' '}
+                  <span className="font-mono text-t900">{formatDate(enrollment.expiresAt)}</span>
+                </div>
+              ) : null}
+              <p className="text-sm font-light text-t600">
+                Агент-куратор и все материалы включены в подписку.
+              </p>
+              {!enrollment.expiresAt ? (
+                <p className="border border-line bg-surface px-4 py-3 font-mono text-xs text-t600">
+                  Доступ предоставлен без автосписаний.
+                </p>
+              ) : enrollment.autoRenew ? (
+                <form action={cancelSubscription}>
+                  <Button type="submit" variant="secondary" className="self-start">
+                    Отключить автопродление
+                  </Button>
+                </form>
+              ) : enrollment.paymentMethodId ? (
+                <form action={resumeSubscription}>
+                  <Button type="submit" variant="primary" className="self-start">
+                    <Icon name="wallet-money-linear" />
+                    Возобновить автопродление
+                  </Button>
+                </form>
+              ) : (
+                <p className="border border-brand-pink/50 bg-brand-pink/10 px-4 py-3 text-sm text-t700">
+                  Автопродление не настроено. После окончания оплаченного периода оформите
+                  подписку снова или обратитесь в поддержку.
+                </p>
+              )}
             </>
           ) : (
             <Link href="/pay" className={buttonClass('primary', 'self-start')}>
@@ -157,8 +190,8 @@ export default async function ProfilePage({
                 {payments.map((p) => (
                   <TRow key={p.id}>
                     <Td mono>{formatDate(p.createdAt)}</Td>
-                    <Td>{p.kind === 'UPGRADE' ? 'Апгрейд' : 'Покупка'}</Td>
-                    <Td mono>{p.targetPlan}</Td>
+                    <Td>{p.kind === 'RENEWAL' ? 'Продление' : 'Подписка'}</Td>
+                    <Td>Единая подписка</Td>
                     <Td mono>{formatRubles(p.amountKopeks)}</Td>
                     <Td>{STATUS_LABEL[p.status] ?? p.status}</Td>
                   </TRow>
@@ -241,7 +274,11 @@ export default async function ProfilePage({
     <div className="px-6 py-8 md:px-10 md:py-12">
       <PageHeader kicker="Кабинет" title="Профиль" />
       <Tabs
-        initialKey={tab === 'codex' ? 'codex' : undefined}
+        initialKey={
+          ['profile', 'business', 'billing', 'telegram', 'codex', 'privacy'].includes(tab ?? '')
+            ? tab
+            : undefined
+        }
         items={[
           { key: 'profile', label: 'Профиль', content: profileTab },
           { key: 'business', label: 'Бизнес-профиль', content: businessTab },

@@ -10,7 +10,7 @@ import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { STUDENT_NAV } from './nav-config';
 
 const PRIMARY = STUDENT_NAV.slice(0, 4); // Главная · Маршрут · Скиллы · Юзкейсы
-const MORE = STUDENT_NAV.slice(4, 8); // Уроки · Эфиры · Лидерборд · Инструкция
+const MORE = STUDENT_NAV.slice(4); // Уроки · Эфиры · Лидерборд · Инструкция · Профиль
 
 function isActive(pathname: string, href: string): boolean {
   if (href === '/') return pathname === '/';
@@ -93,7 +93,14 @@ export function Nav({ brand, userName }: { brand: string; userName?: string }) {
           <Icon name="bell-linear" className="text-lg" />
         </Link>
         {userName ? (
-          <span className="hidden font-mono text-xs text-t500 sm:block">{userName}</span>
+          <Link
+            href="/profile"
+            className="hidden items-center gap-2 font-mono text-xs text-t500 transition-colors hover:text-accent sm:flex"
+            aria-label="Открыть личный кабинет"
+          >
+            <Icon name="user-linear" />
+            {userName}
+          </Link>
         ) : null}
         <form action={signOutAction}>
           <button

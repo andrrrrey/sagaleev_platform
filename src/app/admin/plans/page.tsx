@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: 'Админ — тарифы' };
 
 export default async function AdminPlansPage() {
   await requireRole(['ADMIN']);
-  const plans = await prisma.plan.findMany({ orderBy: { sort: 'asc' } });
+  const plans = await prisma.plan.findMany({ where: { active: true }, orderBy: { sort: 'asc' } });
 
   return (
     <div className="px-6 py-8 md:px-10 md:py-12">
@@ -20,7 +20,7 @@ export default async function AdminPlansPage() {
         title="Тарифы"
         description="Цены и матрица хранятся в БД. Изменение цен не влияет на прошедшие платежи."
       />
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+      <div className="grid max-w-2xl grid-cols-1 gap-6">
         {plans.map((plan) => {
           const features = Array.isArray(plan.features) ? (plan.features as string[]) : [];
           return (
@@ -31,7 +31,10 @@ export default async function AdminPlansPage() {
             >
               <div className="flex flex-col gap-4 p-6">
                 <div className="text-lg font-normal tracking-tight text-t900">{plan.title}</div>
-                <div className="font-mono text-2xl text-t900">{formatRubles(plan.priceKopeks)}</div>
+                <div>
+                  <span className="font-mono text-2xl text-t900">{formatRubles(plan.priceKopeks)}</span>
+                  <span className="ml-2 text-sm text-t500">в месяц</span>
+                </div>
                 <ul className="flex flex-col gap-2 text-sm font-light text-t700">
                   {features.map((f, i) => (
                     <li key={i} className="flex items-start gap-2">
@@ -41,7 +44,7 @@ export default async function AdminPlansPage() {
                   ))}
                 </ul>
                 <p className="font-mono text-[10px] uppercase tracking-widest text-t400">
-                  Редактирование цен — на форме (Этап 1+)
+                  Единая ежемесячная подписка
                 </p>
               </div>
             </Panel>
