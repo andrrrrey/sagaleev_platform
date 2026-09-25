@@ -16,6 +16,9 @@ async function main() {
   let updated = 0;
   const missing: string[] = [];
 
+  // Платформа больше не раздаёт файлы скиллов через отдельное S3-хранилище.
+  await prisma.skill.updateMany({ data: { fileKey: null, fileName: null } });
+
   for (const slug of slugs) {
     const sourcePath = join(sourceRoot, slug, 'SKILL.md');
     if (!existsSync(sourcePath)) continue;
@@ -28,8 +31,6 @@ async function main() {
       where: { id: skill.id },
       data: {
         prompt: readFileSync(sourcePath, 'utf8').trim(),
-        fileKey: null,
-        fileName: null,
       },
     });
     updated += 1;
