@@ -32,15 +32,17 @@ export function SkillCardView({ skill }: { skill: SkillCard }) {
       >
         <div className="flex flex-1 flex-col gap-3 p-5">
           <p className="line-clamp-2 text-sm font-light text-t700">{skill.shortDesc}</p>
-          <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-t500">
-            <Icon name="clock-circle-linear" className="text-xs" />
-            {skill.timeToMaster}
-          </div>
           {skill.tags.length > 0 ? (
             <div className="flex flex-wrap gap-1.5">
               {skill.tags.slice(0, 4).map((t) => (
                 <Tag key={t.slug}>{t.title}</Tag>
               ))}
+            </div>
+          ) : null}
+          {!skill.locked ? (
+            <div className="mt-auto flex items-center justify-between border-t border-line/60 pt-3 font-mono text-[10px] uppercase tracking-widest text-t500">
+              Открыть инструкцию
+              <Icon name="arrow-right-linear" className="text-sm text-accent" />
             </div>
           ) : null}
           {skill.locked ? (

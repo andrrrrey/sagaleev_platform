@@ -17,11 +17,8 @@ type SkillDefaults = {
   shortDesc?: string;
   inputs?: string;
   outputs?: string;
-  timeToMaster?: string;
   prompt?: string;
   demoVideoId?: string;
-  fileKey?: string;
-  fileName?: string;
   minPlan?: string;
   state?: string;
 };
@@ -81,11 +78,6 @@ export function SkillForm({
             <FieldError>{state.fieldErrors?.outputs}</FieldError>
           </div>
           <div>
-            <Label htmlFor="timeToMaster">Время освоения</Label>
-            <Input id="timeToMaster" name="timeToMaster" defaultValue={d.timeToMaster} placeholder="30 минут" required />
-            <FieldError>{state.fieldErrors?.timeToMaster}</FieldError>
-          </div>
-          <div>
             <Label htmlFor="demoVideoId">Kinescope ID demo (необязательно)</Label>
             <Input id="demoVideoId" name="demoVideoId" mono defaultValue={d.demoVideoId} />
           </div>
@@ -97,22 +89,6 @@ export function SkillForm({
           <Label htmlFor="prompt">Полный промпт</Label>
           <Textarea id="prompt" name="prompt" mono rows={8} defaultValue={d.prompt} required />
           <FieldError>{state.fieldErrors?.prompt}</FieldError>
-        </div>
-      </Panel>
-
-      <Panel title="Файл // S3">
-        <div className="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2">
-          <div>
-            <Label htmlFor="fileKey">S3-ключ файла (необязательно)</Label>
-            <Input id="fileKey" name="fileKey" mono defaultValue={d.fileKey} placeholder="skills/seo-audit.md" />
-          </div>
-          <div>
-            <Label htmlFor="fileName">Имя файла</Label>
-            <Input id="fileName" name="fileName" defaultValue={d.fileName} placeholder="seo-audit.md" />
-          </div>
-          <p className="font-mono text-[10px] uppercase tracking-widest text-t400 sm:col-span-2">
-            Загрузка через UI появится с настройкой S3. Пока — ручной ключ.
-          </p>
         </div>
       </Panel>
 
@@ -138,11 +114,9 @@ export function SkillForm({
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <Label htmlFor="minPlan">Гейт-уровень (minPlan)</Label>
-              <Select id="minPlan" name="minPlan" defaultValue={d.minPlan ?? 'SUPPORT'}>
-                <option value="SELF">SELF — базовый набор</option>
-                <option value="SUPPORT">SUPPORT</option>
-                <option value="VIP">VIP</option>
+              <Label htmlFor="minPlan">Доступ</Label>
+              <Select id="minPlan" name="minPlan" defaultValue="SUPPORT">
+                <option value="SUPPORT">Включён в единую подписку</option>
               </Select>
             </div>
             <div>

@@ -77,7 +77,8 @@ export function ContentUnit({
   initialTab?: string;
   initialT?: number;
 }) {
-  const hasTabs = detail.type === 'USECASE' || detail.type === 'STREAM';
+  const hasReadingMaterial = Boolean(richToHtml(detail.article) || detail.transcript);
+  const hasTabs = detail.type === 'USECASE' || detail.type === 'STREAM' || hasReadingMaterial;
 
   const overview = (
     <div className="flex flex-col gap-8">
@@ -125,9 +126,9 @@ export function ContentUnit({
     </div>
   );
 
-  const tabItems: TabItem[] = [{ key: 'overview', label: 'Обзор', content: overview }];
+  const tabItems: TabItem[] = [{ key: 'overview', label: detail.type === 'LESSON' ? 'Материалы' : 'Обзор', content: overview }];
   if (richToHtml(detail.article)) {
-    tabItems.push({ key: 'article', label: 'Статья', content: <Rich json={detail.article} /> });
+    tabItems.push({ key: 'article', label: detail.type === 'LESSON' ? 'Текст урока' : 'Статья', content: <Rich json={detail.article} /> });
   }
   if (detail.transcript) {
     tabItems.push({

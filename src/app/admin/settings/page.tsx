@@ -34,14 +34,13 @@ export default async function AdminSettingsPage() {
     { label: 'Провайдер оплаты', ok: env.PAYMENT_PROVIDER === 'yookassa', note: env.PAYMENT_PROVIDER },
     { label: 'Telegram-бот', ok: isSet('TELEGRAM_BOT_TOKEN'), note: isSet('TELEGRAM_BOT_TOKEN') ? 'токен задан' : 'не настроен' },
     { label: 'Куратор (LLM)', ok: curatorEnabled && isSet('ANTHROPIC_API_KEY'), note: curatorEnabled ? 'включён' : 'выключен' },
-    { label: 'Хранилище S3', ok: isSet('S3_BUCKET'), note: isSet('S3_BUCKET') ? 'настроено' : 'не настроено' },
   ];
 
   return (
     <div className="px-6 py-8 md:px-10 md:py-12">
       <PageHeader kicker="Admin" title="Настройки" description={`Бренд: ${env.NEXT_PUBLIC_BRAND_NAME}`} />
 
-      <section className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <section className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         {statuses.map((s) => (
           <Panel key={s.label} bodyClassName="p-4 gap-2">
             <StatusPill muted={!s.ok}>{s.ok ? 'OK' : 'Нет'}</StatusPill>

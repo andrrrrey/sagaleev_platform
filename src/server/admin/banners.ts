@@ -16,7 +16,7 @@ const bannerSchema = z.object({
 });
 
 export async function createBanner(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  const actor = await requireRole(['ADMIN', 'EDITOR']);
+  const actor = await requireRole(['ADMIN']);
   const parsed = bannerSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { ok: false, fieldErrors: fieldErrorsFromZod(parsed.error.issues) };
   const b = await prisma.banner.create({
@@ -35,7 +35,7 @@ export async function createBanner(_prev: ActionState, formData: FormData): Prom
 }
 
 export async function toggleBanner(formData: FormData): Promise<void> {
-  await requireRole(['ADMIN', 'EDITOR']);
+  await requireRole(['ADMIN']);
   const id = String(formData.get('id') ?? '');
   const active = formData.get('active') === 'true';
   if (!id) return;
@@ -45,7 +45,7 @@ export async function toggleBanner(formData: FormData): Promise<void> {
 }
 
 export async function deleteBanner(formData: FormData): Promise<void> {
-  const actor = await requireRole(['ADMIN', 'EDITOR']);
+  const actor = await requireRole(['ADMIN']);
   const id = String(formData.get('id') ?? '');
   if (!id) return;
   await prisma.banner.delete({ where: { id } });

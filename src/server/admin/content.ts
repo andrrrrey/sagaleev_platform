@@ -7,7 +7,13 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '@/server/db';
 import { requireRole } from '@/server/access/guard';
 import { slugify } from '@/lib/utils';
-import { timecodesSchema, kpisSchema, usecaseStepsSchema, repoLinksSchema } from '@/lib/content-types';
+import { sanitizeRichHtml } from '@/lib/rich';
+import {
+  timecodesSchema,
+  kpisSchema,
+  usecaseStepsSchema,
+  repoLinksSchema,
+} from '@/lib/content-types';
 import { type ActionState, fieldErrorsFromZod } from '@/lib/action-state';
 import { audit } from './audit';
 
@@ -72,13 +78,17 @@ export async function saveContent(_prev: ActionState, formData: FormData): Promi
   if (clash) return { ok: false, fieldErrors: { slug: 'Слаг занят' } };
 
   const timecodes = parseJsonField(d.timecodesJson, timecodesSchema, []);
-  if (timecodes === null) return { ok: false, fieldErrors: { timecodesJson: 'Формат: [{t:сек,label}]' } };
+  if (timecodes === null)
+    return { ok: false, fieldErrors: { timecodesJson: 'Формат: [{t:сек,label}]' } };
   const kpis = parseJsonField(d.kpisJson, kpisSchema, []);
-  if (kpis === null) return { ok: false, fieldErrors: { kpisJson: 'Формат: [{label,value,hint?}]' } };
+  if (kpis === null)
+    return { ok: false, fieldErrors: { kpisJson: 'Формат: [{label,value,hint?}]' } };
   const steps = parseJsonField(d.stepsJson, usecaseStepsSchema, []);
-  if (steps === null) return { ok: false, fieldErrors: { stepsJson: 'Формат: [{title,body?,command?}]' } };
+  if (steps === null)
+    return { ok: false, fieldErrors: { stepsJson: 'Формат: [{title,body?,command?}]' } };
   const repoLinks = parseJsonField(d.repoLinksJson, repoLinksSchema, []);
-  if (repoLinks === null) return { ok: false, fieldErrors: { repoLinksJson: 'Формат: [{title,url}]' } };
+  if (repoLinks === null)
+    return { ok: false, fieldErrors: { repoLinksJson: 'Формат: [{title,url}]' } };
 
   const data: Prisma.ContentUnitUncheckedCreateInput = {
     type: d.type,
@@ -105,9 +115,9 @@ export async function saveContent(_prev: ActionState, formData: FormData): Promi
     goal: d.type !== 'LESSON' ? d.goal || null : null,
     result: d.type !== 'LESSON' ? d.result || null : null,
     kpis,
-    description: d.descriptionHtml ? { html: d.descriptionHtml } : undefined,
+    description: d.descriptionHtml ? { html: sanitizeRichHtml(d.descriptionHtml) } : undefined,
     repoLinks,
-    article: d.articleHtml ? { html: d.articleHtml } : undefined,
+    article: d.articleHtml ? { html: sanitizeRichHtml(d.articleHtml) } : undefined,
     transcript: d.transcript || null,
     steps,
     airedAt: d.type === 'STREAM' && d.airedAt ? new Date(d.airedAt) : null,
@@ -135,7 +145,10 @@ export async function saveContent(_prev: ActionState, formData: FormData): Promi
   // Уведомление о новом контенте (опция).
   if (d.state === 'PUBLISHED' && formData.get('notify') === 'on') {
     const base = d.type === 'LESSON' ? '/lessons' : d.type === 'STREAM' ? '/streams' : '/usecases';
-    const students = await prisma.user.findMany({ where: { role: 'STUDENT', deletedAt: null }, select: { id: true } });
+    const students = await prisma.user.findMany({
+      where: { role: 'STUDENT', deletedAt: null },
+      select: { id: true },
+    });
     if (students.length > 0) {
       await prisma.notification.createMany({
         data: students.map((s) => ({

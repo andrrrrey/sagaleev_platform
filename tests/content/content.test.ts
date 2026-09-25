@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { viewedFromPercent, VIEWED_THRESHOLD } from '@/server/content/service';
 import { redactLocked, canAccess, type Actor } from '@/server/access';
+import { sanitizeRichHtml } from '@/lib/rich';
 
 describe('видео → VIEWED при ≥ 80%', () => {
   it('порог 80', () => {
@@ -8,6 +9,21 @@ describe('видео → VIEWED при ≥ 80%', () => {
     expect(viewedFromPercent(79.9)).toBe(false);
     expect(viewedFromPercent(80)).toBe(true);
     expect(viewedFromPercent(100)).toBe(true);
+  });
+});
+
+describe('безопасный текстовый редактор', () => {
+  it('оставляет оформление и удаляет исполняемый HTML', () => {
+    const html = sanitizeRichHtml(
+      '<h2 onclick="alert(1)">Заголовок</h2><script>alert(1)</script><a href="javascript:alert(1)">ссылка</a><ul><li>пункт</li></ul>',
+    );
+    expect(html).toBe('<h2>Заголовок</h2><a>ссылка</a><ul><li>пункт</li></ul>');
+  });
+
+  it('нормализует безопасную ссылку', () => {
+    expect(sanitizeRichHtml('<a href="https://example.ru" onclick="x()">Сайт</a>')).toBe(
+      '<a href="https://example.ru" target="_blank" rel="noopener noreferrer">Сайт</a>',
+    );
   });
 });
 
@@ -34,7 +50,17 @@ describe('редакция закрытого юнита', () => {
     expect(d.ok).toBe(false);
     const preview = redactLocked(closedUnit, d);
     expect(preview.locked).toBe(true);
-    for (const f of ['kinescopeId', 'prompt', 'timecodes', 'kpis', 'goal', 'result', 'steps', 'article', 'transcript']) {
+    for (const f of [
+      'kinescopeId',
+      'prompt',
+      'timecodes',
+      'kpis',
+      'goal',
+      'result',
+      'steps',
+      'article',
+      'transcript',
+    ]) {
       expect(preview).not.toHaveProperty(f);
     }
     // Превью-поля сохранены

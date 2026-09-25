@@ -55,7 +55,8 @@ export function TelegramPanel({ linked, username }: { linked: boolean; username:
   return (
     <div className="flex flex-col gap-4 p-6">
       <p className="text-sm font-light text-t600">
-        Привяжите Telegram, чтобы получать уведомления о разборах, новом контенте и эфирах.
+        Привяжите Telegram, чтобы получать уведомления о готовом разборе агента-куратора и
+        напоминания о ближайших эфирах.
       </p>
       <Button type="button" onClick={generate} disabled={pending} className="self-start">
         <Icon name="plain-linear" />

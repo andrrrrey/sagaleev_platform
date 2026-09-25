@@ -11,9 +11,8 @@ import { StatusPill } from '@/components/ui/StatusPill';
 import { Tag } from '@/components/ui/Tag';
 import { Icon } from '@/components/ui/Icon';
 import { LockedPanel } from '@/components/ui/LockedPanel';
-import { SendToAgentButton } from '@/components/content/SendToAgentButton';
-import { SkillFileButton } from '@/components/skills/SkillFileButton';
 import { SkillStatusForm } from '@/components/skills/SkillStatusForm';
+import { SkillInstruction } from '@/components/skills/SkillInstruction';
 
 export async function generateMetadata({
   params,
@@ -57,9 +56,8 @@ export default async function SkillPage({ params }: { params: Promise<{ slug: st
         <span className="text-t600">{skill.title}</span>
       </nav>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-        {/* Левая колонка */}
-        <div className="flex flex-col gap-6">
+      <div className="flex max-w-5xl flex-col gap-8">
+        <div className="flex flex-col gap-5">
           <div>
             <Kicker className="mb-4">{SKILL_GROUP_TITLE[skill.group]}</Kicker>
             <Heading as="h1" size="h2">
@@ -75,24 +73,32 @@ export default async function SkillPage({ params }: { params: Promise<{ slug: st
             </div>
           ) : null}
 
-          <div className="grid grid-cols-1 gap-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
             <Spec label="Что делает">{skill.shortDesc}</Spec>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <Spec label="Input // Что на входе">{skill.inputs}</Spec>
-              <Spec label="Output // Что на выходе">{skill.outputs}</Spec>
-            </div>
-            <Spec label="Время освоения">{skill.timeToMaster}</Spec>
+            <Spec label="Что передать агенту">{skill.inputs}</Spec>
+            <Spec label="Что агент вернёт">{skill.outputs}</Spec>
           </div>
         </div>
 
-        {/* Правая колонка */}
-        <div className="flex flex-col gap-6">
-          {skill.locked ? (
-            <LockedPanel requiredPlan={skill.requiredPlan ?? 'SUPPORT'} />
-          ) : (
-            <>
+        {skill.locked ? (
+          <LockedPanel requiredPlan={skill.requiredPlan ?? 'SUPPORT'} />
+        ) : (
+          <>
+            {skill.prompt ? (
+              <SkillInstruction
+                source={skill.prompt}
+                slug={skill.slug}
+                githubSource={
+                  skill.prompt.trimStart().startsWith('---')
+                    ? `https://github.com/andrrrrey/agent/blob/main/skills/${skill.slug}/SKILL.md`
+                    : undefined
+                }
+              />
+            ) : null}
+
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               {skill.demoUnit ? (
-                <Panel title="Demo // Реальный кейс">
+                <Panel title="Пример // Реальный кейс">
                   <Link
                     href={`/usecases/${skill.demoUnit.slug}`}
                     className="flex items-center justify-between p-5 transition-colors hover:bg-paper-hover/40"
@@ -104,35 +110,32 @@ export default async function SkillPage({ params }: { params: Promise<{ slug: st
                     <Icon name="arrow-right-linear" className="text-t400" />
                   </Link>
                 </Panel>
-              ) : null}
-
-              <Panel title="Действия // Агент">
-                <div className="flex flex-col gap-4 p-5">
-                  {skill.prompt ? (
-                    <SendToAgentButton
-                      prompt={skill.prompt}
-                      sendUrl={`/api/skills/${skill.slug}/send-to-agent`}
-                    />
-                  ) : null}
-                  {skill.hasFile ? <SkillFileButton slug={skill.slug} fileName={skill.fileName} /> : null}
-                </div>
-              </Panel>
+              ) : (
+                <div />
+              )}
 
               <Panel
-                title="Мой статус // Прогресс"
-                status={skill.status !== 'NONE' ? <StatusPill>{skill.status}</StatusPill> : undefined}
+                title="Мой результат // Прогресс"
+                status={
+                  skill.status !== 'NONE' ? <StatusPill>{skill.status}</StatusPill> : undefined
+                }
               >
                 <div className="p-5">
-                  <SkillStatusForm slug={skill.slug} current={skill.status} proofNote={skill.proofNote} />
+                  <SkillStatusForm
+                    slug={skill.slug}
+                    current={skill.status}
+                    proofNote={skill.proofNote}
+                  />
                 </div>
               </Panel>
-            </>
-          )}
-        </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Связанное */}
-      {!skill.locked && ((skill.related?.length ?? 0) > 0 || (skill.usedInSteps?.length ?? 0) > 0) ? (
+      {!skill.locked &&
+      ((skill.related?.length ?? 0) > 0 || (skill.usedInSteps?.length ?? 0) > 0) ? (
         <div className="mt-12 grid grid-cols-1 gap-8 border-t border-line/60 pt-8 lg:grid-cols-2">
           {skill.related && skill.related.length > 0 ? (
             <div>

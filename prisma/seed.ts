@@ -1,5 +1,7 @@
 import { PrismaClient, type PlanCode } from '@prisma/client';
 import * as argon2 from 'argon2';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 const prisma = new PrismaClient();
 
@@ -557,19 +559,23 @@ async function main() {
   ];
 
   for (const s of skills) {
+    const sourcePath = join(process.cwd(), 'content', 'skills', s.slug, 'SKILL.md');
+    const fullInstruction = existsSync(sourcePath)
+      ? readFileSync(sourcePath, 'utf8').trim()
+      : s.prompt;
     const created = await prisma.skill.upsert({
       where: { slug: s.slug },
       create: {
         slug: s.slug, title: s.title, group: s.group, shortDesc: s.shortDesc,
         inputs: s.inputs, outputs: s.outputs, timeToMaster: s.timeToMaster,
-        prompt: s.prompt, minPlan: s.minPlan, state: 'PUBLISHED',
-        fileName: s.fileName ?? null, fileKey: s.fileKey ?? null,
+        prompt: fullInstruction, minPlan: s.minPlan, state: 'PUBLISHED',
+        fileName: null, fileKey: null,
       },
       update: {
         title: s.title, group: s.group, shortDesc: s.shortDesc, inputs: s.inputs,
-        outputs: s.outputs, timeToMaster: s.timeToMaster, prompt: s.prompt,
+        outputs: s.outputs, timeToMaster: s.timeToMaster, prompt: fullInstruction,
         minPlan: s.minPlan, state: 'PUBLISHED',
-        fileName: s.fileName ?? null, fileKey: s.fileKey ?? null,
+        fileName: null, fileKey: null,
       },
     });
     await prisma.skillTag.deleteMany({ where: { skillId: created.id } });

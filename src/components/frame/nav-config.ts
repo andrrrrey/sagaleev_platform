@@ -37,7 +37,7 @@ export const ADMIN_NAV: Array<NavItem & { adminOnly?: boolean }> = [
   { href: '/admin/route', label: 'Маршрут', icon: 'routing-linear' },
   { href: '/admin/content', label: 'Контент', icon: 'document-text-linear' },
   { href: '/admin/tags', label: 'Теги', icon: 'point-on-map-linear' },
-  { href: '/admin/banners', label: 'Баннеры', icon: 'graph-new-linear' },
+  { href: '/admin/banners', label: 'Баннеры', icon: 'graph-new-linear', adminOnly: true },
   { href: '/admin/cohort', label: 'Поток', icon: 'chart-2-linear', adminOnly: true },
   { href: '/admin/curator', label: 'Куратор', icon: 'diploma-verified-linear', adminOnly: true },
   { href: '/admin/users', label: 'Пользователи', icon: 'user-linear', adminOnly: true },

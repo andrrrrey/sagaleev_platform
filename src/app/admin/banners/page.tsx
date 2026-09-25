@@ -12,7 +12,7 @@ import { BannerCreateForm } from '@/components/admin/BannerCreateForm';
 export const metadata: Metadata = { title: 'Админ — баннеры' };
 
 export default async function AdminBannersPage() {
-  await requireRole(['ADMIN', 'EDITOR']);
+  await requireRole(['ADMIN']);
   const banners = await prisma.banner.findMany({ orderBy: { sort: 'asc' } });
 
   return (

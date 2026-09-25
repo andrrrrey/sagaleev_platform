@@ -31,11 +31,8 @@ export default async function EditSkillPage({ params }: { params: Promise<{ id: 
           shortDesc: skill.shortDesc,
           inputs: skill.inputs,
           outputs: skill.outputs,
-          timeToMaster: skill.timeToMaster,
           prompt: skill.prompt,
           demoVideoId: skill.demoVideoId ?? undefined,
-          fileKey: skill.fileKey ?? undefined,
-          fileName: skill.fileName ?? undefined,
           minPlan: skill.minPlan,
           state: skill.state,
         }}

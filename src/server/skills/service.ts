@@ -10,7 +10,6 @@ export type SkillCard = {
   title: string;
   group: SkillGroup;
   shortDesc: string;
-  timeToMaster: string;
   tags: { slug: string; title: string }[];
   minPlan: PlanCode;
   locked: boolean;
@@ -66,7 +65,6 @@ export async function listSkills(actor: Actor, filters: SkillFilters): Promise<S
       title: s.title,
       group: s.group,
       shortDesc: s.shortDesc,
-      timeToMaster: s.timeToMaster,
       tags: s.tags.map((t) => t.tag),
       minPlan: s.minPlan,
       locked: !decision.ok,
@@ -89,7 +87,6 @@ export type SkillDetail = {
   shortDesc: string;
   inputs: string;
   outputs: string;
-  timeToMaster: string;
   tags: { slug: string; title: string }[];
   minPlan: PlanCode;
   locked: boolean;
@@ -132,7 +129,6 @@ export async function getSkillBySlug(actor: Actor, slug: string): Promise<SkillD
     shortDesc: s.shortDesc,
     inputs: s.inputs,
     outputs: s.outputs,
-    timeToMaster: s.timeToMaster,
     tags: s.tags.map((t) => t.tag),
     minPlan: s.minPlan,
     status: status?.status ?? ('NONE' as ProgressStatus),

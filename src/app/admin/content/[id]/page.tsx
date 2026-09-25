@@ -3,18 +3,17 @@ import { notFound } from 'next/navigation';
 import { requireRole } from '@/server/access/guard';
 import { prisma } from '@/server/db';
 import { richToHtml } from '@/lib/rich';
-import {
-  parseTimecodes,
-  parseKpis,
-  parseUsecaseSteps,
-  parseRepoLinks,
-} from '@/lib/content-types';
+import { parseTimecodes, parseKpis, parseUsecaseSteps, parseRepoLinks } from '@/lib/content-types';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { ContentForm } from '@/components/admin/ContentForm';
 
 export const metadata: Metadata = { title: 'Редактирование юнита' };
 
-const BASE: Record<string, string> = { LESSON: '/lessons', USECASE: '/usecases', STREAM: '/streams' };
+const BASE: Record<string, string> = {
+  LESSON: '/lessons',
+  USECASE: '/usecases',
+  STREAM: '/streams',
+};
 
 function toLocalInput(d: Date | null): string | undefined {
   if (!d) return undefined;
@@ -27,9 +26,15 @@ export default async function EditContentPage({ params }: { params: Promise<{ id
   const { id } = await params;
 
   const [unit, tags, routeDays] = await Promise.all([
-    prisma.contentUnit.findUnique({ where: { id }, include: { tags: { select: { tagId: true } } } }),
+    prisma.contentUnit.findUnique({
+      where: { id },
+      include: { tags: { select: { tagId: true } } },
+    }),
     prisma.tag.findMany({ orderBy: { title: 'asc' }, select: { id: true, title: true } }),
-    prisma.routeDay.findMany({ orderBy: { dayNumber: 'asc' }, select: { id: true, dayNumber: true, title: true } }),
+    prisma.routeDay.findMany({
+      orderBy: { dayNumber: 'asc' },
+      select: { id: true, dayNumber: true, title: true },
+    }),
   ]);
   if (!unit) notFound();
 
@@ -55,7 +60,7 @@ export default async function EditContentPage({ params }: { params: Promise<{ id
           sort: unit.sort,
           kinescopeId: unit.kinescopeId ?? undefined,
           durationSec: unit.durationSec ?? undefined,
-          timecodesJson: JSON.stringify(parseTimecodes(unit.timecodes)),
+          timecodes: parseTimecodes(unit.timecodes),
           prompt: unit.prompt ?? undefined,
           promptNote: unit.promptNote ?? undefined,
           block: unit.block ?? undefined,
@@ -65,12 +70,12 @@ export default async function EditContentPage({ params }: { params: Promise<{ id
           caseClient: unit.caseClient ?? undefined,
           goal: unit.goal ?? undefined,
           result: unit.result ?? undefined,
-          kpisJson: JSON.stringify(parseKpis(unit.kpis)),
+          kpis: parseKpis(unit.kpis),
           descriptionHtml: richToHtml(unit.description) ?? undefined,
-          repoLinksJson: JSON.stringify(parseRepoLinks(unit.repoLinks)),
+          repoLinks: parseRepoLinks(unit.repoLinks),
           articleHtml: richToHtml(unit.article) ?? undefined,
           transcript: unit.transcript ?? undefined,
-          stepsJson: JSON.stringify(parseUsecaseSteps(unit.steps)),
+          steps: parseUsecaseSteps(unit.steps),
           airedAt: toLocalInput(unit.airedAt),
         }}
       />

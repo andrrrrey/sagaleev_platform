@@ -8,8 +8,16 @@ import { Button, buttonClass } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { Panel } from '@/components/ui/Panel';
 import { Label, Input, Textarea, Select, Checkbox, FieldError } from '@/components/ui/Field';
+import { RichTextEditor } from './RichTextEditor';
+import {
+  KpisEditor,
+  RepoLinksEditor,
+  StepsEditor,
+  TimecodesEditor,
+} from './StructuredFieldEditors';
+import type { Kpi, RepoLink, Timecode, UsecaseStep } from '@/lib/content-types';
 
-type Defaults = Record<string, string | number | boolean | undefined> & { id?: string };
+type Defaults = Record<string, unknown> & { id?: string };
 
 export function ContentForm({
   tags,
@@ -64,15 +72,16 @@ export function ContentForm({
             <Input id="coverUrl" name="coverUrl" mono defaultValue={d.coverUrl as string} />
           </div>
           <div>
-            <Label htmlFor="timeToMaster">Время освоения</Label>
+            <Label htmlFor="timeToMaster">Примерное время материала</Label>
             <Input id="timeToMaster" name="timeToMaster" defaultValue={d.timeToMaster as string} />
+            <p className="mt-1 text-xs font-light text-t500">
+              Например: «20 минут видео + 30 минут практики».
+            </p>
           </div>
           <div>
-            <Label htmlFor="minPlan">minPlan</Label>
-            <Select id="minPlan" name="minPlan" defaultValue={(d.minPlan as string) ?? 'SELF'}>
-              <option value="SELF">SELF</option>
-              <option value="SUPPORT">SUPPORT</option>
-              <option value="VIP">VIP</option>
+            <Label htmlFor="minPlan">Доступ</Label>
+            <Select id="minPlan" name="minPlan" defaultValue="SUPPORT">
+              <option value="SUPPORT">Включён в единую подписку</option>
             </Select>
           </div>
           <div>
@@ -85,7 +94,13 @@ export function ContentForm({
           </div>
           <div>
             <Label htmlFor="sort">Порядок</Label>
-            <Input id="sort" name="sort" type="number" mono defaultValue={(d.sort as number) ?? 0} />
+            <Input
+              id="sort"
+              name="sort"
+              type="number"
+              mono
+              defaultValue={(d.sort as number) ?? 0}
+            />
           </div>
           {type === 'STREAM' ? (
             <div className="flex items-end">
@@ -103,7 +118,13 @@ export function ContentForm({
                 <span className="font-mono text-xs text-t400">Сначала создайте теги.</span>
               ) : (
                 tags.map((t) => (
-                  <Checkbox key={t.id} name="tags" value={t.id} defaultChecked={assigned.has(t.id)} label={t.title} />
+                  <Checkbox
+                    key={t.id}
+                    name="tags"
+                    value={t.id}
+                    defaultChecked={assigned.has(t.id)}
+                    label={t.title}
+                  />
                 ))
               )}
             </div>
@@ -118,15 +139,25 @@ export function ContentForm({
         <div className="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2">
           <div>
             <Label htmlFor="kinescopeId">Kinescope ID</Label>
-            <Input id="kinescopeId" name="kinescopeId" mono defaultValue={d.kinescopeId as string} />
+            <Input
+              id="kinescopeId"
+              name="kinescopeId"
+              mono
+              defaultValue={d.kinescopeId as string}
+            />
           </div>
           <div>
             <Label htmlFor="durationSec">Длительность (сек)</Label>
-            <Input id="durationSec" name="durationSec" type="number" mono defaultValue={d.durationSec as number} />
+            <Input
+              id="durationSec"
+              name="durationSec"
+              type="number"
+              mono
+              defaultValue={d.durationSec as number}
+            />
           </div>
           <div className="sm:col-span-2">
-            <Label htmlFor="timecodesJson">Таймкоды — JSON [{'{'}t,label{'}'}]</Label>
-            <Textarea id="timecodesJson" name="timecodesJson" mono rows={4} defaultValue={d.timecodesJson as string} placeholder='[{"t":125,"label":"Аудит выдачи"}]' />
+            <TimecodesEditor defaults={(d.timecodes as Timecode[] | undefined) ?? []} />
             {err('timecodesJson')}
           </div>
         </div>
@@ -146,23 +177,38 @@ export function ContentForm({
       </Panel>
 
       {type === 'LESSON' ? (
-        <Panel title="Урок // Программа">
-          <div className="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2">
+        <Panel title="Урок // Программа и текстовая версия">
+          <div className="grid grid-cols-1 gap-5 p-5 sm:grid-cols-2">
             <div>
               <Label htmlFor="block">Блок 1–10</Label>
               <Input id="block" name="block" type="number" mono defaultValue={d.block as number} />
             </div>
             <div>
               <Label htmlFor="orderInBlock">Порядок в блоке</Label>
-              <Input id="orderInBlock" name="orderInBlock" type="number" mono defaultValue={d.orderInBlock as number} />
+              <Input
+                id="orderInBlock"
+                name="orderInBlock"
+                type="number"
+                mono
+                defaultValue={d.orderInBlock as number}
+              />
             </div>
             <div>
               <Label htmlFor="methodTag">Принцип метода</Label>
-              <Input id="methodTag" name="methodTag" defaultValue={d.methodTag as string} placeholder="сегментация ABCDX" />
+              <Input
+                id="methodTag"
+                name="methodTag"
+                defaultValue={d.methodTag as string}
+                placeholder="сегментация ABCDX"
+              />
             </div>
             <div>
               <Label htmlFor="routeDayId">День маршрута</Label>
-              <Select id="routeDayId" name="routeDayId" defaultValue={(d.routeDayId as string) ?? ''}>
+              <Select
+                id="routeDayId"
+                name="routeDayId"
+                defaultValue={(d.routeDayId as string) ?? ''}
+              >
                 <option value="">— нет —</option>
                 {routeDays.map((r) => (
                   <option key={r.id} value={r.id}>
@@ -170,6 +216,23 @@ export function ContentForm({
                   </option>
                 ))}
               </Select>
+            </div>
+            <div className="sm:col-span-2">
+              <RichTextEditor
+                name="articleHtml"
+                label="Текстовая версия урока"
+                hint="Полный материал для студента, который предпочитает читать. Используйте заголовки, списки и ссылки — HTML писать не нужно."
+                defaultValue={(d.articleHtml as string) ?? ''}
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <Label htmlFor="lesson-transcript">Транскрипт видео — необязательно</Label>
+              <Textarea
+                id="lesson-transcript"
+                name="transcript"
+                rows={8}
+                defaultValue={d.transcript as string}
+              />
             </div>
           </div>
         </Panel>
@@ -191,31 +254,41 @@ export function ContentForm({
               <Textarea id="result" name="result" rows={2} defaultValue={d.result as string} />
             </div>
             <div>
-              <Label htmlFor="kpisJson">KPI — JSON [{'{'}label,value,hint{'}'}]</Label>
-              <Textarea id="kpisJson" name="kpisJson" mono rows={4} defaultValue={d.kpisJson as string} placeholder='[{"label":"Оценка статьи","value":"≥ 82/100"}]' />
+              <KpisEditor defaults={(d.kpis as Kpi[] | undefined) ?? []} />
               {err('kpisJson')}
             </div>
             <div>
-              <Label htmlFor="descriptionHtml">Описание (HTML)</Label>
-              <Textarea id="descriptionHtml" name="descriptionHtml" rows={4} defaultValue={d.descriptionHtml as string} />
+              <RichTextEditor
+                name="descriptionHtml"
+                label="Описание юзкейса"
+                hint="Контекст, исходная ситуация и важные детали. HTML писать не нужно."
+                defaultValue={(d.descriptionHtml as string) ?? ''}
+              />
             </div>
             <div>
-              <Label htmlFor="repoLinksJson">Ссылки на репо — JSON [{'{'}title,url{'}'}]</Label>
-              <Textarea id="repoLinksJson" name="repoLinksJson" mono rows={3} defaultValue={d.repoLinksJson as string} placeholder='[{"title":"GitHub","url":"https://..."}]' />
+              <RepoLinksEditor defaults={(d.repoLinks as RepoLink[] | undefined) ?? []} />
               {err('repoLinksJson')}
             </div>
             <div>
-              <Label htmlFor="stepsJson">Пошаговые действия — JSON [{'{'}title,body,command{'}'}]</Label>
-              <Textarea id="stepsJson" name="stepsJson" mono rows={4} defaultValue={d.stepsJson as string} />
+              <StepsEditor defaults={(d.steps as UsecaseStep[] | undefined) ?? []} />
               {err('stepsJson')}
             </div>
             <div>
-              <Label htmlFor="articleHtml">Статья (HTML)</Label>
-              <Textarea id="articleHtml" name="articleHtml" rows={4} defaultValue={d.articleHtml as string} />
+              <RichTextEditor
+                name="articleHtml"
+                label="Статья-разбор"
+                hint="Подробный материал для студента: заголовки, абзацы, списки и ссылки."
+                defaultValue={(d.articleHtml as string) ?? ''}
+              />
             </div>
             <div>
               <Label htmlFor="transcript">Транскрипт</Label>
-              <Textarea id="transcript" name="transcript" mono rows={4} defaultValue={d.transcript as string} />
+              <Textarea
+                id="transcript"
+                name="transcript"
+                rows={8}
+                defaultValue={d.transcript as string}
+              />
             </div>
           </div>
         </Panel>
@@ -226,15 +299,31 @@ export function ContentForm({
           <div className="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2">
             <div>
               <Label htmlFor="airedAt">Дата эфира</Label>
-              <Input id="airedAt" name="airedAt" type="datetime-local" mono defaultValue={d.airedAt as string} />
+              <Input
+                id="airedAt"
+                name="airedAt"
+                type="datetime-local"
+                mono
+                defaultValue={d.airedAt as string}
+              />
             </div>
             <div className="sm:col-span-2">
               <Label htmlFor="transcript-s">Транскрипт</Label>
-              <Textarea id="transcript-s" name="transcript" mono rows={4} defaultValue={d.transcript as string} />
+              <Textarea
+                id="transcript-s"
+                name="transcript"
+                mono
+                rows={4}
+                defaultValue={d.transcript as string}
+              />
             </div>
             <div className="sm:col-span-2">
-              <Label htmlFor="article-s">Статья/конспект (HTML)</Label>
-              <Textarea id="article-s" name="articleHtml" rows={3} defaultValue={d.articleHtml as string} />
+              <RichTextEditor
+                name="articleHtml"
+                label="Статья или конспект эфира"
+                hint="Оформите текст заголовками и списками. HTML писать не нужно."
+                defaultValue={(d.articleHtml as string) ?? ''}
+              />
             </div>
           </div>
         </Panel>

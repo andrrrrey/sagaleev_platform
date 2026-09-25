@@ -3,6 +3,7 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '@/server/db';
 import { getSetting, getSettingBool } from '@/server/settings/store';
 import { planLevel } from '@/server/access/plans';
+import { notifyTelegram } from '@/server/telegram/service';
 import {
   CURATOR_SYSTEM_DEFAULT,
   buildCuratorUserPrompt,
@@ -38,8 +39,14 @@ export async function collectCuratorContext(userId: string): Promise<CuratorCont
       take: 40,
     }),
     prisma.routeStepProgress.findMany({ where: { userId }, select: { done: true } }),
-    prisma.moneyEntry.aggregate({ _sum: { amountKopeks: true }, where: { userId, createdAt: { gte: weekStart } } }),
-    prisma.weeklyReport.findUnique({ where: { userId_weekStart: { userId, weekStart } }, select: { text: true } }),
+    prisma.moneyEntry.aggregate({
+      _sum: { amountKopeks: true },
+      where: { userId, createdAt: { gte: weekStart } },
+    }),
+    prisma.weeklyReport.findUnique({
+      where: { userId_weekStart: { userId, weekStart } },
+      select: { text: true },
+    }),
   ]);
   if (!user || !profile) return null;
 
@@ -112,7 +119,10 @@ export async function runCuratorForUser(userId: string): Promise<'OK' | 'SKIPPED
   const ctx = await collectCuratorContext(userId);
   if (!ctx) return 'SKIPPED';
 
-  const settings = await prisma.legalDocument.findFirst({ where: { kind: 'CURATOR_SYSTEM' }, orderBy: { publishedAt: 'desc' } });
+  const settings = await prisma.legalDocument.findFirst({
+    where: { kind: 'CURATOR_SYSTEM' },
+    orderBy: { publishedAt: 'desc' },
+  });
   const system = settings?.bodyHtml ?? CURATOR_SYSTEM_DEFAULT;
   const userPrompt = buildCuratorUserPrompt(ctx);
   assertNoContacts(`${system}\n${userPrompt}`); // страховка приватности
@@ -130,7 +140,14 @@ export async function runCuratorForUser(userId: string): Promise<'OK' | 'SKIPPED
   if (!parsed) {
     await prisma.curatorNote.upsert({
       where: { userId_weekStart: { userId, weekStart } },
-      create: { userId, weekStart, summary: 'Не удалось сформировать разбор.', nextSteps: [], model: CURATOR_MODEL, status: 'FAILED' },
+      create: {
+        userId,
+        weekStart,
+        summary: 'Не удалось сформировать разбор.',
+        nextSteps: [],
+        model: CURATOR_MODEL,
+        status: 'FAILED',
+      },
       update: { status: 'FAILED' },
     });
     return 'FAILED';
@@ -156,9 +173,20 @@ export async function runCuratorForUser(userId: string): Promise<'OK' | 'SKIPPED
       },
     });
     await tx.notification.create({
-      data: { userId, kind: 'CURATOR_NOTE', title: 'Разбор куратора готов', body: parsed.summary.slice(0, 120), href: '/profile/curator' },
+      data: {
+        userId,
+        kind: 'CURATOR_NOTE',
+        title: 'Разбор куратора готов',
+        body: parsed.summary.slice(0, 120),
+        href: '/profile/curator',
+      },
     });
   });
+
+  await notifyTelegram(
+    userId,
+    '🧭 Еженедельный разбор агента-куратора готов. Откройте платформу: https://platform.sagaleev.ru/profile/curator',
+  );
 
   return 'OK';
 }
