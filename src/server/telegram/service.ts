@@ -17,6 +17,23 @@ export async function registerTelegramWebhook(): Promise<TelegramWebhookResult> 
   if (!token) return { registered: false, reason: 'не задан токен Telegram-бота' };
   if (!secret) return { registered: false, reason: 'не задан секрет webhook' };
 
+  if (env.TELEGRAM_UPDATE_MODE === 'polling') {
+    const response = await fetch(`${API}/bot${token}/deleteWebhook`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ drop_pending_updates: false }),
+      signal: AbortSignal.timeout(TELEGRAM_REQUEST_TIMEOUT_MS),
+    });
+    const result = (await response.json().catch(() => null)) as {
+      ok?: boolean;
+      description?: string;
+    } | null;
+    if (!response.ok || !result?.ok) {
+      throw new Error(result?.description || `Telegram API: HTTP ${response.status}`);
+    }
+    return { registered: false, reason: 'включён режим polling; webhook не требуется' };
+  }
+
   const url = new URL('/api/webhooks/telegram', env.APP_URL).toString();
   const response = await fetch(`${API}/bot${token}/setWebhook`, {
     method: 'POST',

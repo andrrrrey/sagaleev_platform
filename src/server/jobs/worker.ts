@@ -16,6 +16,7 @@ import { runCuratorWeekly } from '@/server/curator/service';
 import { reconcilePendingPayments, renewDueSubscriptions } from '@/server/payments/service';
 import { sendStreamReminders } from './tasks';
 import { prisma } from '@/server/db';
+import { startTelegramPolling } from '@/server/telegram/poller';
 
 async function cleanupTokens(): Promise<number> {
   const res = await prisma.authToken.deleteMany({ where: { expiresAt: { lt: new Date() } } });
@@ -73,6 +74,7 @@ async function main() {
   await boss.schedule(QUEUES.cleanup, '0 1 * * *');
 
   console.log('Worker запущен: очереди и расписания зарегистрированы.');
+  void startTelegramPolling();
 }
 
 main().catch((e) => {

@@ -31,6 +31,7 @@ const schema = z.object({
   TELEGRAM_BOT_USERNAME: z.string().optional(),
   TELEGRAM_WEBHOOK_SECRET: z.string().optional(),
   TELEGRAM_API_BASE_URL: z.string().url().default('https://api.telegram.org'),
+  TELEGRAM_UPDATE_MODE: z.enum(['webhook', 'polling']).default('webhook'),
 
   ANTHROPIC_API_KEY: z.string().optional(),
   CURATOR_LLM_PROVIDER: z.enum(['anthropic', 'routerai']).default('anthropic'),

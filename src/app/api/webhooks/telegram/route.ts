@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/server/db';
 import { getSetting } from '@/server/settings/store';
-import { consumeToken } from '@/server/auth/tokens';
-import { sendTelegramMessage } from '@/server/telegram/service';
+import { processTelegramUpdate, type TelegramUpdate } from '@/server/telegram/updates';
 
 /**
  * Webhook бота: обрабатывает `/start <token>` для привязки аккаунта.
@@ -17,39 +15,8 @@ export async function POST(req: Request) {
     }
   }
 
-  const update = (await req.json().catch(() => null)) as {
-    message?: { chat?: { id?: number }; from?: { username?: string }; text?: string };
-  } | null;
-  const msg = update?.message;
-  const chatId = msg?.chat?.id;
-  const text = msg?.text ?? '';
-
-  if (chatId && text.startsWith('/start')) {
-    const token = text.split(/\s+/)[1];
-    if (token) {
-      const userId = await consumeToken(token, 'TELEGRAM_LINK');
-      if (userId) {
-        await prisma.user.update({
-          where: { id: userId },
-          data: { telegramChatId: String(chatId), telegramUsername: msg?.from?.username ?? null },
-        });
-        await sendTelegramMessage(
-          String(chatId),
-          'Аккаунт привязан. Будем присылать уведомления сюда.',
-        );
-        return NextResponse.json({ ok: true });
-      }
-      await sendTelegramMessage(
-        String(chatId),
-        'Ссылка привязки недействительна или уже использована. Откройте на платформе «Профиль → Уведомления → Подключить Telegram» и нажмите новую кнопку привязки.',
-      );
-      return NextResponse.json({ ok: true });
-    }
-    await sendTelegramMessage(
-      String(chatId),
-      'Здравствуйте! Я бот-куратор платформы. Чтобы подключить уведомления, откройте на платформе «Профиль → Уведомления» и нажмите «Подключить Telegram». Обычная команда /start без ссылки аккаунт не привязывает.',
-    );
-  }
+  const update = (await req.json().catch(() => null)) as TelegramUpdate | null;
+  await processTelegramUpdate(update);
 
   return NextResponse.json({ ok: true });
 }
