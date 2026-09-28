@@ -33,11 +33,22 @@ export async function POST(req: Request) {
           where: { id: userId },
           data: { telegramChatId: String(chatId), telegramUsername: msg?.from?.username ?? null },
         });
-        await sendTelegramMessage(String(chatId), 'Аккаунт привязан. Будем присылать уведомления сюда.');
+        await sendTelegramMessage(
+          String(chatId),
+          'Аккаунт привязан. Будем присылать уведомления сюда.',
+        );
         return NextResponse.json({ ok: true });
       }
+      await sendTelegramMessage(
+        String(chatId),
+        'Ссылка привязки недействительна или уже использована. Откройте на платформе «Профиль → Уведомления → Подключить Telegram» и нажмите новую кнопку привязки.',
+      );
+      return NextResponse.json({ ok: true });
     }
-    await sendTelegramMessage(String(chatId), 'Ссылка привязки недействительна. Сгенерируйте новую в профиле.');
+    await sendTelegramMessage(
+      String(chatId),
+      'Здравствуйте! Я бот-куратор платформы. Чтобы подключить уведомления, откройте на платформе «Профиль → Уведомления» и нажмите «Подключить Telegram». Обычная команда /start без ссылки аккаунт не привязывает.',
+    );
   }
 
   return NextResponse.json({ ok: true });

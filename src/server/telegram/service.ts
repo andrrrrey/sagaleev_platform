@@ -2,7 +2,8 @@ import { prisma } from '@/server/db';
 import { env } from '@/lib/env';
 import { getSetting, getSettingFresh } from '@/server/settings/store';
 
-const API = 'https://api.telegram.org';
+const API = env.TELEGRAM_API_BASE_URL.replace(/\/$/, '');
+const TELEGRAM_REQUEST_TIMEOUT_MS = 8_000;
 
 export type TelegramWebhookResult =
   { registered: true; url: string } | { registered: false; reason: string };
@@ -26,6 +27,7 @@ export async function registerTelegramWebhook(): Promise<TelegramWebhookResult> 
       allowed_updates: ['message'],
       drop_pending_updates: false,
     }),
+    signal: AbortSignal.timeout(TELEGRAM_REQUEST_TIMEOUT_MS),
   });
   const result = (await response.json().catch(() => null)) as {
     ok?: boolean;
@@ -54,6 +56,7 @@ export async function sendTelegramMessage(chatId: string, text: string): Promise
         parse_mode: 'HTML',
         disable_web_page_preview: true,
       }),
+      signal: AbortSignal.timeout(TELEGRAM_REQUEST_TIMEOUT_MS),
     });
     if (res.status === 403) {
       await prisma.user.updateMany({
