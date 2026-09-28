@@ -117,10 +117,10 @@ export async function deleteUser(formData: FormData): Promise<void> {
   if (!target || target.deletedAt) return;
 
   if (target.role === 'ADMIN') {
-    const activeAdmins = await prisma.user.count({
-      where: { role: 'ADMIN', deletedAt: null, blockedAt: null },
+    const otherActiveAdmins = await prisma.user.count({
+      where: { id: { not: userId }, role: 'ADMIN', deletedAt: null, blockedAt: null },
     });
-    if (activeAdmins <= 1) return;
+    if (otherActiveAdmins === 0) return;
   }
 
   const now = new Date();
@@ -137,7 +137,11 @@ export async function deleteUser(formData: FormData): Promise<void> {
     await tx.leaderboardEntry.deleteMany({ where: { userId } });
     await tx.enrollment.updateMany({
       where: { userId },
-      data: { status: 'EXPIRED', autoRenew: false, canceledAt: now, paymentMethodId: null },
+      data: { autoRenew: false, paymentMethodId: null },
+    });
+    await tx.enrollment.updateMany({
+      where: { userId, status: { in: ['ACTIVE', 'PENDING'] } },
+      data: { status: 'EXPIRED', canceledAt: now },
     });
     await tx.user.update({
       where: { id: userId },
