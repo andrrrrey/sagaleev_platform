@@ -9,7 +9,10 @@ import { type ActionState } from '@/lib/action-state';
 import { weekStartOf, runCuratorForUser } from './service';
 
 /** «Что сделал за неделю» (WeeklyReport). SUPPORT+. */
-export async function saveWeeklyReport(_prev: ActionState, formData: FormData): Promise<ActionState> {
+export async function saveWeeklyReport(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
   const actor = await getActor();
   if (!actor) redirect('/login');
   assertAccess(actor, { kind: 'feature', feature: 'CURATOR' });
@@ -26,10 +29,32 @@ export async function saveWeeklyReport(_prev: ActionState, formData: FormData): 
 }
 
 /** Ручной запуск разбора для студента (A10, ADMIN). */
-export async function runCuratorManual(formData: FormData): Promise<void> {
+export async function runCuratorManual(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
   const actor = await getActor();
   if (!actor || actor.role !== 'ADMIN') redirect('/');
   const userId = String(formData.get('userId') ?? '');
-  if (userId) await runCuratorForUser(userId);
+  if (!userId) return { ok: false, message: 'Выберите студента.' };
+
+  const result = await runCuratorForUser(userId);
   revalidatePath('/admin/curator');
+  revalidatePath('/profile/curator');
+
+  if (result === 'OK') {
+    return { ok: true, message: 'Разбор готов. Текст появился ниже в журнале запусков.' };
+  }
+  if (result === 'SKIPPED') {
+    return {
+      ok: false,
+      message:
+        'Разбор не создан. Проверьте активную подписку студента, заполненный бизнес-профиль, включённого куратора и API-ключ.',
+    };
+  }
+  return {
+    ok: false,
+    message:
+      'Модель не смогла сформировать корректный разбор. Попробуйте ещё раз или проверьте ключ и модель RouterAI.',
+  };
 }

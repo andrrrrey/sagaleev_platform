@@ -3,17 +3,16 @@ import { requireRole } from '@/server/access/guard';
 import { prisma } from '@/server/db';
 import { getSettingBool } from '@/server/settings/store';
 import { getCuratorLlmConfig } from '@/server/curator/service';
-import { runCuratorManual } from '@/server/curator/actions';
 import { formatDate } from '@/lib/utils';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Panel } from '@/components/ui/Panel';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { Table, THead, Th, TRow, Td } from '@/components/ui/Table';
-import { Button } from '@/components/ui/Button';
-import { Icon } from '@/components/ui/Icon';
-import { Select } from '@/components/ui/Field';
+import { CuratorManualForm } from '@/components/admin/CuratorManualForm';
 
 export const metadata: Metadata = { title: 'Админ — куратор' };
+
+type CuratorStep = { title?: string; why?: string };
 
 export default async function AdminCuratorPage() {
   await requireRole(['ADMIN']);
@@ -103,27 +102,7 @@ export default async function AdminCuratorPage() {
         </Panel>
 
         <Panel title="Ручной запуск // Разбор">
-          <form action={runCuratorManual} className="flex flex-col gap-4 p-6">
-            <Select name="userId" defaultValue="">
-              <option value="" disabled>
-                Выберите студента
-              </option>
-              {students.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </Select>
-            <Button type="submit" disabled={!enabled} className="self-start">
-              <Icon name="refresh-linear" />
-              Запустить разбор
-            </Button>
-            {!enabled ? (
-              <p className="font-mono text-[10px] uppercase tracking-widest text-t400">
-                Недоступно без ключа/фичефлага
-              </p>
-            ) : null}
-          </form>
+          <CuratorManualForm students={students} enabled={enabled} />
         </Panel>
       </div>
 
@@ -138,7 +117,7 @@ export default async function AdminCuratorPage() {
                   <Th>Студент</Th>
                   <Th>Неделя</Th>
                   <Th>Модель</Th>
-                  <Th>Токены</Th>
+                  <Th>Результат</Th>
                   <Th>Статус</Th>
                 </tr>
               </THead>
@@ -148,8 +127,21 @@ export default async function AdminCuratorPage() {
                     <Td>{n.user.name}</Td>
                     <Td mono>{formatDate(n.weekStart)}</Td>
                     <Td mono>{n.model}</Td>
-                    <Td mono>
-                      {n.tokensIn ?? '—'}/{n.tokensOut ?? '—'}
+                    <Td>
+                      <div className="max-w-xl space-y-2 text-sm font-light leading-relaxed text-t700">
+                        <p>{n.summary}</p>
+                        {Array.isArray(n.nextSteps) && n.nextSteps.length > 0 ? (
+                          <div className="text-xs text-t500">
+                            <span className="font-mono uppercase tracking-wider">
+                              Следующие шаги:{' '}
+                            </span>
+                            {(n.nextSteps as CuratorStep[])
+                              .map((step) => step.title)
+                              .filter(Boolean)
+                              .join(' · ')}
+                          </div>
+                        ) : null}
+                      </div>
                     </Td>
                     <Td>
                       <StatusPill muted={n.status !== 'OK'}>{n.status}</StatusPill>
