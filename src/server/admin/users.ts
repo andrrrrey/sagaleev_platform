@@ -7,6 +7,7 @@ import * as argon2 from 'argon2';
 import { prisma } from '@/server/db';
 import { getActor } from '@/server/auth/session';
 import { canManageUsers } from '@/server/access/staff';
+import { rebuildLeaderboardEntry } from '@/server/progress/leaderboard';
 import { type ActionState, fieldErrorsFromZod } from '@/lib/action-state';
 import { audit } from './audit';
 
@@ -15,6 +16,9 @@ const createUserSchema = z.object({
   email: z.string().email('Некорректный email'),
   role: z.enum(['ADMIN', 'EDITOR', 'STUDENT']),
   password: z.string().min(10, 'Минимум 10 символов'),
+  grantAccess: z
+    .preprocess((value) => value === 'on' || value === 'true', z.boolean())
+    .default(false),
 });
 
 const passwordSchema = z.object({
@@ -31,7 +35,7 @@ export async function createUser(_prev: ActionState, formData: FormData): Promis
   if (!parsed.success) {
     return { ok: false, fieldErrors: fieldErrorsFromZod(parsed.error.issues) };
   }
-  const { name, role, password } = parsed.data;
+  const { name, role, password, grantAccess } = parsed.data;
   const email = parsed.data.email.toLowerCase();
 
   const existing = await prisma.user.findUnique({ where: { email } });
@@ -40,19 +44,41 @@ export async function createUser(_prev: ActionState, formData: FormData): Promis
   }
 
   const passwordHash = await argon2.hash(password, { type: argon2.argon2id });
-  const user = await prisma.user.create({
-    data: {
-      email,
-      name,
-      role,
-      passwordHash,
-      // Создан администратором — доступ без письма-подтверждения.
-      emailVerifiedAt: new Date(),
-    },
+  const user = await prisma.$transaction(async (tx) => {
+    const created = await tx.user.create({
+      data: {
+        email,
+        name,
+        role,
+        passwordHash,
+        // Создан администратором — доступ без письма-подтверждения.
+        emailVerifiedAt: new Date(),
+      },
+    });
+    if (role === 'STUDENT' && grantAccess) {
+      await tx.enrollment.create({
+        data: {
+          userId: created.id,
+          planCode: 'SUPPORT',
+          status: 'ACTIVE',
+          activatedAt: new Date(),
+          grantedByAdmin: true,
+        },
+      });
+    }
+    return created;
   });
-  await audit(actor.id, 'CREATE', 'User', user.id, { role });
+  if (role === 'STUDENT' && grantAccess) await rebuildLeaderboardEntry(user.id);
+  await audit(actor.id, 'CREATE', 'User', user.id, { role, grantAccess });
   revalidatePath('/admin/users');
-  return { ok: true, message: `Пользователь ${email} создан (${role}).` };
+  revalidatePath('/admin/students');
+  return {
+    ok: true,
+    message:
+      role === 'STUDENT'
+        ? `Студент ${email} создан${grantAccess ? ' и получил доступ к платформе' : ''}.`
+        : `Пользователь ${email} создан (${role}).`,
+  };
 }
 
 /** Сменить пароль пользователя (ADMIN). */

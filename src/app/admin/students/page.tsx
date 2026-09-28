@@ -11,6 +11,7 @@ import { Select } from '@/components/ui/Field';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { UserRowActions } from '@/components/admin/UserRowActions';
+import { UserCreateForm } from '@/components/admin/UserCreateForm';
 
 export const metadata: Metadata = { title: 'Админ — студенты' };
 
@@ -34,6 +35,11 @@ export default async function AdminStudentsPage() {
         title="Студенты"
         description={`Всего: ${students.length}. Тариф можно включить прямо из списка или в карточке.`}
       />
+      <div className="mb-6">
+        <Panel title="Добавить // Новый студент">
+          <UserCreateForm studentOnly />
+        </Panel>
+      </div>
       <Panel title="Список // Студенты">
         <div className="p-2">
           {students.length === 0 ? (
