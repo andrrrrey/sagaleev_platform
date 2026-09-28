@@ -17,7 +17,7 @@ export { maskSecret };
  * «задан/не задан» и маскированный хвост (см. describeSettings / maskSecret).
  */
 
-export type SettingKind = 'secret' | 'text' | 'boolean';
+export type SettingKind = 'secret' | 'text' | 'boolean' | 'select';
 
 export type SettingDef = {
   key: string;
@@ -26,12 +26,43 @@ export type SettingDef = {
   group: string;
   placeholder?: string;
   hint?: string;
+  options?: { value: string; label: string }[];
   /** Значение по умолчанию из окружения. */
   envFallback: () => string | undefined;
 };
 
 /** Каталог настроек, доступных в админке. Порядок = порядок отображения. */
 export const SETTING_DEFS: SettingDef[] = [
+  {
+    key: 'CURATOR_LLM_PROVIDER',
+    label: 'Провайдер модели',
+    kind: 'select',
+    group: 'Куратор (LLM)',
+    hint: 'RouterAI использует единый ключ и позволяет выбирать модель. Anthropic оставлен для обратной совместимости.',
+    options: [
+      { value: 'routerai', label: 'RouterAI' },
+      { value: 'anthropic', label: 'Anthropic напрямую' },
+    ],
+    envFallback: () => env.CURATOR_LLM_PROVIDER,
+  },
+  {
+    key: 'ROUTERAI_API_KEY',
+    label: 'RouterAI API-ключ',
+    kind: 'secret',
+    group: 'Куратор (LLM)',
+    placeholder: 'Введите ключ RouterAI',
+    hint: 'Используется, когда выше выбран RouterAI.',
+    envFallback: () => env.ROUTERAI_API_KEY,
+  },
+  {
+    key: 'ROUTERAI_MODEL',
+    label: 'Модель RouterAI',
+    kind: 'text',
+    group: 'Куратор (LLM)',
+    placeholder: 'openai/gpt-4o',
+    hint: 'Идентификатор модели из каталога RouterAI, например openai/gpt-4o.',
+    envFallback: () => env.ROUTERAI_MODEL,
+  },
   {
     key: 'ANTHROPIC_API_KEY',
     label: 'Anthropic API-ключ (куратор)',
@@ -135,6 +166,13 @@ export async function getSetting(key: string): Promise<string | undefined> {
   return DEF_BY_KEY.get(key)?.envFallback();
 }
 
+/** Актуальное значение без request-cache. Нужно сразу после изменения настройки. */
+export async function getSettingFresh(key: string): Promise<string | undefined> {
+  const row = await prisma.appSetting.findUnique({ where: { key }, select: { value: true } });
+  if (row?.value.trim()) return row.value;
+  return DEF_BY_KEY.get(key)?.envFallback();
+}
+
 /** Булева настройка (например, CURATOR_ENABLED). */
 export async function getSettingBool(key: string): Promise<boolean> {
   const v = await getSetting(key);
@@ -148,6 +186,7 @@ export type SettingView = {
   group: string;
   placeholder?: string;
   hint?: string;
+  options?: { value: string; label: string }[];
   /** Значение есть (в БД или окружении). */
   isSet: boolean;
   /** Источник значения. */
@@ -175,6 +214,7 @@ export async function describeSettings(): Promise<SettingView[]> {
       group: d.group,
       placeholder: d.placeholder,
       hint: d.hint,
+      options: d.options,
       isSet,
       source,
       // text/boolean можно предзаполнить, секрет — никогда.

@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import { requireRole } from '@/server/access/guard';
 import { prisma } from '@/server/db';
-import { getSetting, getSettingBool } from '@/server/settings/store';
+import { getSettingBool } from '@/server/settings/store';
+import { getCuratorLlmConfig } from '@/server/curator/service';
 import { runCuratorManual } from '@/server/curator/actions';
 import { formatDate } from '@/lib/utils';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -19,7 +20,11 @@ export default async function AdminCuratorPage() {
 
   const [students, notes] = await Promise.all([
     prisma.user.findMany({
-      where: { role: 'STUDENT', deletedAt: null, enrollments: { some: { status: 'ACTIVE', planCode: { in: ['SUPPORT', 'VIP'] } } } },
+      where: {
+        role: 'STUDENT',
+        deletedAt: null,
+        enrollments: { some: { status: 'ACTIVE', planCode: { in: ['SUPPORT', 'VIP'] } } },
+      },
       select: { id: true, name: true },
       orderBy: { name: 'asc' },
     }),
@@ -30,11 +35,11 @@ export default async function AdminCuratorPage() {
     }),
   ]);
 
-  const [curatorFlag, apiKey] = await Promise.all([
+  const [curatorFlag, llmConfig] = await Promise.all([
     getSettingBool('CURATOR_ENABLED'),
-    getSetting('ANTHROPIC_API_KEY'),
+    getCuratorLlmConfig(),
   ]);
-  const enabled = curatorFlag && Boolean(apiKey);
+  const enabled = curatorFlag && Boolean(llmConfig);
 
   return (
     <div className="px-6 py-8 md:px-10 md:py-12">
@@ -48,10 +53,11 @@ export default async function AdminCuratorPage() {
         <Panel title="Что это // Объяснение">
           <div className="flex flex-col gap-3 p-6 text-sm font-light leading-relaxed text-t700">
             <p>
-              <b>Агент-куратор</b> — это встроенный в платформу ИИ-наставник (на модели Claude).
-              Раз в неделю (по понедельникам) он смотрит на то, что студент <i>реально внедрил</i> в
-              бизнесе: прогресс по маршруту и юзкейсам, отметки «внедрил / есть результат», движение
-              по деньгам и еженедельный отчёт студента.
+              <b>Агент-куратор</b> — это встроенный в платформу ИИ-наставник. Модель и провайдер
+              (RouterAI или прямое подключение Anthropic) выбираются администратором. Раз в неделю
+              (по понедельникам) он смотрит на то, что студент <i>реально внедрил</i> в бизнесе:
+              прогресс по маршруту и юзкейсам, отметки «внедрил / есть результат», движение по
+              деньгам и еженедельный отчёт студента.
             </p>
             <p>
               На основе этого он формирует короткий разбор: что сделано за неделю, какой принцип
@@ -70,11 +76,29 @@ export default async function AdminCuratorPage() {
       </div>
 
       <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <Panel title="Статус // Фичефлаг" status={<StatusPill muted={!enabled}>{enabled ? 'Включён' : 'Выключен'}</StatusPill>}>
+        <Panel
+          title="Статус // Фичефлаг"
+          status={<StatusPill muted={!enabled}>{enabled ? 'Включён' : 'Выключен'}</StatusPill>}
+        >
           <div className="flex flex-col gap-2 p-6 text-sm font-light text-t700">
-            <div>CURATOR_ENABLED: <span className="font-mono text-t900">{String(curatorFlag)}</span></div>
-            <div>ANTHROPIC_API_KEY: <span className="font-mono text-t900">{apiKey ? 'задан' : 'не задан'}</span></div>
-            <div>Расписание: <span className="font-mono text-t900">пн 09:00 МСК</span> (джоба curator.weekly)</div>
+            <div>
+              CURATOR_ENABLED: <span className="font-mono text-t900">{String(curatorFlag)}</span>
+            </div>
+            <div>
+              Провайдер:{' '}
+              <span className="font-mono text-t900">{llmConfig?.provider ?? 'не настроен'}</span>
+            </div>
+            <div>
+              API-ключ:{' '}
+              <span className="font-mono text-t900">{llmConfig ? 'задан' : 'не задан'}</span>
+            </div>
+            <div>
+              Модель: <span className="font-mono text-t900">{llmConfig?.model ?? '—'}</span>
+            </div>
+            <div>
+              Расписание: <span className="font-mono text-t900">пн 09:00 МСК</span> (джоба
+              curator.weekly)
+            </div>
           </div>
         </Panel>
 
@@ -124,7 +148,9 @@ export default async function AdminCuratorPage() {
                     <Td>{n.user.name}</Td>
                     <Td mono>{formatDate(n.weekStart)}</Td>
                     <Td mono>{n.model}</Td>
-                    <Td mono>{n.tokensIn ?? '—'}/{n.tokensOut ?? '—'}</Td>
+                    <Td mono>
+                      {n.tokensIn ?? '—'}/{n.tokensOut ?? '—'}
+                    </Td>
                     <Td>
                       <StatusPill muted={n.status !== 'OK'}>{n.status}</StatusPill>
                     </Td>

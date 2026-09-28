@@ -10,6 +10,7 @@ import { StatusPill } from '@/components/ui/StatusPill';
 import { Select } from '@/components/ui/Field';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
+import { UserRowActions } from '@/components/admin/UserRowActions';
 
 export const metadata: Metadata = { title: 'Админ — студенты' };
 
@@ -46,6 +47,7 @@ export default async function AdminStudentsPage() {
                   <Th>Тариф</Th>
                   <Th>Очки</Th>
                   <Th>Управление тарифом</Th>
+                  <Th>Пользователь</Th>
                 </tr>
               </THead>
               <tbody>
@@ -95,6 +97,14 @@ export default async function AdminStudentsPage() {
                             </form>
                           ) : null}
                         </div>
+                      </Td>
+                      <Td>
+                        <UserRowActions
+                          userId={s.id}
+                          name={s.name}
+                          blocked={Boolean(s.blockedAt)}
+                          returnTo="/admin/students"
+                        />
                       </Td>
                     </TRow>
                   );

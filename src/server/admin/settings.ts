@@ -6,11 +6,15 @@ import { getActor } from '@/server/auth/session';
 import { prisma } from '@/server/db';
 import { recomputeAllLeaderboard } from '@/server/progress/leaderboard';
 import { SETTING_DEFS, saveSettings } from '@/server/settings/store';
+import { registerTelegramWebhook } from '@/server/telegram/service';
 import { type ActionState } from '@/lib/action-state';
 import { audit } from './audit';
 
 /** Системный промпт куратора хранится как LegalDocument(kind=CURATOR_SYSTEM). */
-export async function saveCuratorPrompt(_prev: ActionState, formData: FormData): Promise<ActionState> {
+export async function saveCuratorPrompt(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
   const actor = await getActor();
   if (!actor || actor.role !== 'ADMIN') redirect('/');
   const body = (formData.get('prompt') as string | null)?.trim();
@@ -53,9 +57,22 @@ export async function saveIntegrationSettings(
 
   const changed = await saveSettings(entries, actor.id);
   await audit(actor.id, 'UPDATE', 'AppSetting', undefined, { keys: changed });
+  let telegramMessage = '';
+  try {
+    const webhook = await registerTelegramWebhook();
+    telegramMessage = webhook.registered
+      ? ' Telegram webhook зарегистрирован автоматически.'
+      : ` Telegram webhook пока не зарегистрирован: ${webhook.reason}.`;
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : 'неизвестная ошибка';
+    telegramMessage = ` Настройки сохранены, но Telegram webhook не зарегистрирован: ${reason}.`;
+  }
   revalidatePath('/admin/settings');
   revalidatePath('/admin/curator');
-  return { ok: true, message: `Сохранено. Обновлено ключей: ${changed.length}.` };
+  return {
+    ok: true,
+    message: `Сохранено. Обновлено ключей: ${changed.length}.${telegramMessage}`,
+  };
 }
 
 /** Ручной полный пересчёт лидерборда (страховка). */

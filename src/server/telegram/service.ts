@@ -1,7 +1,41 @@
 import { prisma } from '@/server/db';
-import { getSetting } from '@/server/settings/store';
+import { env } from '@/lib/env';
+import { getSetting, getSettingFresh } from '@/server/settings/store';
 
 const API = 'https://api.telegram.org';
+
+export type TelegramWebhookResult =
+  { registered: true; url: string } | { registered: false; reason: string };
+
+/** Регистрирует production webhook у Telegram по текущим настройкам админки. */
+export async function registerTelegramWebhook(): Promise<TelegramWebhookResult> {
+  const [token, secret] = await Promise.all([
+    getSettingFresh('TELEGRAM_BOT_TOKEN'),
+    getSettingFresh('TELEGRAM_WEBHOOK_SECRET'),
+  ]);
+  if (!token) return { registered: false, reason: 'не задан токен Telegram-бота' };
+  if (!secret) return { registered: false, reason: 'не задан секрет webhook' };
+
+  const url = new URL('/api/webhooks/telegram', env.APP_URL).toString();
+  const response = await fetch(`${API}/bot${token}/setWebhook`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      url,
+      secret_token: secret,
+      allowed_updates: ['message'],
+      drop_pending_updates: false,
+    }),
+  });
+  const result = (await response.json().catch(() => null)) as {
+    ok?: boolean;
+    description?: string;
+  } | null;
+  if (!response.ok || !result?.ok) {
+    throw new Error(result?.description || `Telegram API: HTTP ${response.status}`);
+  }
+  return { registered: true, url };
+}
 
 /**
  * Отправка сообщения студенту через Bot API. При блокировке бота (403)
@@ -14,10 +48,18 @@ export async function sendTelegramMessage(chatId: string, text: string): Promise
     const res = await fetch(`${API}/bot${token}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML', disable_web_page_preview: true }),
+      body: JSON.stringify({
+        chat_id: chatId,
+        text,
+        parse_mode: 'HTML',
+        disable_web_page_preview: true,
+      }),
     });
     if (res.status === 403) {
-      await prisma.user.updateMany({ where: { telegramChatId: chatId }, data: { telegramChatId: null } });
+      await prisma.user.updateMany({
+        where: { telegramChatId: chatId },
+        data: { telegramChatId: null },
+      });
       return false;
     }
     return res.ok;

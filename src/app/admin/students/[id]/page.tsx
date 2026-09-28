@@ -48,10 +48,18 @@ export default async function StudentCardPage({ params }: { params: Promise<{ id
           <div className="flex flex-col gap-2 p-6 text-sm font-light text-t700">
             {user.businessProfile ? (
               <>
-                <div><span className="text-t400">Компания:</span> {user.businessProfile.companyName}</div>
-                <div><span className="text-t400">Ниша:</span> {user.businessProfile.niche}</div>
-                <div><span className="text-t400">Продукт:</span> {user.businessProfile.product}</div>
-                <div><span className="text-t400">Клиент:</span> {user.businessProfile.audience}</div>
+                <div>
+                  <span className="text-t400">Компания:</span> {user.businessProfile.companyName}
+                </div>
+                <div>
+                  <span className="text-t400">Ниша:</span> {user.businessProfile.niche}
+                </div>
+                <div>
+                  <span className="text-t400">Продукт:</span> {user.businessProfile.product}
+                </div>
+                <div>
+                  <span className="text-t400">Клиент:</span> {user.businessProfile.audience}
+                </div>
               </>
             ) : (
               <span className="font-mono text-xs text-t400">Профиль не заполнен.</span>
@@ -59,7 +67,12 @@ export default async function StudentCardPage({ params }: { params: Promise<{ id
           </div>
         </Panel>
 
-        <Panel title="Тариф // Ручная выдача" status={activePlan ? <StatusPill>{activePlan}</StatusPill> : <StatusPill muted>Нет</StatusPill>}>
+        <Panel
+          title="Тариф // Ручная выдача"
+          status={
+            activePlan ? <StatusPill>{activePlan}</StatusPill> : <StatusPill muted>Нет</StatusPill>
+          }
+        >
           <form action={grantPlanManual} className="flex flex-col gap-4 p-6">
             <input type="hidden" name="userId" value={user.id} />
             <div>
@@ -103,7 +116,12 @@ export default async function StudentCardPage({ params }: { params: Promise<{ id
               Блокировка мгновенно закрывает вход и текущие сессии. Смена пароля не уведомляет
               студента — сообщите новый пароль отдельно.
             </p>
-            <UserRowActions userId={user.id} name={user.name} blocked={Boolean(user.blockedAt)} />
+            <UserRowActions
+              userId={user.id}
+              name={user.name}
+              blocked={Boolean(user.blockedAt)}
+              returnTo="/admin/students"
+            />
           </div>
         </Panel>
       </div>

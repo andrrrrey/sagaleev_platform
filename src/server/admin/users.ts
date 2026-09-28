@@ -56,7 +56,10 @@ export async function createUser(_prev: ActionState, formData: FormData): Promis
 }
 
 /** Сменить пароль пользователя (ADMIN). */
-export async function setUserPassword(_prev: ActionState, formData: FormData): Promise<ActionState> {
+export async function setUserPassword(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
   const actor = await getActor();
   if (!actor || !canManageUsers(actor.role)) redirect('/');
 
@@ -93,4 +96,80 @@ export async function setUserBlocked(formData: FormData): Promise<void> {
   await audit(actor.id, blocked ? 'BLOCK' : 'UNBLOCK', 'User', userId);
   revalidatePath('/admin/users');
   revalidatePath(`/admin/students/${userId}`);
+}
+
+/**
+ * Удалить доступ и персональные данные пользователя, сохранив обязательную
+ * историю платежей и аудит. Себя и последнего активного ADMIN удалить нельзя.
+ */
+export async function deleteUser(formData: FormData): Promise<void> {
+  const actor = await getActor();
+  if (!actor || !canManageUsers(actor.role)) redirect('/');
+
+  const userId = String(formData.get('userId') ?? '');
+  const returnTo = String(formData.get('returnTo') ?? '');
+  if (!userId || userId === actor.id) return;
+
+  const target = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, role: true, deletedAt: true },
+  });
+  if (!target || target.deletedAt) return;
+
+  if (target.role === 'ADMIN') {
+    const activeAdmins = await prisma.user.count({
+      where: { role: 'ADMIN', deletedAt: null, blockedAt: null },
+    });
+    if (activeAdmins <= 1) return;
+  }
+
+  const now = new Date();
+  const anonymousEmail = `deleted-${userId}-${now.getTime()}@invalid.local`;
+  await prisma.$transaction(async (tx) => {
+    await tx.authToken.deleteMany({ where: { userId } });
+    await tx.businessProfile.deleteMany({ where: { userId } });
+    await tx.routeStepProgress.deleteMany({ where: { userId } });
+    await tx.progress.deleteMany({ where: { userId } });
+    await tx.moneyEntry.deleteMany({ where: { userId } });
+    await tx.weeklyReport.deleteMany({ where: { userId } });
+    await tx.curatorNote.deleteMany({ where: { userId } });
+    await tx.notification.deleteMany({ where: { userId } });
+    await tx.leaderboardEntry.deleteMany({ where: { userId } });
+    await tx.enrollment.updateMany({
+      where: { userId },
+      data: { status: 'EXPIRED', autoRenew: false, canceledAt: now, paymentMethodId: null },
+    });
+    await tx.user.update({
+      where: { id: userId },
+      data: {
+        email: anonymousEmail,
+        passwordHash: null,
+        name: 'Удалённый пользователь',
+        phone: null,
+        avatarUrl: null,
+        telegramChatId: null,
+        telegramUsername: null,
+        notifyEmail: false,
+        notifyTelegram: false,
+        showInLeaderboard: false,
+        cohortId: null,
+        blockedAt: now,
+        deletedAt: now,
+      },
+    });
+    await tx.auditLog.create({
+      data: {
+        actorId: actor.id,
+        action: 'DELETE',
+        entity: 'User',
+        entityId: userId,
+        meta: { previousRole: target.role, mode: 'anonymize' },
+      },
+    });
+  });
+
+  revalidatePath('/admin/users');
+  revalidatePath('/admin/students');
+  if (returnTo === '/admin/students') redirect('/admin/students');
+  if (returnTo === '/admin/users') redirect('/admin/users');
 }

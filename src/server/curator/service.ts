@@ -13,7 +13,28 @@ import {
   type CuratorResponse,
 } from './prompt';
 
-const CURATOR_MODEL = 'claude-sonnet-5'; // docs/01 §1: разовый вызов, дешёвая модель
+const ANTHROPIC_MODEL = 'claude-sonnet-5';
+const ROUTERAI_BASE_URL = 'https://routerai.ru/api/v1';
+
+type CuratorLlmConfig = {
+  provider: 'anthropic' | 'routerai';
+  apiKey: string;
+  model: string;
+};
+
+export async function getCuratorLlmConfig(): Promise<CuratorLlmConfig | null> {
+  const provider =
+    (await getSetting('CURATOR_LLM_PROVIDER')) === 'routerai' ? 'routerai' : 'anthropic';
+  const apiKey = await getSetting(
+    provider === 'routerai' ? 'ROUTERAI_API_KEY' : 'ANTHROPIC_API_KEY',
+  );
+  if (!apiKey) return null;
+  const model =
+    provider === 'routerai'
+      ? (await getSetting('ROUTERAI_MODEL'))?.trim() || 'openai/gpt-4o'
+      : ANTHROPIC_MODEL;
+  return { provider, apiKey, model };
+}
 
 /** Понедельник текущей недели (UTC, 00:00). */
 export function weekStartOf(date = new Date()): Date {
@@ -73,30 +94,64 @@ export async function collectCuratorContext(userId: string): Promise<CuratorCont
   };
 }
 
-async function callCurator(system: string, user: string): Promise<CuratorResponse> {
-  const apiKey = await getSetting('ANTHROPIC_API_KEY');
-  const client = new Anthropic({ apiKey });
-  const response = await client.messages.create({
-    model: CURATOR_MODEL,
-    max_tokens: 1500,
-    output_config: { effort: 'low' },
-    system,
-    messages: [
-      {
-        role: 'user',
-        content: `${user}\n\nВерни ТОЛЬКО JSON вида {"summary": "...", "methodPrinciple": "...", "nextSteps": [{"title": "...", "why": "...", "refType": null, "refId": null}]}. 1–2 шага.`,
-      },
-    ],
-  });
-  const text = response.content
-    .filter((b): b is Anthropic.TextBlock => b.type === 'text')
-    .map((b) => b.text)
-    .join('')
+const JSON_INSTRUCTION =
+  'Верни ТОЛЬКО JSON вида {"summary": "...", "methodPrinciple": "...", "nextSteps": [{"title": "...", "why": "...", "refType": null, "refId": null}]}. 1–2 шага.';
+
+function parseCuratorResponse(text: string): CuratorResponse {
+  const cleaned = text
     .trim()
     .replace(/^```(?:json)?/i, '')
     .replace(/```$/i, '')
     .trim();
-  return curatorResponseSchema.parse(JSON.parse(text));
+  return curatorResponseSchema.parse(JSON.parse(cleaned));
+}
+
+async function callCurator(
+  config: CuratorLlmConfig,
+  system: string,
+  user: string,
+): Promise<CuratorResponse> {
+  if (config.provider === 'routerai') {
+    const response = await fetch(`${ROUTERAI_BASE_URL}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${config.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: config.model,
+        max_tokens: 1500,
+        temperature: 0.2,
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: `${user}\n\n${JSON_INSTRUCTION}` },
+        ],
+      }),
+    });
+    if (!response.ok) {
+      throw new Error(`RouterAI request failed: ${response.status}`);
+    }
+    const data = (await response.json()) as {
+      choices?: { message?: { content?: string | null } }[];
+    };
+    const text = data.choices?.[0]?.message?.content;
+    if (!text) throw new Error('RouterAI returned an empty response');
+    return parseCuratorResponse(text);
+  }
+
+  const client = new Anthropic({ apiKey: config.apiKey });
+  const response = await client.messages.create({
+    model: config.model,
+    max_tokens: 1500,
+    output_config: { effort: 'low' },
+    system,
+    messages: [{ role: 'user', content: `${user}\n\n${JSON_INSTRUCTION}` }],
+  });
+  const text = response.content
+    .filter((b): b is Anthropic.TextBlock => b.type === 'text')
+    .map((b) => b.text)
+    .join('');
+  return parseCuratorResponse(text);
 }
 
 /**
@@ -104,11 +159,11 @@ async function callCurator(system: string, user: string): Promise<CuratorRespons
  * Гейт: CURATOR_ENABLED + ключ + активный тариф уровня ≥ 2 (SUPPORT).
  */
 export async function runCuratorForUser(userId: string): Promise<'OK' | 'SKIPPED' | 'FAILED'> {
-  const [curatorEnabled, apiKey] = await Promise.all([
+  const [curatorEnabled, llmConfig] = await Promise.all([
     getSettingBool('CURATOR_ENABLED'),
-    getSetting('ANTHROPIC_API_KEY'),
+    getCuratorLlmConfig(),
   ]);
-  if (!curatorEnabled || !apiKey) return 'SKIPPED';
+  if (!curatorEnabled || !llmConfig) return 'SKIPPED';
 
   const enrollment = await prisma.enrollment.findFirst({
     where: { userId, status: 'ACTIVE' },
@@ -131,7 +186,7 @@ export async function runCuratorForUser(userId: string): Promise<'OK' | 'SKIPPED
   let parsed: CuratorResponse | null = null;
   for (let attempt = 0; attempt < 2 && !parsed; attempt++) {
     try {
-      parsed = await callCurator(system, userPrompt);
+      parsed = await callCurator(llmConfig, system, userPrompt);
     } catch {
       parsed = null;
     }
@@ -145,7 +200,7 @@ export async function runCuratorForUser(userId: string): Promise<'OK' | 'SKIPPED
         weekStart,
         summary: 'Не удалось сформировать разбор.',
         nextSteps: [],
-        model: CURATOR_MODEL,
+        model: `${llmConfig.provider}:${llmConfig.model}`,
         status: 'FAILED',
       },
       update: { status: 'FAILED' },
@@ -162,13 +217,14 @@ export async function runCuratorForUser(userId: string): Promise<'OK' | 'SKIPPED
         summary: parsed.summary,
         methodPrinciple: parsed.methodPrinciple ?? null,
         nextSteps: parsed.nextSteps as unknown as Prisma.InputJsonValue,
-        model: CURATOR_MODEL,
+        model: `${llmConfig.provider}:${llmConfig.model}`,
         status: 'OK',
       },
       update: {
         summary: parsed.summary,
         methodPrinciple: parsed.methodPrinciple ?? null,
         nextSteps: parsed.nextSteps as unknown as Prisma.InputJsonValue,
+        model: `${llmConfig.provider}:${llmConfig.model}`,
         status: 'OK',
       },
     });

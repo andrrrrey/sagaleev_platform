@@ -29,22 +29,44 @@ export default async function AdminSettingsPage() {
   const byKey = Object.fromEntries(settings.map((s) => [s.key, s]));
   const isSet = (key: string) => Boolean(byKey[key]?.isSet);
   const curatorEnabled = byKey['CURATOR_ENABLED']?.value === 'true';
+  const curatorProvider = byKey['CURATOR_LLM_PROVIDER']?.value || 'anthropic';
+  const curatorKey = curatorProvider === 'routerai' ? 'ROUTERAI_API_KEY' : 'ANTHROPIC_API_KEY';
 
   const statuses: { label: string; ok: boolean; note: string }[] = [
-    { label: 'Провайдер оплаты', ok: env.PAYMENT_PROVIDER === 'yookassa', note: env.PAYMENT_PROVIDER },
-    { label: 'Telegram-бот', ok: isSet('TELEGRAM_BOT_TOKEN'), note: isSet('TELEGRAM_BOT_TOKEN') ? 'токен задан' : 'не настроен' },
-    { label: 'Куратор (LLM)', ok: curatorEnabled && isSet('ANTHROPIC_API_KEY'), note: curatorEnabled ? 'включён' : 'выключен' },
+    {
+      label: 'Провайдер оплаты',
+      ok: env.PAYMENT_PROVIDER === 'yookassa',
+      note: env.PAYMENT_PROVIDER,
+    },
+    {
+      label: 'Telegram-бот',
+      ok: isSet('TELEGRAM_BOT_TOKEN'),
+      note: isSet('TELEGRAM_BOT_TOKEN') ? 'токен задан' : 'не настроен',
+    },
+    {
+      label: 'Куратор (LLM)',
+      ok: curatorEnabled && isSet(curatorKey),
+      note: curatorEnabled
+        ? `${curatorProvider}: ${isSet(curatorKey) ? 'ключ задан' : 'нет ключа'}`
+        : 'выключен',
+    },
   ];
 
   return (
     <div className="px-6 py-8 md:px-10 md:py-12">
-      <PageHeader kicker="Admin" title="Настройки" description={`Бренд: ${env.NEXT_PUBLIC_BRAND_NAME}`} />
+      <PageHeader
+        kicker="Admin"
+        title="Настройки"
+        description={`Бренд: ${env.NEXT_PUBLIC_BRAND_NAME}`}
+      />
 
       <section className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         {statuses.map((s) => (
           <Panel key={s.label} bodyClassName="p-4 gap-2">
             <StatusPill muted={!s.ok}>{s.ok ? 'OK' : 'Нет'}</StatusPill>
-            <div className="font-mono text-[10px] uppercase tracking-widest text-t500">{s.label}</div>
+            <div className="font-mono text-[10px] uppercase tracking-widest text-t500">
+              {s.label}
+            </div>
             <div className="text-xs font-light text-t600">{s.note}</div>
           </Panel>
         ))}

@@ -18,6 +18,7 @@ export default async function AdminUsersPage() {
     where: { role: { in: ['ADMIN', 'EDITOR'] }, deletedAt: null },
     orderBy: { createdAt: 'asc' },
   });
+  const activeAdminCount = staff.filter((user) => user.role === 'ADMIN' && !user.blockedAt).length;
 
   return (
     <div className="px-6 py-8 md:px-10 md:py-12">
@@ -66,6 +67,8 @@ export default async function AdminUsersPage() {
                       name={u.name}
                       blocked={Boolean(u.blockedAt)}
                       isSelf={u.id === me.id}
+                      canDelete={u.role !== 'ADMIN' || activeAdminCount > 1}
+                      returnTo="/admin/users"
                     />
                   </Td>
                 </TRow>

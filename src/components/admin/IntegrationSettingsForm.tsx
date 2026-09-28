@@ -5,7 +5,7 @@ import { saveIntegrationSettings } from '@/server/admin/settings';
 import { initialActionState } from '@/lib/action-state';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
-import { Label, Input, Checkbox } from '@/components/ui/Field';
+import { Label, Input, Checkbox, Select } from '@/components/ui/Field';
 import { StatusPill } from '@/components/ui/StatusPill';
 import type { SettingView } from '@/server/settings/store';
 
@@ -24,7 +24,9 @@ function SourceHint({ item }: { item: SettingView }) {
       </span>
     );
   }
-  return <span className="font-mono text-[10px] uppercase tracking-widest text-t400">Не задано</span>;
+  return (
+    <span className="font-mono text-[10px] uppercase tracking-widest text-t400">Не задано</span>
+  );
 }
 
 export function IntegrationSettingsForm({ settings }: { settings: SettingView[] }) {
@@ -39,8 +41,9 @@ export function IntegrationSettingsForm({ settings }: { settings: SettingView[] 
     <form action={action} className="flex flex-col gap-6 p-6">
       <p className="text-sm font-light text-t600">
         Все ключи интеграций хранятся здесь. Значение из этой формы имеет приоритет над{' '}
-        <span className="font-mono text-xs text-t700">.env</span>. Для секретов оставьте поле пустым,
-        чтобы не менять текущее значение; отметьте «Очистить», чтобы вернуть значение из окружения.
+        <span className="font-mono text-xs text-t700">.env</span>. Для секретов оставьте поле
+        пустым, чтобы не менять текущее значение; отметьте «Очистить», чтобы вернуть значение из
+        окружения.
       </p>
 
       {Object.entries(groups).map(([group, items]) => (
@@ -62,13 +65,25 @@ export function IntegrationSettingsForm({ settings }: { settings: SettingView[] 
                     <span className="pl-7 text-xs font-light text-t500">{item.hint}</span>
                   ) : null}
                 </div>
+              ) : item.kind === 'select' ? (
+                <div key={item.key} className="flex flex-col gap-1">
+                  <Label htmlFor={item.key}>{item.label}</Label>
+                  <Select id={item.key} name={item.key} defaultValue={item.value}>
+                    {item.options?.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </Select>
+                  {item.hint ? (
+                    <span className="text-xs font-light text-t500">{item.hint}</span>
+                  ) : null}
+                </div>
               ) : (
                 <div key={item.key} className="flex flex-col gap-1">
                   <div className="flex items-center justify-between gap-3">
                     <Label htmlFor={item.key}>{item.label}</Label>
-                    {item.isSet ? (
-                      <StatusPill muted={item.source === 'env'}>OK</StatusPill>
-                    ) : null}
+                    {item.isSet ? <StatusPill muted={item.source === 'env'}>OK</StatusPill> : null}
                   </div>
                   <Input
                     id={item.key}
@@ -96,7 +111,9 @@ export function IntegrationSettingsForm({ settings }: { settings: SettingView[] 
                       />
                     ) : null}
                   </div>
-                  {item.hint ? <span className="text-xs font-light text-t500">{item.hint}</span> : null}
+                  {item.hint ? (
+                    <span className="text-xs font-light text-t500">{item.hint}</span>
+                  ) : null}
                 </div>
               ),
             )}

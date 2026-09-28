@@ -32,6 +32,9 @@ const schema = z.object({
   TELEGRAM_WEBHOOK_SECRET: z.string().optional(),
 
   ANTHROPIC_API_KEY: z.string().optional(),
+  CURATOR_LLM_PROVIDER: z.enum(['anthropic', 'routerai']).default('anthropic'),
+  ROUTERAI_API_KEY: z.string().optional(),
+  ROUTERAI_MODEL: z.string().default('openai/gpt-4o'),
   CURATOR_ENABLED: z
     .string()
     .default('true')
