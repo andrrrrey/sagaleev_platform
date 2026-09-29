@@ -16,7 +16,11 @@ export async function saveBusinessProfile(
 
   const parsed = businessProfileSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
-    return { ok: false, fieldErrors: fieldErrorsFromZod(parsed.error.issues) };
+    return {
+      ok: false,
+      message: 'Не удалось завершить онбординг. Проверьте поле с ошибкой.',
+      fieldErrors: fieldErrorsFromZod(parsed.error.issues),
+    };
   }
   const data = parsed.data;
   const websiteUrl = data.websiteUrl ? data.websiteUrl : null;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useEffect, useRef, useState } from 'react';
 import { saveBusinessProfile } from '@/server/profile/actions';
 import { initialActionState } from '@/lib/action-state';
 import { Button } from '@/components/ui/Button';
@@ -11,6 +11,12 @@ import { SegmentedProgress } from '@/components/ui/ProgressBar';
 import { Label, Input, Textarea, Select, FieldError } from '@/components/ui/Field';
 
 const STEPS = ['Кто ты', 'Продукт', 'Клиент', 'Голос бренда'] as const;
+const STEP_FIELDS = [
+  ['companyName', 'niche', 'websiteUrl', 'whoAmI'],
+  ['product'],
+  ['audience'],
+  ['brandVoice', 'monthlyRevenueBand', 'goals'],
+] as const;
 
 export function OnboardingWizard({
   defaults,
@@ -23,14 +29,41 @@ export function OnboardingWizard({
 }) {
   const [state, action, pending] = useActionState(saveBusinessProfile, initialActionState);
   const [step, setStep] = useState(0);
+  const formRef = useRef<HTMLFormElement>(null);
   const d = defaults ?? {};
+
+  useEffect(() => {
+    const firstInvalidField = Object.keys(state.fieldErrors ?? {})[0];
+    if (!firstInvalidField) return;
+    const invalidStep = STEP_FIELDS.findIndex((fields) =>
+      fields.includes(firstInvalidField as never),
+    );
+    if (invalidStep >= 0) setStep(invalidStep);
+  }, [state.fieldErrors]);
+
+  function goNext() {
+    const form = formRef.current;
+    if (!form) return;
+
+    for (const fieldName of STEP_FIELDS[step] ?? STEP_FIELDS[0]) {
+      const field = form.elements.namedItem(fieldName);
+      if (field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement) {
+        if (!field.checkValidity()) {
+          field.reportValidity();
+          field.focus();
+          return;
+        }
+      }
+    }
+    setStep((current) => Math.min(3, current + 1));
+  }
 
   return (
     <Panel
       title={`Онбординг // ${STEPS[step]}`}
       status={<StatusPill pulse>{`Шаг ${step + 1} / 4`}</StatusPill>}
     >
-      <form action={action} className="flex flex-col gap-6 p-6 md:p-8">
+      <form ref={formRef} action={action} noValidate className="flex flex-col gap-6 p-6 md:p-8">
         <input type="hidden" name="redirectTo" value={redirectTo} />
         <SegmentedProgress total={4} filled={step + 1} />
 
@@ -99,8 +132,10 @@ export function OnboardingWizard({
           </div>
         </div>
 
-        {state.message && !state.ok ? (
-          <p className="font-mono text-[11px] text-accent">{state.message}</p>
+        {(state.message || Object.keys(state.fieldErrors ?? {}).length > 0) && !state.ok ? (
+          <p className="font-mono text-[11px] text-accent">
+            {state.message || 'Проверьте выделенное поле и попробуйте ещё раз.'}
+          </p>
         ) : null}
 
         <div className="flex items-center justify-between border-t border-line/60 pt-5">
@@ -115,7 +150,7 @@ export function OnboardingWizard({
           </Button>
 
           {step < 3 ? (
-            <Button type="button" onClick={() => setStep((s) => Math.min(3, s + 1))}>
+            <Button type="button" onClick={goNext}>
               Далее
               <Icon name="alt-arrow-right-linear" />
             </Button>
