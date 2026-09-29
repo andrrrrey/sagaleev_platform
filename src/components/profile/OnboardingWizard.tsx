@@ -1,8 +1,8 @@
 'use client';
 
-import { useActionState, useEffect, useRef, useState } from 'react';
-import { saveBusinessProfile } from '@/server/profile/actions';
-import { initialActionState } from '@/lib/action-state';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
+import { initialActionState, type ActionState } from '@/lib/action-state';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { Panel } from '@/components/ui/Panel';
@@ -27,7 +27,9 @@ export function OnboardingWizard({
   redirectTo?: string;
   submitLabel?: string;
 }) {
-  const [state, action, pending] = useActionState(saveBusinessProfile, initialActionState);
+  const router = useRouter();
+  const [state, setState] = useState<ActionState>(initialActionState);
+  const [pending, setPending] = useState(false);
   const [step, setStep] = useState(0);
   const formRef = useRef<HTMLFormElement>(null);
   const d = defaults ?? {};
@@ -58,13 +60,43 @@ export function OnboardingWizard({
     setStep((current) => Math.min(3, current + 1));
   }
 
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setPending(true);
+    setState(initialActionState);
+    try {
+      const formData = new FormData(event.currentTarget);
+      formData.delete('redirectTo');
+      const response = await fetch('/api/me/business-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.fromEntries(formData)),
+      });
+      const result = (await response.json().catch(() => null)) as ActionState | null;
+      if (!response.ok || !result?.ok) {
+        setState(
+          result ?? { ok: false, message: 'Не удалось сохранить анкету. Попробуйте ещё раз.' },
+        );
+        return;
+      }
+      router.push(redirectTo);
+      router.refresh();
+    } catch {
+      setState({
+        ok: false,
+        message: 'Нет связи с сервером. Проверьте интернет и попробуйте ещё раз.',
+      });
+    } finally {
+      setPending(false);
+    }
+  }
+
   return (
     <Panel
       title={`Онбординг // ${STEPS[step]}`}
       status={<StatusPill pulse>{`Шаг ${step + 1} / 4`}</StatusPill>}
     >
-      <form ref={formRef} action={action} noValidate className="flex flex-col gap-6 p-6 md:p-8">
-        <input type="hidden" name="redirectTo" value={redirectTo} />
+      <form ref={formRef} onSubmit={submit} noValidate className="flex flex-col gap-6 p-6 md:p-8">
         <SegmentedProgress total={4} filled={step + 1} />
 
         {/* Шаг 1 */}
@@ -112,13 +144,25 @@ export function OnboardingWizard({
         {/* Шаг 4 */}
         <div className={step === 3 ? 'flex flex-col gap-5' : 'hidden'}>
           <div>
-            <Label htmlFor="brandVoice">Голос бренда: тон, слова-маркеры, чего избегать, примеры</Label>
-            <Textarea id="brandVoice" name="brandVoice" rows={4} defaultValue={d.brandVoice} required />
+            <Label htmlFor="brandVoice">
+              Голос бренда: тон, слова-маркеры, чего избегать, примеры
+            </Label>
+            <Textarea
+              id="brandVoice"
+              name="brandVoice"
+              rows={4}
+              defaultValue={d.brandVoice}
+              required
+            />
             <FieldError>{state.fieldErrors?.brandVoice}</FieldError>
           </div>
           <div>
             <Label htmlFor="monthlyRevenueBand">Ориентир по выручке (необязательно)</Label>
-            <Select id="monthlyRevenueBand" name="monthlyRevenueBand" defaultValue={d.monthlyRevenueBand ?? ''}>
+            <Select
+              id="monthlyRevenueBand"
+              name="monthlyRevenueBand"
+              defaultValue={d.monthlyRevenueBand ?? ''}
+            >
               <option value="">Не указывать</option>
               <option value="&lt;300k">до 300 000 ₽/мес</option>
               <option value="300k-1m">300 000 – 1 000 000 ₽/мес</option>
