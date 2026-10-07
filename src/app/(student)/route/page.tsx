@@ -26,31 +26,31 @@ export default async function RoutePage() {
   const pct = totalSteps ? Math.round((doneSteps / totalSteps) * 100) : 0;
 
   return (
-    <div className="px-6 py-8 md:px-10 md:py-12">
+    <div className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 md:px-10 md:py-10">
       <PageHeader
         kicker="Маршрут"
-        title="Твой бизнес-агент за 3 дня"
+        title="Первый агент за 3 дня"
         description="Пошаговая инструкция с нуля: куда нажать, что скопировать и как проверить результат. Опыт программирования не нужен."
       />
 
-      <div className="mb-8 max-w-3xl border border-line bg-paper-panel p-5 text-sm font-light leading-relaxed text-t700">
+      <div className="brand-gradient mb-8 max-w-4xl rounded-[24px] border border-line/70 p-5 text-sm leading-relaxed text-t700 shadow-panel md:p-6">
         <p>
-          Представь, что VPS — это компьютер в интернете, а Hermes — программа-помощник
-          на этом компьютере. За 24 небольших шага ты подготовишь сервер, установишь
-          помощника и подключишь его к Telegram. В каждом шаге написано, где именно
-          действовать: на сайте, на своём компьютере или на сервере.
+          Представь, что VPS — это компьютер в интернете, а Hermes — программа-помощник на этом
+          компьютере. За 24 небольших шага ты подготовишь сервер, установишь помощника и подключишь
+          его к Telegram. В каждом шаге написано, где именно действовать: на сайте, на своём
+          компьютере или на сервере.
         </p>
         <p className="mt-3">
-          Не спеши: выполняй по одному шагу и отмечай его только после проверки блока
-          «Готово, если». Надпись «Текст для ИИ» означает: скопируй блок в отдельный чат
-          ChatGPT или Codex. Надпись «Команда для терминала» означает: вставь блок в
-          Terminal или PowerShell. Пароли и токены никогда не вставляй в поле отчёта.
+          Не спеши: выполняй по одному шагу и отмечай его только после проверки блока «Готово,
+          если». Надпись «Текст для ИИ» означает: скопируй блок в отдельный чат ChatGPT или Codex.
+          Надпись «Команда для терминала» означает: вставь блок в Terminal или PowerShell. Пароли и
+          токены никогда не вставляй в поле отчёта.
         </p>
         <a
           href="https://github.com/andrrrrey/agent"
           target="_blank"
           rel="noreferrer"
-          className="mt-3 inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-accent hover:underline"
+          className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-accent hover:underline"
         >
           Исходная подробная инструкция
           <Icon name="arrow-right-linear" />
@@ -64,7 +64,7 @@ export default async function RoutePage() {
       ) : (
         <>
           <div className="mb-8 max-w-2xl">
-            <div className="mb-2 flex items-center justify-between font-mono text-[10px] uppercase tracking-widest text-t500">
+            <div className="mb-2 flex items-center justify-between text-xs font-semibold text-t500">
               <span>Общий прогресс</span>
               <span>
                 {doneSteps} / {totalSteps} шагов · {pct}%
@@ -80,17 +80,19 @@ export default async function RoutePage() {
                 <Link key={d.id} href={`/route/${d.dayNumber}`} className="group">
                   <Panel
                     className="h-full transition-colors group-hover:border-accent/30"
-                    title={`День ${d.dayNumber} // Маршрут`}
+                    title={`День ${d.dayNumber}`}
                     status={<StatusPill muted={s.muted}>{s.label}</StatusPill>}
                   >
                     <div className="flex flex-1 flex-col gap-4 p-6">
-                      <div className="text-lg font-normal tracking-tight text-t900">{d.title}</div>
-                      <p className="text-sm font-light text-t600">{d.summary}</p>
+                      <div className="text-xl font-bold tracking-tight text-t900">{d.title}</div>
+                      <p className="text-sm leading-relaxed text-t600">{d.summary}</p>
                       <div className="mt-auto flex items-center gap-2 border-t border-line/60 pt-4">
                         <Icon name="diploma-verified-linear" className="text-accent" />
-                        <span className="text-xs font-light text-t700">{d.artifact}</span>
+                        <span className="text-xs font-medium text-t700">
+                          На выходе: {d.artifact}
+                        </span>
                       </div>
-                      <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-widest text-t500">
+                      <div className="flex items-center justify-between text-xs font-semibold text-t500">
                         <span>
                           {d.doneSteps} / {d.totalSteps} шагов
                         </span>

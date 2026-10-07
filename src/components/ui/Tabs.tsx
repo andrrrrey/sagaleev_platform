@@ -20,7 +20,7 @@ export function Tabs({
 
   return (
     <div className={className}>
-      <div role="tablist" className="flex flex-wrap">
+      <div role="tablist" className="inline-flex flex-wrap gap-1 rounded-2xl bg-paper-tint p-1">
         {items.map((item) => {
           const isActive = item.key === active;
           return (
@@ -31,10 +31,10 @@ export function Tabs({
               type="button"
               onClick={() => setActive(item.key)}
               className={cn(
-                '-ml-px border border-line px-4 py-2 font-mono text-xs transition-colors',
+                'rounded-xl px-4 py-2.5 text-sm font-medium transition-colors',
                 isActive
-                  ? 'border-b-accent bg-surface text-t900'
-                  : 'bg-transparent text-t500 hover:bg-paper-hover',
+                  ? 'bg-paper text-t900 shadow-sm'
+                  : 'text-t500 hover:bg-paper-hover hover:text-t800',
               )}
             >
               {item.label}
@@ -42,7 +42,7 @@ export function Tabs({
           );
         })}
       </div>
-      <div role="tabpanel" className="pt-6">
+      <div role="tabpanel" className="pt-7">
         {activeItem?.content}
       </div>
     </div>

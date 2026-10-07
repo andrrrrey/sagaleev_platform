@@ -81,11 +81,7 @@ export default async function ProfilePage({
         </div>
       </Panel>
       <Panel title="Личные данные // Редактирование">
-        <AccountSettingsForm
-          name={user.name}
-          email={user.email}
-          phone={user.phone}
-        />
+        <AccountSettingsForm name={user.name} email={user.email} phone={user.phone} />
       </Panel>
     </div>
   );
@@ -158,8 +154,8 @@ export default async function ProfilePage({
                 </form>
               ) : (
                 <p className="border border-brand-pink/50 bg-brand-pink/10 px-4 py-3 text-sm text-t700">
-                  Автопродление не настроено. После окончания оплаченного периода оформите
-                  подписку снова или обратитесь в поддержку.
+                  Автопродление не настроено. После окончания оплаченного периода оформите подписку
+                  снова или обратитесь в поддержку.
                 </p>
               )}
             </>
@@ -255,7 +251,12 @@ export default async function ProfilePage({
 
       <Panel title="Уведомления">
         <form action={setNotifyPrefs} className="flex flex-col gap-4 p-6">
-          <Checkbox id="notifyEmail" name="notifyEmail" defaultChecked={user.notifyEmail} label="Email" />
+          <Checkbox
+            id="notifyEmail"
+            name="notifyEmail"
+            defaultChecked={user.notifyEmail}
+            label="Email"
+          />
           <Checkbox
             id="notifyTelegram"
             name="notifyTelegram"
@@ -271,7 +272,7 @@ export default async function ProfilePage({
   );
 
   return (
-    <div className="px-6 py-8 md:px-10 md:py-12">
+    <div className="mx-auto w-full max-w-[1200px] px-4 py-6 sm:px-6 md:px-10 md:py-10">
       <PageHeader kicker="Кабинет" title="Профиль" />
       <Tabs
         initialKey={

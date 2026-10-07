@@ -71,9 +71,7 @@ export function KinescopePlayer({
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_240px]">
-      <div className="relative border border-line bg-black">
-        <div className="absolute -left-px -top-px z-10 h-2 w-2 border-l-2 border-t-2 border-t300" />
-        <div className="absolute -right-px -top-px z-10 h-2 w-2 border-r-2 border-t-2 border-t300" />
+      <div className="relative overflow-hidden rounded-[24px] border border-line bg-black shadow-panel">
         <div className="aspect-video w-full">
           <iframe
             key={nonce}
@@ -88,8 +86,8 @@ export function KinescopePlayer({
 
       <div className="flex flex-col gap-3">
         {timecodes.length > 0 ? (
-          <div className="border border-line bg-paper-panel">
-            <div className="border-b border-line px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-t500">
+          <div className="overflow-hidden rounded-[20px] border border-line bg-paper">
+            <div className="border-b border-line bg-paper-tint px-4 py-3 text-xs font-semibold text-t600">
               Таймкоды
             </div>
             <ul className="max-h-[320px] overflow-y-auto">
@@ -99,11 +97,13 @@ export function KinescopePlayer({
                     type="button"
                     onClick={() => seekTo(tc.t)}
                     className={cn(
-                      'flex w-full items-center gap-2 px-3 py-2 text-left font-mono text-xs transition-colors hover:bg-paper-hover',
+                      'flex w-full items-center gap-2 px-4 py-2.5 text-left font-mono text-xs transition-colors hover:bg-paper-hover',
                       activeT === tc.t ? 'text-accent' : 'text-t600',
                     )}
                   >
-                    <span className={cn('tabular-nums', activeT === tc.t ? 'text-accent' : 'text-t400')}>
+                    <span
+                      className={cn('tabular-nums', activeT === tc.t ? 'text-accent' : 'text-t400')}
+                    >
                       {formatTimecode(tc.t)}
                     </span>
                     <span className="flex-1 font-sans font-light">{tc.label}</span>

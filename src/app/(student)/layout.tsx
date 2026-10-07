@@ -28,7 +28,7 @@ export default async function StudentLayout({ children }: { children: ReactNode 
   return (
     <AppFrame
       topLabel="sys_cabinet_01"
-      nav={<Nav brand={env.NEXT_PUBLIC_BRAND_NAME} userName={user?.name} />}
+      nav={<Nav brand={env.NEXT_PUBLIC_BRAND_NAME} userName={user?.name} staffMode={isStaff} />}
       mobileNav={<MobileNav />}
     >
       <div className="pb-20 md:pb-0">{children}</div>

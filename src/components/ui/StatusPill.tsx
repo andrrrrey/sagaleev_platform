@@ -21,13 +21,13 @@ export function StatusPill({
   return (
     <div
       className={cn(
-        'flex items-center gap-2 border border-line bg-surface px-2.5 py-1 font-mono text-[10px] text-t500 shadow-sm',
+        'flex items-center gap-2 rounded-full border border-line bg-paper px-3 py-1.5 text-[11px] font-medium text-t600',
         className,
       )}
     >
       <span
         className={cn(
-          'h-1.5 w-1.5 rounded-none',
+          'h-1.5 w-1.5 rounded-full',
           muted ? 'bg-t300' : 'bg-accent',
           pulse && !muted && 'animate-pulse',
         )}

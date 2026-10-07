@@ -15,13 +15,13 @@ export function LinedBlock({
   className?: string;
 }) {
   return (
-    <div className={cn('bg-lined relative overflow-hidden p-6 md:p-8', className)}>
+    <div className={cn('relative overflow-hidden rounded-2xl bg-paper-tint p-5 md:p-7', className)}>
       {label ? (
-        <span className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-t400">
+        <span className="mb-3 block text-[11px] font-semibold uppercase tracking-[0.14em] text-accent">
           {label}
         </span>
       ) : null}
-      <div className="font-mono text-sm leading-[28px] text-t800">{children}</div>
+      <div className="font-mono text-sm leading-7 text-t800">{children}</div>
     </div>
   );
 }

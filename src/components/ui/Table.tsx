@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 /** Таблица админки/лидерборда (docs/02 §3.10). */
 export function Table({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className="w-full overflow-x-auto">
+    <div className="w-full overflow-x-auto rounded-2xl border border-line bg-paper">
       <table className={cn('w-full text-sm', className)}>{children}</table>
     </div>
   );
@@ -12,7 +12,7 @@ export function Table({ children, className }: { children: ReactNode; className?
 
 export function THead({ children }: { children: ReactNode }) {
   return (
-    <thead className="border-b border-line bg-paper font-mono text-[10px] uppercase tracking-widest text-t500">
+    <thead className="border-b border-line bg-paper-tint text-[11px] font-semibold uppercase tracking-wider text-t500">
       {children}
     </thead>
   );
@@ -24,7 +24,9 @@ export function Th({ children, className }: { children?: ReactNode; className?: 
 
 export function TRow({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <tr className={cn('border-b border-line/60 hover:bg-paper-hover/40', className)}>
+    <tr
+      className={cn('border-b border-line/60 last:border-b-0 hover:bg-paper-hover/50', className)}
+    >
       {children}
     </tr>
   );

@@ -11,7 +11,8 @@ export const metadata: Metadata = {
     default: env.NEXT_PUBLIC_BRAND_NAME,
     template: `%s — ${env.NEXT_PUBLIC_BRAND_NAME}`,
   },
-  description: 'Закрытый портал: обучающий курс и рабочая среда для сборки маркетингового ИИ-агента.',
+  description:
+    'Закрытый портал: обучающий курс и рабочая среда для сборки маркетингового ИИ-агента.',
   robots: { index: false, follow: false },
 };
 
@@ -21,7 +22,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <head>
         <ThemeScript />
       </head>
-      <body className="flex h-dvh min-h-[520px] flex-col overflow-hidden bg-page p-2 font-sans text-t800 antialiased selection:bg-brand-pink/35 selection:text-brand-navy sm:p-4 md:p-6 lg:p-8">
+      <body className="min-h-dvh bg-paper-tint font-sans text-t800 antialiased selection:bg-brand-pink/35 selection:text-brand-navy">
         <IconRegistry />
         <ToastProvider>{children}</ToastProvider>
       </body>

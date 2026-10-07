@@ -29,8 +29,8 @@ export default async function RouteDayPage({ params }: { params: Promise<{ day: 
   const allDone = view.steps.length > 0 && doneCount === view.steps.length;
 
   return (
-    <div className="px-6 py-8 md:px-10 md:py-12">
-      <nav className="mb-6 flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-t400">
+    <div className="mx-auto w-full max-w-[1180px] px-4 py-6 sm:px-6 md:px-10 md:py-10">
+      <nav className="mb-6 flex items-center gap-2 text-xs font-medium text-t400">
         <Link href="/" className="hover:text-accent">
           Кабинет
         </Link>
@@ -42,39 +42,59 @@ export default async function RouteDayPage({ params }: { params: Promise<{ day: 
         <span className="text-t600">День {view.dayNumber}</span>
       </nav>
 
-      <PageHeader kicker={`Маршрут · День ${view.dayNumber}`} title={view.title} description={view.summary} />
+      <PageHeader
+        kicker={`Маршрут · День ${view.dayNumber}`}
+        title={view.title}
+        description={view.summary}
+      />
 
-      <div className="mb-8 flex flex-col gap-3 border border-line bg-paper-panel p-5">
+      <div className="brand-gradient mb-8 flex flex-col gap-4 rounded-[24px] border border-line/70 p-5 shadow-panel md:p-6">
         <div className="flex items-center justify-between">
-          <span className="flex items-center gap-2 text-sm font-light text-t700">
+          <span className="flex items-center gap-2 text-sm font-medium text-t700">
             <Icon name="diploma-verified-linear" className="text-accent" />
             Артефакт дня: {view.artifact}
           </span>
-          <StatusPill muted={!allDone}>{allDone ? 'Готов' : `${doneCount} / ${view.steps.length}`}</StatusPill>
+          <StatusPill muted={!allDone}>
+            {allDone ? 'Готов' : `${doneCount} / ${view.steps.length}`}
+          </StatusPill>
         </div>
         <ProgressBar value={pct} />
       </div>
 
-      <div className="mb-6 grid gap-3 text-xs font-light leading-relaxed text-t700 md:grid-cols-3">
-        <div className="border border-line bg-paper-panel p-4">
+      <div className="mb-6 grid gap-3 text-xs leading-relaxed text-t700 md:grid-cols-3">
+        <div className="rounded-2xl border border-line bg-paper p-4 shadow-sm">
           <strong className="font-medium text-t900">Текст для ИИ</strong>
-          <p className="mt-1">Нажми «Скопировать», открой ChatGPT или Codex, вставь в новое сообщение и отправь.</p>
+          <p className="mt-1">
+            Нажми «Скопировать», открой ChatGPT или Codex, вставь в новое сообщение и отправь.
+          </p>
         </div>
-        <div className="border border-line bg-paper-panel p-4">
+        <div className="rounded-2xl border border-line bg-paper p-4 shadow-sm">
           <strong className="font-medium text-t900">Команда для терминала</strong>
-          <p className="mt-1">Вставляй только в указанное окно: свой Terminal/PowerShell или окно SSH с сервером.</p>
+          <p className="mt-1">
+            Вставляй только в указанное окно: свой Terminal/PowerShell или окно SSH с сервером.
+          </p>
         </div>
-        <div className="border border-line bg-paper-panel p-4">
+        <div className="rounded-2xl border border-line bg-paper p-4 shadow-sm">
           <strong className="font-medium text-t900">Что сохранить после шага</strong>
-          <p className="mt-1">Сюда внеси безопасный итог. Никогда не сохраняй пароль, токен бота или API-ключ.</p>
+          <p className="mt-1">
+            Сюда внеси безопасный итог. Никогда не сохраняй пароль, токен бота или API-ключ.
+          </p>
         </div>
       </div>
 
-      <div className="mb-6 border border-accent/30 bg-accent/[0.04] p-4 text-sm font-light leading-relaxed text-t700">
+      <div className="mb-6 rounded-2xl border border-accent/20 bg-accent/[0.06] p-4 text-sm leading-relaxed text-t700">
         <strong className="font-medium text-t900">Если стало непонятно — не оставайся один.</strong>{' '}
-        Скопируй название шага и безопасный текст ошибки в ChatGPT/Codex и попроси: «Объясни только одно следующее действие и назови окно, куда это вводить». Пароли, токены, API-ключи, IP и данные клиентов не копируй. Можно также{' '}
-        <Link href="/profile?tab=codex" className="text-accent underline">подключить Codex к маршруту через MCP</Link>{' '}
-        или <Link href="/help" className="text-accent underline">написать в поддержку</Link>.
+        Скопируй название шага и безопасный текст ошибки в ChatGPT/Codex и попроси: «Объясни только
+        одно следующее действие и назови окно, куда это вводить». Пароли, токены, API-ключи, IP и
+        данные клиентов не копируй. Можно также{' '}
+        <Link href="/profile?tab=codex" className="text-accent underline">
+          подключить Codex к маршруту через MCP
+        </Link>{' '}
+        или{' '}
+        <Link href="/help" className="text-accent underline">
+          написать в поддержку
+        </Link>
+        .
       </div>
 
       <div className="flex flex-col gap-3">
@@ -84,7 +104,7 @@ export default async function RouteDayPage({ params }: { params: Promise<{ day: 
       </div>
 
       {allDone ? (
-        <Panel className="mt-8" title="День пройден // Маршрут" status={<StatusPill>Готов</StatusPill>}>
+        <Panel className="mt-8" title="День пройден" status={<StatusPill>Готов</StatusPill>}>
           <div className="flex flex-col items-start gap-4 p-6">
             <p className="text-sm font-light text-t700">
               Отлично! Артефакт «{view.artifact}» собран.
@@ -95,9 +115,9 @@ export default async function RouteDayPage({ params }: { params: Promise<{ day: 
                 Следующий день
               </Link>
             ) : (
-              <Link href="/skills" className={buttonClass('primary')}>
-                <Icon name="bolt-linear" />
-                К библиотеке скиллов
+              <Link href="/lessons" className={buttonClass('primary')}>
+                <Icon name="videocamera-record-linear" />
+                Перейти к урокам
               </Link>
             )}
           </div>

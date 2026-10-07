@@ -41,7 +41,7 @@ export default async function UsecasesPage({
   const clients = clientsRaw.map((c) => c.caseClient).filter((c): c is string => Boolean(c));
 
   return (
-    <div className="px-6 py-8 md:px-10 md:py-12">
+    <div className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 md:px-10 md:py-10">
       <PageHeader
         kicker="Юзкейсы"
         title="Реальные кейсы с цифрами"
@@ -53,7 +53,7 @@ export default async function UsecasesPage({
 
       {cards.length === 0 ? (
         <div className="max-w-xl">
-          <EmptyState label="Юзкейсы // Empty">Ничего не найдено. Сбросьте фильтры.</EmptyState>
+          <EmptyState label="Юзкейсы">Ничего не найдено. Сбросьте фильтры.</EmptyState>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

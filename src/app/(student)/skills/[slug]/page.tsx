@@ -28,9 +28,11 @@ export async function generateMetadata({
 
 function Spec({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="border border-line bg-paper-panel p-4">
-      <div className="mb-1 font-mono text-[10px] uppercase tracking-widest text-t400">{label}</div>
-      <div className="whitespace-pre-line text-sm font-light text-t700">{children}</div>
+    <div className="rounded-[20px] border border-line bg-paper p-5 shadow-sm">
+      <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-accent">
+        {label}
+      </div>
+      <div className="whitespace-pre-line text-sm leading-relaxed text-t700">{children}</div>
     </div>
   );
 }
@@ -43,8 +45,8 @@ export default async function SkillPage({ params }: { params: Promise<{ slug: st
   if (!skill) notFound();
 
   return (
-    <div className="px-6 py-8 md:px-10 md:py-12">
-      <nav className="mb-6 flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-t400">
+    <div className="mx-auto w-full max-w-[1180px] px-4 py-6 sm:px-6 md:px-10 md:py-10">
+      <nav className="mb-6 flex items-center gap-2 text-xs font-medium text-t400">
         <Link href="/" className="hover:text-accent">
           Кабинет
         </Link>
@@ -98,12 +100,12 @@ export default async function SkillPage({ params }: { params: Promise<{ slug: st
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               {skill.demoUnit ? (
-                <Panel title="Пример // Реальный кейс">
+                <Panel title="Пример · реальный юзкейс">
                   <Link
                     href={`/usecases/${skill.demoUnit.slug}`}
                     className="flex items-center justify-between p-5 transition-colors hover:bg-paper-hover/40"
                   >
-                    <span className="flex items-center gap-2 text-sm font-light text-t700">
+                    <span className="flex items-center gap-2 text-sm font-medium text-t700">
                       <Icon name="chart-2-linear" className="text-accent" />
                       {skill.demoUnit.title}
                     </span>
@@ -115,7 +117,7 @@ export default async function SkillPage({ params }: { params: Promise<{ slug: st
               )}
 
               <Panel
-                title="Мой результат // Прогресс"
+                title="Мой результат"
                 status={
                   skill.status !== 'NONE' ? <StatusPill>{skill.status}</StatusPill> : undefined
                 }
@@ -139,15 +141,13 @@ export default async function SkillPage({ params }: { params: Promise<{ slug: st
         <div className="mt-12 grid grid-cols-1 gap-8 border-t border-line/60 pt-8 lg:grid-cols-2">
           {skill.related && skill.related.length > 0 ? (
             <div>
-              <div className="mb-4 font-mono text-xs uppercase tracking-widest text-t500">
-                Связанные скиллы
-              </div>
+              <div className="mb-4 text-sm font-bold text-t900">Связанные скиллы</div>
               <div className="flex flex-col gap-2">
                 {skill.related.map((r) => (
                   <Link
                     key={r.slug}
                     href={`/skills/${r.slug}`}
-                    className="flex items-center justify-between border border-line bg-surface px-4 py-2.5 text-sm font-light text-t700 transition-colors hover:border-accent/30"
+                    className="flex items-center justify-between rounded-2xl border border-line bg-paper px-4 py-3 text-sm font-medium text-t700 transition-colors hover:border-accent/30"
                   >
                     {r.title}
                     <Icon name="arrow-right-linear" className="text-t400" />
@@ -159,14 +159,12 @@ export default async function SkillPage({ params }: { params: Promise<{ slug: st
 
           {skill.usedInSteps && skill.usedInSteps.length > 0 ? (
             <div>
-              <div className="mb-4 font-mono text-xs uppercase tracking-widest text-t500">
-                Где применяется
-              </div>
+              <div className="mb-4 text-sm font-bold text-t900">Где применяется</div>
               <div className="flex flex-col gap-2">
                 {skill.usedInSteps.map((u, i) => (
                   <div
                     key={i}
-                    className="flex items-center gap-2 border border-line bg-surface px-4 py-2.5 text-sm font-light text-t700"
+                    className="flex items-center gap-2 rounded-2xl border border-line bg-paper px-4 py-3 text-sm text-t700"
                   >
                     <Icon name="routing-linear" className="text-accent" />
                     День {u.dayNumber}: {u.title}

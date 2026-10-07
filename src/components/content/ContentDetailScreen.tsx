@@ -37,8 +37,8 @@ export async function ContentDetailScreen({
   const kicker = detail.block ? `${s.kicker} · Блок ${detail.block}` : s.kicker;
 
   return (
-    <div className="px-6 py-8 md:px-10 md:py-12">
-      <nav className="mb-6 flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-t400">
+    <div className="mx-auto w-full max-w-[1180px] px-4 py-6 sm:px-6 md:px-10 md:py-10">
+      <nav className="mb-6 flex flex-wrap items-center gap-2 text-xs font-medium text-t400">
         <Link href="/" className="hover:text-accent">
           Кабинет
         </Link>
@@ -50,7 +50,7 @@ export async function ContentDetailScreen({
         <span className="text-t600">{detail.title}</span>
       </nav>
 
-      <div className="mb-8 max-w-3xl">
+      <div className="mb-8 max-w-4xl">
         <Kicker className="mb-4">{kicker}</Kicker>
         <Heading as="h1" size="h2">
           {detail.title}
@@ -61,14 +61,14 @@ export async function ContentDetailScreen({
             <Tag key={t.slug}>{t.title}</Tag>
           ))}
           {detail.timeToMaster ? (
-            <span className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-t500">
+            <span className="flex items-center gap-1.5 text-xs font-medium text-t500">
               <Icon name="clock-circle-linear" className="text-xs" />
               {detail.timeToMaster}
             </span>
           ) : null}
         </div>
         {detail.summary ? (
-          <p className="mt-4 text-base font-light leading-relaxed text-t600">{detail.summary}</p>
+          <p className="mt-4 max-w-3xl text-base leading-relaxed text-t600">{detail.summary}</p>
         ) : null}
       </div>
 

@@ -36,7 +36,7 @@ export default async function StreamsPage({
   const sorted = [...cards].sort((a, b) => (b.airedAt ?? '').localeCompare(a.airedAt ?? ''));
 
   return (
-    <div className="px-6 py-8 md:px-10 md:py-12">
+    <div className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 md:px-10 md:py-10">
       <PageHeader
         kicker="Эфиры"
         title="Архив еженедельных разборов"
@@ -48,7 +48,7 @@ export default async function StreamsPage({
 
       {sorted.length === 0 ? (
         <div className="max-w-xl">
-          <EmptyState label="Эфиры // Empty">Пока нет записей.</EmptyState>
+          <EmptyState label="Эфиры">Пока нет записей.</EmptyState>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

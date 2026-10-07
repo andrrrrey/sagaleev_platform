@@ -1,15 +1,7 @@
 import type { ReactNode } from 'react';
-import { CornerBrackets } from './CornerBrackets';
-import { TickBorder } from './TickBorder';
 
-/**
- * Мастер-контейнер (рама) — каркас каждой страницы студента/админки/публичной.
- * 1:1 с эталоном: скруглённый бежевый контейнер со штриховкой, тенью, ring,
- * внутренней технической рамкой, нижней мерной лентой. См. docs/02 §2.
- */
+/** Светлая продуктовая оболочка, единая с визуальным языком лендинга. */
 export function AppFrame({
-  topLabel = 'sys_frame_01',
-  bottomLabel = 'end_frame',
   nav,
   mobileNav,
   children,
@@ -21,12 +13,10 @@ export function AppFrame({
   children: ReactNode;
 }) {
   return (
-    <div className="bg-hatch relative mx-auto flex w-full max-w-[1440px] flex-1 flex-col overflow-hidden rounded-2xl bg-paper shadow-2xl ring-1 ring-white/10 md:rounded-[2rem]">
-      <CornerBrackets topLabel={topLabel} bottomLabel={bottomLabel} />
+    <div className="relative mx-auto flex min-h-dvh w-full max-w-[1600px] flex-1 flex-col bg-paper">
       {nav}
-      <main className="relative z-10 flex w-full min-h-0 flex-1 flex-col overflow-y-auto">{children}</main>
+      <main className="relative z-10 flex min-h-0 w-full flex-1 flex-col">{children}</main>
       {mobileNav}
-      <TickBorder />
     </div>
   );
 }

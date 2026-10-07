@@ -15,7 +15,13 @@ export default async function AccountLayout({ children }: { children: ReactNode 
   return (
     <AppFrame
       topLabel="sys_account_01"
-      nav={<Nav brand={env.NEXT_PUBLIC_BRAND_NAME} userName={user?.name} />}
+      nav={
+        <Nav
+          brand={env.NEXT_PUBLIC_BRAND_NAME}
+          userName={user?.name}
+          staffMode={actor.role === 'ADMIN' || actor.role === 'EDITOR'}
+        />
+      }
       mobileNav={<MobileNav />}
     >
       <div className="pb-20 md:pb-0">{children}</div>

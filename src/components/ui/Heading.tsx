@@ -5,12 +5,12 @@ import { useMaskedReveal } from '@/components/hooks/useMaskedReveal';
 import { cn } from '@/lib/utils';
 
 const SIZES = {
-  h1: 'text-4xl md:text-5xl lg:text-6xl leading-[1.05]',
-  h2: 'text-2xl md:text-3xl leading-[1.1]',
-  h3: 'text-lg md:text-xl leading-[1.1]',
+  h1: 'text-4xl md:text-5xl lg:text-[56px] leading-[1.02]',
+  h2: 'text-2xl md:text-4xl leading-[1.08]',
+  h3: 'text-xl md:text-2xl leading-[1.15]',
 } as const;
 
-/** Заголовок с masked reveal (SF Pro Display 400, не жирный). */
+/** Крупный продуктовый заголовок. */
 export function Heading({
   as = 'h1',
   size,
@@ -29,7 +29,7 @@ export function Heading({
     <Tag
       ref={ref}
       className={cn(
-        'js-masked-reveal font-display font-normal tracking-tight text-t900',
+        'js-masked-reveal font-display font-extrabold tracking-[-0.04em] text-t900',
         SIZES[size ?? as],
         className,
       )}

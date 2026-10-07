@@ -12,13 +12,13 @@ function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-/** Левое моно-меню админки. EDITOR видит только контентные пункты. */
+/** Левое меню админки. EDITOR видит только контентные пункты. */
 export function AdminNav({ role }: { role: Role }) {
   const pathname = usePathname();
   const items = ADMIN_NAV.filter((i) => !i.adminOnly || role === 'ADMIN');
 
   return (
-    <nav className="flex flex-col gap-0.5" aria-label="Меню админки">
+    <nav className="flex gap-1 overflow-x-auto md:flex-col" aria-label="Меню админки">
       {items.map((item) => {
         const active = isActive(pathname, item.href);
         return (
@@ -26,10 +26,10 @@ export function AdminNav({ role }: { role: Role }) {
             key={item.href}
             href={item.href}
             className={cn(
-              'flex items-center gap-3 border-l-2 px-3 py-2 font-mono text-xs transition-colors',
+              'flex shrink-0 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
               active
-                ? 'border-accent bg-surface text-t900'
-                : 'border-transparent text-t500 hover:bg-paper-hover hover:text-t900',
+                ? 'bg-paper-hover text-accent'
+                : 'text-t600 hover:bg-paper-tint hover:text-t900',
             )}
           >
             <Icon name={item.icon} className="text-sm" />

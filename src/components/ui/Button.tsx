@@ -4,16 +4,15 @@ import { cn } from '@/lib/utils';
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'action' | 'icon';
 
 const VARIANTS: Record<ButtonVariant, string> = {
-  // Точно по эталону (docs/02 §3.1).
   primary:
-    'bg-ink text-paper px-6 py-3 border border-ink text-sm font-normal hover:bg-ink-hover transition-colors shadow-sm flex items-center justify-center gap-2',
+    'bg-accent text-white px-6 py-3 rounded-full border border-accent text-sm font-semibold hover:bg-accent/90 hover:shadow-lg hover:shadow-accent/20 transition-all shadow-sm flex items-center justify-center gap-2',
   secondary:
-    'bg-paper-panel text-t700 border border-line px-6 py-3 text-sm font-normal shadow-sm hover:bg-surface hover:text-t900 transition-colors flex items-center justify-center gap-2',
+    'bg-paper text-t800 border border-line px-6 py-3 rounded-full text-sm font-semibold shadow-sm hover:bg-paper-hover hover:text-t900 transition-colors flex items-center justify-center gap-2',
   ghost:
-    'text-xs font-mono px-4 py-2 bg-transparent border border-line text-t700 hover:bg-paper-hover hover:border-t300 transition-all shadow-sm flex items-center gap-2',
+    'text-sm font-medium px-4 py-2.5 rounded-full bg-transparent text-t600 hover:bg-paper-hover hover:text-t900 transition-all flex items-center gap-2',
   action:
-    'flex items-center gap-2 bg-surface border border-line px-4 py-2 text-[11px] font-mono tracking-wide text-t700 hover:text-accent hover:border-accent/30 transition-colors shadow-sm group',
-  icon: 'w-8 h-8 flex items-center justify-center text-t400 hover:text-t700 transition-colors',
+    'flex items-center gap-2 rounded-full bg-accent/10 border border-accent/15 px-4 py-2.5 text-xs font-semibold text-accent hover:bg-accent hover:text-white transition-colors group',
+  icon: 'w-10 h-10 rounded-full flex items-center justify-center text-t500 hover:bg-paper-hover hover:text-t900 transition-colors',
 };
 
 /** Классы варианта кнопки для применения к <Link> (Next). */

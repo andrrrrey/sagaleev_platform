@@ -52,7 +52,10 @@ export function SkillsFilterBar({ tags }: { tags: { slug: string; title: string 
   return (
     <div className="mb-8 flex flex-col gap-4">
       <div className="relative max-w-md">
-        <Icon name="magnifer-linear" className="absolute left-3 top-1/2 -translate-y-1/2 text-t400" />
+        <Icon
+          name="magnifer-linear"
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-t400"
+        />
         <Input
           value={q}
           onChange={(e) => setQ(e.target.value)}
@@ -63,13 +66,13 @@ export function SkillsFilterBar({ tags }: { tags: { slug: string; title: string 
       </div>
 
       {/* Группы-якоря */}
-      <div className="flex flex-wrap gap-1">
+      <div className="flex flex-wrap gap-1 rounded-2xl bg-paper-tint p-1">
         <button
           type="button"
           onClick={() => setParam('group', null)}
           className={cn(
-            '-ml-px border border-line px-3 py-1.5 font-mono text-xs transition-colors',
-            !activeGroup ? 'border-b-accent bg-surface text-t900' : 'bg-transparent text-t500 hover:bg-paper-hover',
+            'rounded-xl px-3 py-2 text-xs font-semibold transition-colors',
+            !activeGroup ? 'bg-paper text-t900 shadow-sm' : 'text-t500 hover:bg-paper-hover',
           )}
         >
           Все
@@ -80,10 +83,10 @@ export function SkillsFilterBar({ tags }: { tags: { slug: string; title: string 
             type="button"
             onClick={() => setParam('group', g.code)}
             className={cn(
-              '-ml-px border border-line px-3 py-1.5 font-mono text-xs transition-colors',
+              'rounded-xl px-3 py-2 text-xs font-semibold transition-colors',
               activeGroup === g.code
-                ? 'border-b-accent bg-surface text-t900'
-                : 'bg-transparent text-t500 hover:bg-paper-hover',
+                ? 'bg-paper text-t900 shadow-sm'
+                : 'text-t500 hover:bg-paper-hover',
             )}
           >
             {g.title}
@@ -103,11 +106,14 @@ export function SkillsFilterBar({ tags }: { tags: { slug: string; title: string 
       ) : null}
 
       {/* Переключатели */}
-      <div className="flex flex-wrap items-center gap-4 font-mono text-xs text-t600">
+      <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-t600">
         <button
           type="button"
           onClick={() => setParam('available', availableOnly ? null : '1')}
-          className={cn('flex items-center gap-2', availableOnly ? 'text-accent' : 'hover:text-t900')}
+          className={cn(
+            'flex items-center gap-2',
+            availableOnly ? 'text-accent' : 'hover:text-t900',
+          )}
         >
           <Icon name={availableOnly ? 'check-circle-linear' : 'lock-linear'} />
           Только доступные мне
@@ -115,7 +121,10 @@ export function SkillsFilterBar({ tags }: { tags: { slug: string; title: string 
         <button
           type="button"
           onClick={() => setParam('status', status === 'started' ? null : 'started')}
-          className={cn('flex items-center gap-2', status === 'started' ? 'text-accent' : 'hover:text-t900')}
+          className={cn(
+            'flex items-center gap-2',
+            status === 'started' ? 'text-accent' : 'hover:text-t900',
+          )}
         >
           <Icon name="diploma-verified-linear" />
           Внедрено
@@ -123,7 +132,10 @@ export function SkillsFilterBar({ tags }: { tags: { slug: string; title: string 
         <button
           type="button"
           onClick={() => setParam('status', status === 'not_started' ? null : 'not_started')}
-          className={cn('flex items-center gap-2', status === 'not_started' ? 'text-accent' : 'hover:text-t900')}
+          className={cn(
+            'flex items-center gap-2',
+            status === 'not_started' ? 'text-accent' : 'hover:text-t900',
+          )}
         >
           <Icon name="clock-circle-linear" />
           Не начато

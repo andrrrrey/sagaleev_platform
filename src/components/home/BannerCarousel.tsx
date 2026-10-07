@@ -22,10 +22,10 @@ export function BannerCarousel({ banners }: { banners: Banner[] }) {
   if (n === 0) return null;
   const b = banners[i]!;
   const inner = (
-    <div className="flex items-center justify-between gap-4 p-6 md:p-8">
+    <div className="brand-gradient flex items-center justify-between gap-4 p-6 md:p-8">
       <div>
-        <div className="text-lg font-normal tracking-tight text-t900">{b.title}</div>
-        {b.subtitle ? <p className="mt-1 text-sm font-light text-t600">{b.subtitle}</p> : null}
+        <div className="text-xl font-bold tracking-tight text-t900">{b.title}</div>
+        {b.subtitle ? <p className="mt-1 text-sm text-t600">{b.subtitle}</p> : null}
       </div>
       {b.href ? <Icon name="arrow-right-linear" className="shrink-0 text-t400" /> : null}
     </div>
@@ -34,12 +34,16 @@ export function BannerCarousel({ banners }: { banners: Banner[] }) {
   return (
     <div onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
       <Panel
-        title="Анонсы // Лента"
+        title="Анонсы"
         status={
-          <div className="flex items-center gap-2 font-mono text-[10px] text-t500">
+          <div className="flex items-center gap-2 text-[11px] font-semibold text-t500">
             {n > 1 ? (
               <>
-                <button type="button" aria-label="Назад" onClick={() => setI((v) => (v - 1 + n) % n)}>
+                <button
+                  type="button"
+                  aria-label="Назад"
+                  onClick={() => setI((v) => (v - 1 + n) % n)}
+                >
                   <Icon name="alt-arrow-left-linear" className="hover:text-accent" />
                 </button>
                 <span className="tabular-nums">

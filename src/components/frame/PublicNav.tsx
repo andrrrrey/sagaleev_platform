@@ -6,26 +6,30 @@ import { ThemeToggle } from '@/components/theme/ThemeToggle';
 /** Публичная навигация (вход/регистрация) — упрощённая версия шапки эталона. */
 export function PublicNav({ brand }: { brand: string }) {
   return (
-    <nav className="relative z-50 flex w-full items-center justify-between border-b border-line/70 px-6 py-5 md:px-10 md:py-6">
-      <Link href="/login" className="group flex items-center gap-3">
-        <div className="flex h-6 w-6 items-center justify-center border border-t300 bg-surface transition-colors group-hover:border-accent">
-          <div className="h-2 w-2 bg-t800 transition-colors group-hover:bg-accent" />
+    <header className="relative z-50 bg-paper/80 px-3 py-3 backdrop-blur-xl sm:px-5 lg:px-8">
+      <nav className="mx-auto flex min-h-16 w-full items-center justify-between rounded-[22px] border border-line/80 bg-paper/95 px-4 shadow-panel sm:px-6">
+        <Link href="/login" className="group flex items-center gap-3">
+          <span className="text-[15px] font-extrabold tracking-[-0.025em] text-t900 sm:text-base">
+            {brand}
+          </span>
+          <span className="grid h-7 min-w-7 place-items-center rounded-lg bg-ink px-1.5 text-[11px] font-bold text-paper">
+            AI
+          </span>
+        </Link>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <ThemeToggle />
+          <Link
+            href="/login"
+            className="hidden rounded-full px-4 py-2 text-sm font-medium text-t600 transition-colors hover:bg-paper-hover hover:text-t900 sm:block"
+          >
+            Войти
+          </Link>
+          <Link href="/register" className={buttonClass('ghost')}>
+            Регистрация
+            <Icon name="arrow-right-linear" />
+          </Link>
         </div>
-        <span className="text-base font-normal tracking-tight text-t900">{brand}</span>
-      </Link>
-      <div className="flex items-center gap-3 sm:gap-5">
-        <ThemeToggle />
-        <Link
-          href="/login"
-          className="hidden font-mono text-xs text-t500 transition-colors hover:text-t900 sm:block"
-        >
-          Войти
-        </Link>
-        <Link href="/register" className={buttonClass('ghost')}>
-          Регистрация
-          <Icon name="arrow-right-linear" />
-        </Link>
-      </div>
-    </nav>
+      </nav>
+    </header>
   );
 }

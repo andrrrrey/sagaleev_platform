@@ -13,7 +13,7 @@
     --c-paper-tint: 245 250 253;
     --c-paper-hover: 237 248 255;
     --c-surface: 255 255 255; /* #ffffff */
-    --c-line: 222 222 222; /* Light Grey #DEDEDE */
+    --c-line: 220 231 239; /* Cold border, close to the landing */
     --c-ink: 6 38 68;
     --c-ink-hover: 13 54 90;
     --c-accent: 246 105 17; /* Fuel Orange #F66911 */
@@ -27,10 +27,10 @@
     --c-t600: 76 99 119;
     --c-t500: 105 124 140;
     --c-t400: 143 157 169;
-    --c-t300: 190 199 207;
+    --c-t300: 181 198 211;
 
     /* Декоративные наложения */
-    --c-line-solid: 222 222 222;
+    --c-line-solid: 220 231 239;
     --hatch-rgb: 6 38 68;
     --hatch-alpha: 0.012;
     --grid-rgb: 6 38 68;
@@ -69,11 +69,9 @@
     --grid-rgb: 255 255 255;
   }
 
-  /* Системная тёмная тема, если пользователь не выбрал светлую явно */
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme='light']):not([data-theme='dark']) {
       color-scheme: dark;
-
       --c-page: 3 19 33;
       --c-paper: 6 38 68;
       --c-paper-panel: 10 47 80;
@@ -83,11 +81,6 @@
       --c-line: 67 93 117;
       --c-ink: 255 255 255;
       --c-ink-hover: 255 255 255;
-      --c-accent: 246 105 17;
-      --c-brand-sky: 142 216 255;
-      --c-brand-pink: 253 158 248;
-      --c-brand-navy: 6 38 68;
-
       --c-t900: 244 243 239;
       --c-t800: 231 229 223;
       --c-t700: 201 198 189;
@@ -95,7 +88,6 @@
       --c-t500: 146 143 134;
       --c-t400: 111 109 101;
       --c-t300: 74 72 66;
-
       --c-line-solid: 67 93 117;
       --hatch-rgb: 255 255 255;
       --hatch-alpha: 0.02;
@@ -105,7 +97,18 @@
 
   html,
   body {
-    height: 100%;
+    min-height: 100%;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-image:
+      radial-gradient(circle at 82% 6%, rgb(var(--c-brand-sky) / 0.16), transparent 26rem),
+      radial-gradient(circle at 14% 2%, rgb(var(--c-brand-pink) / 0.1), transparent 24rem);
+    background-attachment: fixed;
   }
 
   :where(a, button, input, textarea, select, [tabindex]):focus-visible {
@@ -164,9 +167,20 @@
   /* Техническая сетка-оверлей. */
   .bg-grid {
     background-image:
-      linear-gradient(rgb(var(--grid-rgb)) 1px, transparent 1px),
-      linear-gradient(90deg, rgb(var(--grid-rgb)) 1px, transparent 1px);
+      linear-gradient(rgb(var(--grid-rgb) / 0.055) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(var(--grid-rgb) / 0.055) 1px, transparent 1px);
     background-size: 40px 40px;
+  }
+
+  .brand-gradient {
+    background:
+      radial-gradient(circle at 15% 20%, rgb(var(--c-brand-pink) / 0.32), transparent 38%),
+      linear-gradient(
+        120deg,
+        rgb(var(--c-brand-sky) / 0.48),
+        rgb(var(--c-paper)) 48%,
+        rgb(var(--c-accent) / 0.08)
+      );
   }
 }
 

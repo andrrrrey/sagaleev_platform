@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import { Crosshair } from '@/components/frame/Crosshair';
 import { Panel } from '@/components/ui/Panel';
 import { LinedBlock } from '@/components/ui/LinedBlock';
 import { StatusPill } from '@/components/ui/StatusPill';
@@ -21,7 +20,7 @@ export function AuthHero({
   sidePanel?: { label: string; lines: string[] };
 }) {
   const panel = sidePanel ?? {
-    label: 'Session // Standby',
+    label: 'Что вас ждёт внутри',
     lines: [
       'Собери маркетингового ИИ-агента за 3 дня.',
       'Скиллы и кейсы с бизнес-результатом.',
@@ -30,30 +29,27 @@ export function AuthHero({
   };
 
   return (
-    <div className="grid flex-1 grid-cols-1 lg:grid-cols-2">
-      <div className="relative flex flex-col justify-center p-8 md:p-14 lg:p-20">
-        <Crosshair className="absolute right-12 top-12" />
-        <Crosshair className="absolute bottom-12 left-8" />
+    <div className="mx-auto grid w-full max-w-[1400px] flex-1 grid-cols-1 gap-4 px-4 pb-6 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
+      <div className="relative flex flex-col justify-center rounded-[30px] bg-paper p-7 md:p-12 lg:p-16">
         <div className="z-10 w-full max-w-md">
           <Kicker className="mb-6">{kicker}</Kicker>
           <Heading as="h1" size="h2" className="mb-6">
             {title}
           </Heading>
           {description ? (
-            <p className="mb-8 text-base font-light leading-relaxed text-t600">{description}</p>
+            <p className="mb-8 text-base leading-relaxed text-t600">{description}</p>
           ) : null}
           {children}
         </div>
       </div>
 
-      <div className="relative flex min-h-[320px] items-center justify-center border-t border-line/70 bg-paper-tint/40 p-6 lg:min-h-full lg:border-l lg:border-t-0 lg:p-12">
-        <div className="bg-grid pointer-events-none absolute inset-0 opacity-[0.03]" />
+      <div className="brand-gradient bg-grid relative flex min-h-[340px] items-center justify-center overflow-hidden rounded-[30px] border border-line/60 p-6 lg:min-h-full lg:p-12">
         <Panel
           className="z-10 w-full max-w-md"
           title={panel.label}
-          status={<StatusPill pulse>Готов к работе</StatusPill>}
+          status={<StatusPill pulse>Доступно</StatusPill>}
         >
-          <LinedBlock label="Brief">
+          <LinedBlock label="Платформа">
             {panel.lines.map((line, i) => (
               <p key={i}>{line}</p>
             ))}

@@ -9,29 +9,46 @@ import { signOutAction } from '@/server/auth/actions';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { STUDENT_NAV } from './nav-config';
 
-const PRIMARY = STUDENT_NAV.slice(0, 4); // Главная · Маршрут · Скиллы · Юзкейсы
-const MORE = STUDENT_NAV.slice(4); // Уроки · Эфиры · Лидерборд · Инструкция · Профиль
+const PRIMARY = STUDENT_NAV.slice(0, 6);
+const SECONDARY = STUDENT_NAV.slice(6);
 
 function isActive(pathname: string, href: string): boolean {
   if (href === '/') return pathname === '/';
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function Nav({ brand, userName }: { brand: string; userName?: string }) {
+function Brand({ brand }: { brand: string }) {
+  return (
+    <Link href="/" className="group flex shrink-0 items-center gap-2.5" aria-label="На главную">
+      <span className="text-[15px] font-extrabold tracking-[-0.025em] text-t900 sm:text-base">
+        {brand}
+      </span>
+      <span className="grid h-7 min-w-7 place-items-center rounded-lg bg-ink px-1.5 text-[11px] font-bold text-paper transition-transform group-hover:-rotate-3">
+        AI
+      </span>
+    </Link>
+  );
+}
+
+export function Nav({
+  brand,
+  userName,
+  staffMode = false,
+}: {
+  brand: string;
+  userName?: string;
+  staffMode?: boolean;
+}) {
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <nav className="relative z-50 flex w-full items-center justify-between border-b border-line/70 px-6 py-5 md:px-10 md:py-6">
-      <div className="flex items-center gap-8">
-        <Link href="/" className="group flex cursor-pointer items-center gap-3">
-          <div className="flex h-6 w-6 items-center justify-center border border-t300 bg-surface transition-colors group-hover:border-accent">
-            <div className="h-2 w-2 bg-t800 transition-colors group-hover:bg-accent" />
-          </div>
-          <span className="text-base font-normal tracking-tight text-t900">{brand}</span>
-        </Link>
+    <header className="sticky top-0 z-50 bg-paper/80 px-3 py-3 backdrop-blur-xl sm:px-5 lg:px-8">
+      <nav className="relative mx-auto flex min-h-16 w-full items-center justify-between gap-4 rounded-[22px] border border-line/80 bg-paper/95 px-4 shadow-panel sm:px-6">
+        <Brand brand={brand} />
 
-        <div className="hidden items-center gap-8 font-mono text-xs text-t500 md:flex">
+        <div className="hidden min-w-0 flex-1 items-center justify-center gap-1 xl:flex">
           {PRIMARY.map((item) => {
             const active = isActive(pathname, item.href);
             return (
@@ -39,8 +56,10 @@ export function Nav({ brand, userName }: { brand: string; userName?: string }) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'transition-colors hover:text-t900',
-                  active && 'border-b border-accent pb-1 text-t900',
+                  'rounded-full px-3.5 py-2 text-[13px] font-medium transition-colors',
+                  active
+                    ? 'bg-paper-hover text-t900'
+                    : 'text-t600 hover:bg-paper-tint hover:text-t900',
                 )}
               >
                 {item.label}
@@ -48,70 +67,123 @@ export function Nav({ brand, userName }: { brand: string; userName?: string }) {
             );
           })}
 
-          <div
-            className="relative"
-            onMouseEnter={() => setMoreOpen(true)}
-            onMouseLeave={() => setMoreOpen(false)}
-          >
+          <div className="relative">
             <button
               type="button"
-              className="flex items-center gap-1.5 transition-colors hover:text-t900"
-              onClick={() => setMoreOpen((v) => !v)}
+              className="flex items-center gap-1 rounded-full px-3.5 py-2 text-[13px] font-medium text-t600 transition-colors hover:bg-paper-tint hover:text-t900"
+              onClick={() => setMoreOpen((value) => !value)}
               aria-expanded={moreOpen}
             >
               Ещё
-              <Icon name="alt-arrow-down-linear" className="text-[10px]" />
+              <Icon name="alt-arrow-down-linear" className="text-xs" />
             </button>
-            {moreOpen && (
-              <div className="absolute left-0 top-full z-50 flex min-w-[160px] flex-col border border-line bg-paper-panel shadow-panel">
-                {MORE.map((item) => (
+            {moreOpen ? (
+              <div className="absolute right-0 top-[calc(100%+10px)] z-50 w-56 rounded-2xl border border-line bg-paper p-2 shadow-lift">
+                {SECONDARY.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
+                    onClick={() => setMoreOpen(false)}
                     className={cn(
-                      'flex items-center gap-2 px-4 py-2.5 transition-colors hover:bg-paper-hover hover:text-t900',
-                      isActive(pathname, item.href) && 'text-accent',
+                      'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors hover:bg-paper-hover',
+                      isActive(pathname, item.href) ? 'text-accent' : 'text-t700',
                     )}
                   >
-                    <Icon name={item.icon} className="text-sm" />
+                    <Icon name={item.icon} className="text-lg" />
                     {item.label}
                   </Link>
                 ))}
               </div>
-            )}
+            ) : null}
           </div>
         </div>
-      </div>
 
-      <div className="flex items-center gap-3 sm:gap-5">
-        <ThemeToggle />
-        <Link
-          href="/profile/notifications"
-          className="flex h-8 w-8 items-center justify-center text-t400 transition-colors hover:text-t700"
-          aria-label="Уведомления"
-        >
-          <Icon name="bell-linear" className="text-lg" />
-        </Link>
-        {userName ? (
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+          {staffMode ? (
+            <Link
+              href="/admin"
+              className="hidden items-center gap-2 rounded-full bg-accent/10 px-4 py-2 text-xs font-semibold text-accent transition-colors hover:bg-accent hover:text-white sm:flex"
+            >
+              <Icon name="widget-linear" />
+              Админка
+            </Link>
+          ) : null}
+          <ThemeToggle />
           <Link
-            href="/profile"
-            className="hidden items-center gap-2 font-mono text-xs text-t500 transition-colors hover:text-accent sm:flex"
-            aria-label="Открыть личный кабинет"
+            href="/profile/notifications"
+            className="grid h-10 w-10 place-items-center rounded-full text-t500 transition-colors hover:bg-paper-hover hover:text-t900"
+            aria-label="Уведомления"
           >
-            <Icon name="user-linear" />
-            {userName}
+            <Icon name="bell-linear" className="text-lg" />
           </Link>
-        ) : null}
-        <form action={signOutAction}>
+          {userName ? (
+            <Link
+              href="/profile"
+              className="hidden items-center gap-2 rounded-full px-2.5 py-2 text-sm font-medium text-t700 transition-colors hover:bg-paper-hover hover:text-t900 md:flex"
+              aria-label="Открыть личный кабинет"
+            >
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-ink text-xs font-bold text-paper">
+                {userName.trim().charAt(0).toUpperCase() || 'Я'}
+              </span>
+              <span className="max-w-24 truncate">{userName}</span>
+            </Link>
+          ) : null}
           <button
-            type="submit"
-            className="flex items-center gap-2 border border-line bg-transparent px-4 py-2 font-mono text-xs text-t700 shadow-sm transition-all hover:border-t300 hover:bg-paper-hover"
+            type="button"
+            onClick={() => setMobileOpen((value) => !value)}
+            className="grid h-10 w-10 place-items-center rounded-full text-t700 transition-colors hover:bg-paper-hover xl:hidden"
+            aria-label="Открыть меню"
+            aria-expanded={mobileOpen}
           >
-            Выйти
-            <Icon name="logout-2-linear" />
+            <Icon
+              name={mobileOpen ? 'close-circle-linear' : 'hamburger-menu-linear'}
+              className="text-xl"
+            />
           </button>
-        </form>
-      </div>
-    </nav>
+        </div>
+
+        {mobileOpen ? (
+          <div className="absolute left-0 right-0 top-[calc(100%+10px)] z-50 rounded-[22px] border border-line bg-paper p-3 shadow-lift xl:hidden">
+            <div className="grid grid-cols-2 gap-1 sm:grid-cols-3">
+              {STUDENT_NAV.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileOpen(false)}
+                  className={cn(
+                    'flex items-center gap-2 rounded-xl px-3 py-3 text-sm font-medium transition-colors',
+                    isActive(pathname, item.href)
+                      ? 'bg-paper-hover text-accent'
+                      : 'text-t700 hover:bg-paper-tint',
+                  )}
+                >
+                  <Icon name={item.icon} className="text-lg" />
+                  {item.label}
+                </Link>
+              ))}
+              {staffMode ? (
+                <Link
+                  href="/admin"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-2 rounded-xl bg-accent/10 px-3 py-3 text-sm font-semibold text-accent"
+                >
+                  <Icon name="widget-linear" className="text-lg" />
+                  Админка
+                </Link>
+              ) : null}
+            </div>
+            <form action={signOutAction} className="mt-2 border-t border-line pt-2">
+              <button
+                type="submit"
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-3 text-sm text-t600 transition-colors hover:bg-paper-hover hover:text-t900"
+              >
+                <Icon name="logout-2-linear" className="text-lg" />
+                Выйти
+              </button>
+            </form>
+          </div>
+        ) : null}
+      </nav>
+    </header>
   );
 }

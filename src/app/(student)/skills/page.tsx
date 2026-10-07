@@ -25,13 +25,15 @@ export default async function SkillsPage({
   if (!actor) redirect('/login');
 
   const sp = await searchParams;
-  const groupParam = sp.group && GROUP_CODES.has(sp.group as SkillGroup) ? (sp.group as SkillGroup) : undefined;
+  const groupParam =
+    sp.group && GROUP_CODES.has(sp.group as SkillGroup) ? (sp.group as SkillGroup) : undefined;
   const filters: SkillFilters = {
     q: sp.q,
     group: groupParam,
     tags: sp.tags ? sp.tags.split(',').filter(Boolean) : undefined,
     availableOnly: sp.available === '1',
-    status: sp.status === 'started' ? 'started' : sp.status === 'not_started' ? 'not_started' : undefined,
+    status:
+      sp.status === 'started' ? 'started' : sp.status === 'not_started' ? 'not_started' : undefined,
   };
 
   const [cards, tags] = await Promise.all([
@@ -43,14 +45,16 @@ export default async function SkillsPage({
     }),
   ]);
 
-  const groupsToRender = groupParam ? SKILL_GROUPS.filter((g) => g.code === groupParam) : SKILL_GROUPS;
+  const groupsToRender = groupParam
+    ? SKILL_GROUPS.filter((g) => g.code === groupParam)
+    : SKILL_GROUPS;
 
   return (
-    <div className="px-6 py-8 md:px-10 md:py-12">
+    <div className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 md:px-10 md:py-10">
       <PageHeader
         kicker="Скиллы"
-        title="Библиотека маркетинг-скиллов"
-        description="Каждый скилл — маркетинг-функция с бизнес-результатом. Отправляй агенту одной кнопкой."
+        title="Инструкции для агента"
+        description="Скиллы — это готовые инструкции, которые можно передать подключённому агенту или скопировать вручную."
       />
 
       <Suspense fallback={<div className="mb-8 h-24 animate-pulse bg-line/30" />}>
@@ -59,7 +63,7 @@ export default async function SkillsPage({
 
       {cards.length === 0 ? (
         <div className="max-w-xl">
-          <EmptyState label="Скиллы // Empty">Ничего не найдено. Сбросьте фильтры.</EmptyState>
+          <EmptyState label="Скиллы">Ничего не найдено. Сбросьте фильтры.</EmptyState>
         </div>
       ) : (
         <div className="flex flex-col gap-12">
@@ -68,7 +72,7 @@ export default async function SkillsPage({
             if (groupCards.length === 0) return null;
             return (
               <section key={g.code}>
-                <div className="mb-5 flex items-center gap-3 border-b border-line/60 pb-3 font-mono text-xs uppercase tracking-widest text-accent">
+                <div className="mb-5 flex items-center gap-3 border-b border-line/60 pb-3 text-sm font-bold text-t900">
                   <Icon name={g.icon} className="text-accent" />
                   {g.title}
                   <span className="text-t400">· {groupCards.length}</span>

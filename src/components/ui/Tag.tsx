@@ -14,10 +14,10 @@ export function Tag({
   return (
     <span
       className={cn(
-        'inline-flex items-center px-2 py-1 font-mono text-[10px] uppercase tracking-widest',
+        'inline-flex items-center rounded-full px-3 py-1.5 text-[11px] font-medium',
         active
-          ? 'border border-accent/30 bg-surface text-accent'
-          : 'border border-line bg-surface text-t500',
+          ? 'border border-accent/20 bg-accent/10 text-accent'
+          : 'border border-line bg-paper text-t600',
         className,
       )}
     >

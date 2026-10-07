@@ -25,21 +25,24 @@ export function RouteStepItem({
   const [state, action, pending] = useActionState(saveStepProgress, initialActionState);
 
   return (
-    <div className="border border-line bg-paper-panel">
+    <div className="overflow-hidden rounded-[22px] border border-line bg-paper shadow-sm transition-shadow hover:shadow-panel">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-4 px-4 py-4 text-left transition-colors hover:bg-paper-hover/40"
+        className="flex w-full items-center gap-4 px-4 py-4 text-left transition-colors hover:bg-paper-hover/60 md:px-5"
         aria-expanded={open}
       >
         <Icon
           name={step.done ? 'check-circle-linear' : 'clock-circle-linear'}
           className={cn('text-lg', step.done ? 'text-accent' : 'text-t400')}
         />
-        <span className="font-mono text-[10px] uppercase tracking-widest text-t400">
-          {String(index + 1).padStart(2, '0')}
-        </span>
-        <span className={cn('flex-1 text-sm', step.done ? 'text-t500 line-through' : 'text-t800')}>
+        <span className="text-xs font-bold text-accent">{String(index + 1).padStart(2, '0')}</span>
+        <span
+          className={cn(
+            'flex-1 text-sm font-semibold',
+            step.done ? 'text-t500 line-through' : 'text-t800',
+          )}
+        >
           {step.title}
         </span>
         <Icon
@@ -52,7 +55,7 @@ export function RouteStepItem({
         <div className="flex flex-col gap-5 border-t border-line/60 p-4 md:p-6">
           {step.body ? (
             <div
-              className="text-sm font-light leading-relaxed text-t700 [&_a]:text-accent [&_a]:underline [&_p+p]:mt-3 [&_strong]:font-medium [&_strong]:text-t900"
+              className="text-[15px] leading-relaxed text-t700 [&_a]:text-accent [&_a]:underline [&_p+p]:mt-3 [&_strong]:font-semibold [&_strong]:text-t900"
               dangerouslySetInnerHTML={{ __html: step.body }}
             />
           ) : null}
@@ -77,7 +80,7 @@ export function RouteStepItem({
           {step.linkedSkill ? (
             <Link
               href={`/skills/${step.linkedSkill.slug}`}
-              className="flex items-center justify-between border border-line bg-surface px-4 py-3 transition-colors hover:border-accent/30"
+              className="flex items-center justify-between rounded-2xl border border-line bg-paper-tint px-4 py-3 transition-colors hover:border-accent/30"
             >
               <span className="flex items-center gap-2 text-sm font-light text-t700">
                 <Icon name="bolt-linear" className="text-accent" />
@@ -87,8 +90,14 @@ export function RouteStepItem({
             </Link>
           ) : null}
 
-          <div className="border border-line/70 bg-surface px-4 py-3 text-xs font-light leading-relaxed text-t600">
-            <strong className="font-medium text-t900">Застрял на этом шаге?</strong> Скопируй название шага и безопасный текст ошибки в ChatGPT/Codex. Попроси объяснить одно следующее действие и указать нужное окно. Не копируй секреты. Если не помогло — <Link href="/help" className="text-accent underline">обратись в поддержку</Link>.
+          <div className="rounded-2xl border border-line/70 bg-paper-tint px-4 py-3 text-xs leading-relaxed text-t600">
+            <strong className="font-medium text-t900">Застрял на этом шаге?</strong> Скопируй
+            название шага и безопасный текст ошибки в ChatGPT/Codex. Попроси объяснить одно
+            следующее действие и указать нужное окно. Не копируй секреты. Если не помогло —{' '}
+            <Link href="/help" className="text-accent underline">
+              обратись в поддержку
+            </Link>
+            .
           </div>
 
           {/* Фиксация артефакта */}

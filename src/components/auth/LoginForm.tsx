@@ -15,13 +15,11 @@ export function LoginForm({ notice }: { notice?: string }) {
   return (
     <form action={action} className="flex flex-col gap-5">
       {notice ? (
-        <p className="border border-line bg-surface px-4 py-3 font-mono text-xs text-t600">
+        <p className="rounded-xl border border-line bg-paper-tint px-4 py-3 text-xs text-t600">
           {notice}
         </p>
       ) : null}
-      {state.message ? (
-        <p className="font-mono text-[11px] text-accent">{state.message}</p>
-      ) : null}
+      {state.message ? <p className="font-mono text-[11px] text-accent">{state.message}</p> : null}
 
       <div>
         <Label htmlFor="email">Email</Label>
@@ -51,7 +49,7 @@ export function LoginForm({ notice }: { notice?: string }) {
         <FieldError>{state.fieldErrors?.password}</FieldError>
       </div>
 
-      <div className="flex items-center justify-between font-mono text-xs text-t500">
+      <div className="flex items-center justify-between text-xs font-medium text-t500">
         <Link href="/forgot" className="hover:text-t900">
           Забыли пароль?
         </Link>

@@ -103,13 +103,13 @@ export function SkillInstruction({
   }
 
   return (
-    <section className="overflow-hidden border border-line bg-surface">
-      <div className="flex flex-col gap-4 border-b border-line bg-paper-panel p-5 sm:flex-row sm:items-center sm:justify-between">
+    <section className="overflow-hidden rounded-[24px] border border-line bg-paper shadow-panel">
+      <div className="flex flex-col gap-4 border-b border-line bg-paper-tint p-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <div className="font-mono text-[10px] uppercase tracking-widest text-accent">
+          <div className="text-xs font-semibold uppercase tracking-[0.13em] text-accent">
             Инструкция для агента
           </div>
-          <p className="mt-1 text-sm font-light text-t600">
+          <p className="mt-1 text-sm text-t600">
             Прочитайте её или скопируйте целиком в ChatGPT, Codex либо другого агента.
           </p>
         </div>
@@ -122,7 +122,7 @@ export function SkillInstruction({
         <InstructionBody source={source} />
       </div>
       {githubSource ? (
-        <div className="border-t border-line px-5 py-3 font-mono text-[10px] uppercase tracking-widest text-t400 sm:px-7">
+        <div className="border-t border-line px-5 py-3 text-[11px] font-medium text-t400 sm:px-7">
           Источник:{' '}
           <a
             href={githubSource}

@@ -56,7 +56,7 @@ export default async function LessonsPage({
   const viewed = cards.filter((c) => c.status !== 'NONE').length;
 
   return (
-    <div className="px-6 py-8 md:px-10 md:py-12">
+    <div className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 md:px-10 md:py-10">
       <PageHeader
         kicker="Уроки"
         title="10-недельная программа"
@@ -84,7 +84,7 @@ export default async function LessonsPage({
             return (
               <Panel
                 key={b}
-                title={b > 0 ? `Блок ${b} // Программа` : 'Без блока'}
+                title={b > 0 ? `Блок ${b}` : 'Без блока'}
                 status={
                   <StatusPill muted={blockViewed === 0}>
                     {blockViewed} / {lessons.length}
@@ -96,21 +96,25 @@ export default async function LessonsPage({
                     <li key={l.slug}>
                       <Link
                         href={`/lessons/${l.slug}`}
-                        className="flex items-center justify-between gap-3 px-5 py-3 transition-colors hover:bg-paper-hover/40"
+                        className="flex items-center justify-between gap-3 px-5 py-4 transition-colors hover:bg-paper-hover/50"
                       >
                         <span className="flex items-center gap-3">
                           <Icon
-                            name={l.status !== 'NONE' ? 'check-circle-linear' : 'videocamera-record-linear'}
+                            name={
+                              l.status !== 'NONE'
+                                ? 'check-circle-linear'
+                                : 'videocamera-record-linear'
+                            }
                             className={l.status !== 'NONE' ? 'text-accent' : 'text-t400'}
                           />
-                          <span className="text-sm font-light text-t800">{l.title}</span>
+                          <span className="text-sm font-semibold text-t800">{l.title}</span>
                           {l.methodTag ? (
-                            <span className="font-mono text-[10px] uppercase tracking-widest text-accent">
+                            <span className="text-[11px] font-semibold text-accent">
                               · {l.methodTag}
                             </span>
                           ) : null}
                         </span>
-                        <span className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-widest text-t500">
+                        <span className="flex items-center gap-3 text-[11px] font-medium text-t500">
                           {l.status !== 'NONE' ? STATUS_LABEL[l.status] : null}
                           {l.timeToMaster ? <span>{l.timeToMaster}</span> : null}
                           {l.locked ? <Icon name="lock-linear" className="text-t400" /> : null}

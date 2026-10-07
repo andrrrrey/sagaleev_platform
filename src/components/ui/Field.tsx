@@ -8,7 +8,7 @@ import {
 import { cn } from '@/lib/utils';
 
 const BASE =
-  'w-full bg-surface border border-line px-4 py-3 text-sm font-light text-t800 placeholder:text-t400 focus:outline-none focus:border-accent/50 focus:ring-0';
+  'w-full rounded-xl bg-paper border border-line px-4 py-3 text-sm font-normal text-t800 placeholder:text-t400 transition-shadow focus:outline-none focus:border-accent/50 focus:ring-4 focus:ring-accent/10';
 
 /** Микро-лейбл поля (docs/02 §3.8). */
 export function Label({
@@ -23,10 +23,7 @@ export function Label({
   return (
     <label
       htmlFor={htmlFor}
-      className={cn(
-        'mb-1 block font-mono text-[10px] uppercase tracking-widest text-t400',
-        className,
-      )}
+      className={cn('mb-1.5 block text-xs font-semibold text-t600', className)}
     >
       {children}
     </label>
@@ -35,7 +32,7 @@ export function Label({
 
 export function FieldError({ children }: { children: ReactNode }) {
   if (!children) return null;
-  return <p className="mt-1 font-mono text-[11px] text-accent">{children}</p>;
+  return <p className="mt-1 text-xs font-medium text-accent">{children}</p>;
 }
 
 type InputProps = InputHTMLAttributes<HTMLInputElement> & { mono?: boolean; invalid?: boolean };
@@ -96,14 +93,14 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
   ref,
 ) {
   return (
-    <label htmlFor={id} className="flex cursor-pointer items-start gap-3 text-sm font-light text-t700">
+    <label htmlFor={id} className="flex cursor-pointer items-start gap-3 text-sm text-t700">
       <input
         ref={ref}
         id={id}
         type="checkbox"
         className={cn(
-          'mt-0.5 grid h-4 w-4 shrink-0 place-items-center appearance-none border border-t300 bg-surface',
-          'checked:border-t800 checked:bg-t800',
+          'mt-0.5 grid h-5 w-5 shrink-0 appearance-none place-items-center rounded-md border border-t300 bg-paper',
+          'checked:border-accent checked:bg-accent',
           'checked:before:block checked:before:h-1.5 checked:before:w-1.5 checked:before:bg-paper',
           'focus:border-accent focus:outline-none',
           className,

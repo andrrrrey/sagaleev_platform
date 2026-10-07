@@ -1,15 +1,15 @@
 import { cn } from '@/lib/utils';
 
-/** Моно-кикер с акцентной линией слева (docs/02 §3.5). */
+/** Компактная техно-метка как на лендинге. */
 export function Kicker({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <div
       className={cn(
-        'flex items-center gap-3 font-mono text-xs uppercase tracking-widest text-accent',
+        'inline-flex items-center gap-2.5 font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-accent',
         className,
       )}
     >
-      <span className="h-px w-6 bg-accent" />
+      <span className="h-1.5 w-1.5 rounded-sm bg-accent" />
       {children}
     </div>
   );

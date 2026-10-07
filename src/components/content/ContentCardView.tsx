@@ -6,7 +6,11 @@ import { Tag } from '@/components/ui/Tag';
 import { Icon } from '@/components/ui/Icon';
 import { formatDate } from '@/lib/utils';
 
-const BASE: Record<string, string> = { LESSON: '/lessons', USECASE: '/usecases', STREAM: '/streams' };
+const BASE: Record<string, string> = {
+  LESSON: '/lessons',
+  USECASE: '/usecases',
+  STREAM: '/streams',
+};
 const STATUS_LABEL: Record<string, string> = {
   VIEWED: 'Просмотрен',
   SUBMITTED: 'Сдан',
@@ -19,8 +23,8 @@ export function ContentCardView({ card }: { card: ContentCard }) {
   return (
     <Link href={`${BASE[card.type]}/${card.slug}`} className="group">
       <Panel
-        className="h-full transition-colors group-hover:border-accent/30"
-        title={`${card.title} // ${card.type === 'STREAM' ? 'Эфир' : card.type === 'LESSON' ? 'Урок' : 'Юзкейс'}`}
+        className="h-full group-hover:-translate-y-1 group-hover:border-accent/20"
+        title={card.type === 'STREAM' ? 'Эфир' : card.type === 'LESSON' ? 'Урок' : 'Юзкейс'}
         status={
           card.locked ? (
             <StatusPill muted>
@@ -31,23 +35,25 @@ export function ContentCardView({ card }: { card: ContentCard }) {
           ) : undefined
         }
       >
-        <div className="flex flex-1 flex-col gap-3 p-5">
+        <div className="flex flex-1 flex-col gap-3 p-5 md:p-6">
+          <h3 className="text-xl font-bold leading-tight tracking-tight text-t900">{card.title}</h3>
           {card.caseClient ? (
-            <div className="font-mono text-[10px] uppercase tracking-widest text-t500">
-              Кейс · {card.caseClient}
-            </div>
+            <div className="text-xs font-semibold text-t500">Кейс · {card.caseClient}</div>
           ) : null}
           {card.airedAt ? (
-            <div className="font-mono text-[10px] uppercase tracking-widest text-t500">
-              Эфир · {formatDate(card.airedAt)}
-            </div>
+            <div className="text-xs font-semibold text-t500">Эфир · {formatDate(card.airedAt)}</div>
           ) : null}
-          {card.summary ? <p className="line-clamp-2 text-sm font-light text-t700">{card.summary}</p> : null}
+          {card.summary ? (
+            <p className="line-clamp-3 text-sm leading-relaxed text-t600">{card.summary}</p>
+          ) : null}
 
           {!card.locked && card.kpis.length > 0 ? (
             <div className="flex flex-wrap gap-2">
               {card.kpis.slice(0, 3).map((k, i) => (
-                <span key={i} className="border border-line bg-paper-panel px-2 py-1 font-mono text-[10px] text-t700">
+                <span
+                  key={i}
+                  className="rounded-full border border-line bg-paper-tint px-2.5 py-1 text-[11px] font-semibold text-t700"
+                >
                   {k.value}
                 </span>
               ))}
@@ -56,7 +62,7 @@ export function ContentCardView({ card }: { card: ContentCard }) {
 
           <div className="flex items-center gap-3">
             {card.timeToMaster ? (
-              <span className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-t500">
+              <span className="flex items-center gap-1.5 text-xs font-medium text-t500">
                 <Icon name="clock-circle-linear" className="text-xs" />
                 {card.timeToMaster}
               </span>
@@ -72,7 +78,7 @@ export function ContentCardView({ card }: { card: ContentCard }) {
           ) : null}
 
           {card.locked ? (
-            <div className="mt-auto flex items-center gap-2 border-t border-line/60 pt-3 font-mono text-[10px] uppercase tracking-widest text-t400">
+            <div className="mt-auto flex items-center gap-2 border-t border-line/60 pt-3 text-xs font-medium text-t400">
               <Icon name="lock-keyhole-linear" className="text-xs" />
               Откроется на тарифе {card.requiredPlan ?? 'SUPPORT'}
             </div>

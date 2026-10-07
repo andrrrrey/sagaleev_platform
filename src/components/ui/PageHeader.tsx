@@ -16,11 +16,11 @@ export function PageHeader({
 }) {
   return (
     <div className="mb-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-      <div className="max-w-2xl">
-        <Kicker className="mb-6">{kicker}</Kicker>
+      <div className="max-w-3xl">
+        <Kicker className="mb-5">{kicker}</Kicker>
         <Heading as="h1">{title}</Heading>
         {description ? (
-          <p className="mt-6 max-w-md text-base font-light leading-relaxed text-t600 md:text-lg">
+          <p className="mt-5 max-w-2xl text-base leading-relaxed text-t600 md:text-lg">
             {description}
           </p>
         ) : null}

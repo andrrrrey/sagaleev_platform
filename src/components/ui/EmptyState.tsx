@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import { Crosshair } from '@/components/frame/Crosshair';
 import { LinedBlock } from './LinedBlock';
 
 /** Пустое состояние: LinedBlock + crosshair (docs/02 §6). */
@@ -13,9 +12,7 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="relative border border-line">
-      <Crosshair className="absolute right-4 top-4" />
-      <Crosshair className="absolute bottom-4 left-4" />
+    <div className="relative rounded-[24px] border border-dashed border-line bg-paper p-2">
       <LinedBlock label={label}>
         <div className="flex flex-col items-start gap-4">
           <span>{children}</span>

@@ -18,8 +18,8 @@ export function SkillCardView({ skill }: { skill: SkillCard }) {
   return (
     <Link href={`/skills/${skill.slug}`} className="group">
       <Panel
-        className="h-full transition-colors group-hover:border-accent/30"
-        title={`${skill.title} // Скилл`}
+        className="h-full group-hover:-translate-y-1 group-hover:border-accent/20"
+        title="Скилл для агента"
         status={
           skill.locked ? (
             <StatusPill muted>
@@ -30,8 +30,11 @@ export function SkillCardView({ skill }: { skill: SkillCard }) {
           ) : undefined
         }
       >
-        <div className="flex flex-1 flex-col gap-3 p-5">
-          <p className="line-clamp-2 text-sm font-light text-t700">{skill.shortDesc}</p>
+        <div className="flex flex-1 flex-col gap-3 p-5 md:p-6">
+          <h3 className="text-xl font-bold leading-tight tracking-tight text-t900">
+            {skill.title}
+          </h3>
+          <p className="line-clamp-3 text-sm leading-relaxed text-t600">{skill.shortDesc}</p>
           {skill.tags.length > 0 ? (
             <div className="flex flex-wrap gap-1.5">
               {skill.tags.slice(0, 4).map((t) => (
@@ -40,13 +43,13 @@ export function SkillCardView({ skill }: { skill: SkillCard }) {
             </div>
           ) : null}
           {!skill.locked ? (
-            <div className="mt-auto flex items-center justify-between border-t border-line/60 pt-3 font-mono text-[10px] uppercase tracking-widest text-t500">
+            <div className="mt-auto flex items-center justify-between border-t border-line/60 pt-3 text-xs font-semibold text-t500">
               Открыть инструкцию
               <Icon name="arrow-right-linear" className="text-sm text-accent" />
             </div>
           ) : null}
           {skill.locked ? (
-            <div className="mt-auto flex items-center gap-2 border-t border-line/60 pt-3 font-mono text-[10px] uppercase tracking-widest text-t400">
+            <div className="mt-auto flex items-center gap-2 border-t border-line/60 pt-3 text-xs font-medium text-t400">
               <Icon name="lock-keyhole-linear" className="text-xs" />
               Откроется на тарифе {skill.requiredPlan ?? 'SUPPORT'}
             </div>

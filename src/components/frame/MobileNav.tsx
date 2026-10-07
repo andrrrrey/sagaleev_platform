@@ -11,12 +11,12 @@ function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-/** Нижняя навигация внутри рамы на <md (5 табов, тап-таргеты ≥ 40px). */
+/** Нижняя навигация по главным учебным разделам. */
 export function MobileNav() {
   const pathname = usePathname();
   return (
     <nav
-      className="relative z-30 flex h-14 w-full border-t border-line bg-paper md:hidden"
+      className="fixed inset-x-3 bottom-3 z-40 flex h-16 rounded-[20px] border border-line bg-paper/95 p-1 shadow-lift backdrop-blur-xl md:hidden"
       aria-label="Основная навигация"
     >
       {MOBILE_NAV.map((item) => {
@@ -26,12 +26,12 @@ export function MobileNav() {
             key={item.href}
             href={item.href}
             className={cn(
-              'flex flex-1 flex-col items-center justify-center gap-1 transition-colors',
-              active ? 'text-accent' : 'text-t400 hover:text-t600',
+              'flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-2xl transition-colors',
+              active ? 'bg-paper-hover text-accent' : 'text-t500 hover:text-t800',
             )}
           >
             <Icon name={item.icon} className="text-lg" />
-            <span className="font-mono text-[9px] uppercase tracking-widest">{item.label}</span>
+            <span className="max-w-full truncate text-[9px] font-semibold">{item.label}</span>
           </Link>
         );
       })}
