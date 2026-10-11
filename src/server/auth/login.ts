@@ -18,11 +18,6 @@ async function postLoginPath(userId: string): Promise<string> {
   if (!user) return '/';
   if (user.role === 'ADMIN' || user.role === 'EDITOR') return '/admin';
 
-  const activeEnrollment = await prisma.enrollment.findFirst({
-    where: { userId, status: 'ACTIVE' },
-    select: { id: true },
-  });
-  if (!activeEnrollment) return '/pay';
   if (!user.businessProfile) return '/onboarding';
   return '/';
 }
@@ -45,7 +40,7 @@ export async function loginAction(_prev: ActionState, formData: FormData): Promi
   } catch (e) {
     if (e instanceof AuthError) {
       // Единый текст без раскрытия существования email/статуса верификации.
-      return { ok: false, message: 'Неверный email или пароль (или email не подтверждён).' };
+      return { ok: false, message: 'Неверный email или пароль.' };
     }
     throw e;
   }

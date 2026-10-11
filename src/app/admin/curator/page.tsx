@@ -22,7 +22,7 @@ export default async function AdminCuratorPage() {
       where: {
         role: 'STUDENT',
         deletedAt: null,
-        enrollments: { some: { status: 'ACTIVE', planCode: { in: ['SUPPORT', 'VIP'] } } },
+        blockedAt: null,
       },
       select: { id: true, name: true },
       orderBy: { name: 'asc' },
@@ -66,8 +66,8 @@ export default async function AdminCuratorPage() {
             </p>
             <p className="text-t600">
               <b>Приватность (152-ФЗ):</b> куратор читает только учебные данные и бизнес-профиль. Он
-              не видит переписку, контакты (email/телефон), платежи. Доступен на тарифах SUPPORT и
-              VIP. Системный промпт и API-ключ настраиваются в{' '}
+              не видит переписку, контакты (email/телефон) и платежи. Куратор доступен всем
+              зарегистрированным студентам. Системный промпт и API-ключ настраиваются в{' '}
               <span className="font-mono text-xs">Настройках</span>.
             </p>
           </div>

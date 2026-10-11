@@ -8,15 +8,15 @@ import type { PlanCode } from '@prisma/client';
 
 export type FeatureKey = 'CURATOR' | 'ZOOM';
 
-/** Фичи требуют уровень >= 2 (SUPPORT). */
+/** CURATOR бесплатен; значение используется как справочное. ZOOM требует SUPPORT. */
 export const FEATURE_MIN_PLAN: Record<FeatureKey, PlanCode> = {
-  CURATOR: 'SUPPORT',
+  CURATOR: 'SELF',
   ZOOM: 'SUPPORT',
 };
 
 /** Значения `minPlan` по умолчанию для сидов/контента (справочно). */
 export const DEFAULT_MIN_PLAN = {
-  ROUTE: 'SELF', // без гейта, доступен всем активным
+  ROUTE: 'SELF', // справочно: сам маршрут доступен и без подписки
   SKILL_BASIC: 'SELF',
   SKILL_FULL: 'SUPPORT',
   LESSON: 'SELF',

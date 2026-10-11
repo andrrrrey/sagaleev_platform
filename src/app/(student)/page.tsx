@@ -9,7 +9,6 @@ import { Panel } from '@/components/ui/Panel';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { Icon } from '@/components/ui/Icon';
 import { LinedBlock } from '@/components/ui/LinedBlock';
-import { LockedPanel } from '@/components/ui/LockedPanel';
 import { buttonClass } from '@/components/ui/Button';
 import { BannerCarousel } from '@/components/home/BannerCarousel';
 import { MoneyEntryModal } from '@/components/money/MoneyEntryModal';
@@ -72,6 +71,7 @@ export default async function HomePage() {
   const usecases = countUnit('USECASE');
   const streams = countUnit('STREAM');
   const moneyTotal = moneyAgg?._sum.amountKopeks ?? 0;
+  const hasPaidAccess = a.enrollmentActive || a.role === 'ADMIN' || a.role === 'EDITOR';
 
   const feed = [
     ...latestUnits.map((u) => ({
@@ -96,14 +96,14 @@ export default async function HomePage() {
       label: 'Уроки',
       description: 'Программа обучения по направлениям',
       icon: 'videocamera-record-linear',
-      count: `${lessons.avail} доступно`,
+      count: hasPaidAccess ? `${lessons.avail} доступно` : 'По подписке',
     },
     {
       href: '/usecases',
       label: 'Юзкейсы',
       description: 'Реальные задачи, решения и результаты',
       icon: 'chart-2-linear',
-      count: `${usecases.avail} доступно`,
+      count: hasPaidAccess ? `${usecases.avail} доступно` : 'По подписке',
     },
     {
       href: '/streams',
@@ -117,14 +117,10 @@ export default async function HomePage() {
       label: 'Скиллы',
       description: 'База готовых инструкций для агента',
       icon: 'bolt-linear',
-      count: `${skillsAvail} доступно`,
+      count: hasPaidAccess ? `${skillsAvail} доступно` : 'По подписке',
     },
   ];
   const routePct = route.totalSteps ? Math.round((route.doneSteps / route.totalSteps) * 100) : 0;
-
-  const curatorAccess = actor
-    ? canAccess(a, { kind: 'feature', feature: 'CURATOR' })
-    : { ok: false as const };
 
   return (
     <div className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 md:px-10 md:py-10">
@@ -241,15 +237,14 @@ export default async function HomePage() {
           </div>
         </Panel>
 
-        <Panel title="Разбор куратора" status={<StatusPill muted>В подписке</StatusPill>}>
+        <Panel title="Разбор куратора" status={<StatusPill>Бесплатно</StatusPill>}>
           <div className="p-6">
-            {curatorAccess.ok ? (
-              <LinedBlock label="Разбор">
-                <p>Еженедельный разбор куратора появится после первой недели работы.</p>
-              </LinedBlock>
-            ) : (
-              <LockedPanel requiredPlan="SUPPORT" />
-            )}
+            <LinedBlock label="Разбор">
+              <p>Еженедельный разбор куратора появится после первой недели работы.</p>
+              <Link href="/profile/curator" className="mt-3 inline-flex font-semibold text-accent">
+                Открыть куратора →
+              </Link>
+            </LinedBlock>
           </div>
         </Panel>
       </section>

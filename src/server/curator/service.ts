@@ -2,7 +2,6 @@ import Anthropic from '@anthropic-ai/sdk';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/server/db';
 import { getSetting, getSettingBool } from '@/server/settings/store';
-import { planLevel } from '@/server/access/plans';
 import { notifyTelegram } from '@/server/telegram/service';
 import {
   CURATOR_SYSTEM_DEFAULT,
@@ -156,7 +155,7 @@ async function callCurator(
 
 /**
  * Еженедельный разбор одного студента. Возвращает статус.
- * Гейт: CURATOR_ENABLED + ключ + активный тариф уровня ≥ 2 (SUPPORT).
+ * Гейт: CURATOR_ENABLED + ключ + действующий аккаунт студента.
  */
 export async function runCuratorForUser(userId: string): Promise<'OK' | 'SKIPPED' | 'FAILED'> {
   const [curatorEnabled, llmConfig] = await Promise.all([
@@ -165,11 +164,13 @@ export async function runCuratorForUser(userId: string): Promise<'OK' | 'SKIPPED
   ]);
   if (!curatorEnabled || !llmConfig) return 'SKIPPED';
 
-  const enrollment = await prisma.enrollment.findFirst({
-    where: { userId, status: 'ACTIVE' },
-    select: { planCode: true },
+  const account = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { role: true, deletedAt: true, blockedAt: true },
   });
-  if (!enrollment || planLevel(enrollment.planCode) < 2) return 'SKIPPED';
+  if (!account || account.role !== 'STUDENT' || account.deletedAt || account.blockedAt) {
+    return 'SKIPPED';
+  }
 
   const ctx = await collectCuratorContext(userId);
   if (!ctx) return 'SKIPPED';
@@ -247,20 +248,19 @@ export async function runCuratorForUser(userId: string): Promise<'OK' | 'SKIPPED
   return 'OK';
 }
 
-/** Джоба недели: разбор всех студентов с активной единой подпиской. */
+/** Джоба недели: разбор всех действующих студентов, включая бесплатные аккаунты. */
 export async function runCuratorWeekly(): Promise<{ ok: number; failed: number; skipped: number }> {
-  const enrollments = await prisma.enrollment.findMany({
+  const students = await prisma.user.findMany({
     where: {
-      status: 'ACTIVE',
-      planCode: 'SUPPORT',
-      OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+      role: 'STUDENT',
+      deletedAt: null,
+      blockedAt: null,
     },
-    select: { userId: true },
-    distinct: ['userId'],
+    select: { id: true },
   });
   const result = { ok: 0, failed: 0, skipped: 0 };
-  for (const e of enrollments) {
-    const r = await runCuratorForUser(e.userId);
+  for (const student of students) {
+    const r = await runCuratorForUser(student.id);
     if (r === 'OK') result.ok += 1;
     else if (r === 'FAILED') result.failed += 1;
     else result.skipped += 1;

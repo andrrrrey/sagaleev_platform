@@ -1,6 +1,6 @@
 import type { PlanCode } from '@prisma/client';
 import { prisma } from '@/server/db';
-import { type Actor, HttpError } from '@/server/access';
+import { type Actor } from '@/server/access';
 import { parseCommands, type Command } from '@/lib/content-types';
 
 export type RouteDayStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'DONE';
@@ -41,12 +41,6 @@ export type RouteDayView = {
   nextDay: number | null;
 };
 
-/** Маршрут доступен всем активным тарифам; закрытый доступ — read-only. */
-function assertActive(actor: Actor): void {
-  if (actor.role === 'ADMIN' || actor.role === 'EDITOR') return;
-  if (!actor.enrollmentActive) throw new HttpError('PAYMENT_REQUIRED');
-}
-
 function statusOf(total: number, done: number): RouteDayStatus {
   if (done === 0) return 'NOT_STARTED';
   if (done >= total && total > 0) return 'DONE';
@@ -58,7 +52,6 @@ export async function getRouteOverview(actor: Actor): Promise<{
   totalSteps: number;
   doneSteps: number;
 }> {
-  assertActive(actor);
   const days = await prisma.routeDay.findMany({
     orderBy: { dayNumber: 'asc' },
     include: {
@@ -94,7 +87,6 @@ export async function getRouteOverview(actor: Actor): Promise<{
 }
 
 export async function getRouteDay(actor: Actor, dayNumber: number): Promise<RouteDayView | null> {
-  assertActive(actor);
   const day = await prisma.routeDay.findUnique({
     where: { dayNumber },
     include: {
@@ -148,11 +140,6 @@ export async function setStepProgress(
   stepId: string,
   input: { done: boolean; artifactNote?: string | null; artifactUrl?: string | null },
 ): Promise<void> {
-  assertActive(actor);
-  if (!actor.enrollmentActive && actor.role === 'STUDENT') {
-    throw new HttpError('PAYMENT_REQUIRED');
-  }
-
   const step = await prisma.routeStep.findUnique({ where: { id: stepId } });
   if (!step) throw new Error('STEP_NOT_FOUND');
 

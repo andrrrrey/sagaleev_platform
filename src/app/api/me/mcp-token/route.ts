@@ -14,9 +14,6 @@ export async function GET() {
 export async function POST() {
   const actor = await getActor();
   if (!actor) return NextResponse.json({ error: { code: 'UNAUTHENTICATED' } }, { status: 401 });
-  if (!actor.enrollmentActive && actor.role === 'STUDENT') {
-    return NextResponse.json({ error: { code: 'PAYMENT_REQUIRED' } }, { status: 402 });
-  }
   return NextResponse.json(await issueMcpToken(actor.id));
 }
 

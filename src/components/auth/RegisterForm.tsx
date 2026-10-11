@@ -28,16 +28,8 @@ export function RegisterForm({ invite }: { invite?: string }) {
         <p className="border border-line bg-surface px-4 py-3 font-mono text-xs text-t700">
           {state.message}
         </p>
-        {state.meta?.verifyUrl ? (
-          <a
-            href={state.meta.verifyUrl}
-            className="break-all font-mono text-[11px] text-accent underline"
-          >
-            [dev] Подтвердить email: {state.meta.verifyUrl}
-          </a>
-        ) : null}
         <Link href="/login" className="font-mono text-xs text-t500 hover:text-t900">
-          ← К входу
+          Войти в аккаунт →
         </Link>
       </div>
     );
@@ -80,7 +72,10 @@ export function RegisterForm({ invite }: { invite?: string }) {
       </div>
 
       <div className="flex flex-col gap-3 border-t border-line/60 pt-4">
-        <Checkbox id="consent" name="consent" required
+        <Checkbox
+          id="consent"
+          name="consent"
+          required
           label={
             <>
               Согласен на обработку персональных данных (
@@ -92,7 +87,10 @@ export function RegisterForm({ invite }: { invite?: string }) {
           }
         />
         <FieldError>{state.fieldErrors?.consent}</FieldError>
-        <Checkbox id="offer" name="offer" required
+        <Checkbox
+          id="offer"
+          name="offer"
+          required
           label={
             <>
               Принимаю условия{' '}

@@ -13,7 +13,6 @@ export default async function OnboardingPage() {
 
   // ADMIN/EDITOR не проходят онбординг.
   if (actor.role === 'ADMIN' || actor.role === 'EDITOR') redirect('/admin');
-  if (!actor.enrollmentActive) redirect('/pay');
 
   // Если профиль уже собран — на Главную.
   const existing = await prisma.businessProfile.findUnique({ where: { userId: actor.id } });

@@ -14,11 +14,11 @@ export const metadata: Metadata = { title: 'Тариф и оплата' };
 export default async function PayPage({
   searchParams,
 }: {
-  searchParams: Promise<{ upgrade?: string }>;
+  searchParams: Promise<{ upgrade?: string; from?: string }>;
 }) {
   const actor = await getActor();
   if (!actor) redirect('/login');
-  await searchParams; // upgrade-хинт учитываем визуально позже
+  const { from } = await searchParams;
 
   const plan = await prisma.plan.findUnique({ where: { code: 'SUPPORT' } });
 
@@ -26,24 +26,46 @@ export default async function PayPage({
   if (!plan || !plan.active) {
     throw new Error('Единая подписка временно недоступна.');
   }
-  const features = Array.isArray(plan.features) ? (plan.features as string[]) : [];
+  const features = Array.isArray(plan.features)
+    ? (plan.features as string[]).filter((feature) => !feature.toLowerCase().includes('куратор'))
+    : [];
+  const sectionLabel =
+    from === 'lessons'
+      ? 'уроки'
+      : from === 'usecases'
+        ? 'юзкейсы'
+        : from === 'skills'
+          ? 'скиллы'
+          : null;
 
   return (
     <div className="px-6 py-8 md:px-10 md:py-12">
       <PageHeader
         kicker="Оплата"
-        title={currentPlan ? 'Ваша подписка' : 'Единая подписка'}
+        title={
+          currentPlan
+            ? 'Ваша подписка'
+            : sectionLabel
+              ? `Откройте ${sectionLabel} по подписке`
+              : 'Единая подписка'
+        }
         description={
           currentPlan
-            ? 'Весь контент и агент-куратор уже включены.'
-            : 'Один понятный тариф без уровней и скрытых доплат.'
+            ? 'Уроки, юзкейсы и скиллы уже доступны.'
+            : 'Маршрут на 3 дня и агент-куратор остаются бесплатными. Подписка открывает учебную библиотеку.'
         }
       />
 
       <div className="max-w-2xl">
         <Panel
           title={`${plan.title} // Ежемесячно`}
-          status={currentPlan ? <StatusPill>Активна</StatusPill> : <StatusPill pulse>Всё включено</StatusPill>}
+          status={
+            currentPlan ? (
+              <StatusPill>Активна</StatusPill>
+            ) : (
+              <StatusPill pulse>Всё включено</StatusPill>
+            )
+          }
           className="flex flex-col"
         >
           <div className="flex flex-1 flex-col gap-5 p-6 md:p-8">
@@ -59,6 +81,9 @@ export default async function PayPage({
                 </li>
               ))}
             </ul>
+            <p className="rounded-2xl bg-brand-sky/15 px-4 py-3 text-sm text-t700">
+              Бесплатно для всех аккаунтов: маршрут «Агент за 3 дня» и агент-куратор.
+            </p>
             {currentPlan ? (
               <p className="border border-line bg-surface px-4 py-3 text-center font-mono text-xs text-t600">
                 Подписка уже активна
@@ -70,8 +95,8 @@ export default async function PayPage({
                   label={`Подписаться за ${formatRubles(plan.priceKopeks)}`}
                 />
                 <p className="text-xs font-light leading-relaxed text-t500">
-                  Нажимая кнопку, вы соглашаетесь на ежемесячное автопродление. Отключить его
-                  можно в любой момент в профиле; оплаченный период сохранится.
+                  Нажимая кнопку, вы соглашаетесь на ежемесячное автопродление. Отключить его можно
+                  в любой момент в профиле; оплаченный период сохранится.
                 </p>
               </>
             )}

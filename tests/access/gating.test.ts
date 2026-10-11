@@ -110,12 +110,16 @@ describe('партиальный доступ (эфиры для SELF)', () => {
 });
 
 describe('фичи CURATOR/ZOOM', () => {
-  it('SELF не имеет доступа к куратору', () => {
-    expect(canAccess(selfActor, { kind: 'feature', feature: 'CURATOR' }).ok).toBe(false);
+  it('куратор доступен даже без подписки', () => {
+    expect(canAccess(noEnrollActor, { kind: 'feature', feature: 'CURATOR' })).toEqual({ ok: true });
+    expect(canAccess(selfActor, { kind: 'feature', feature: 'CURATOR' })).toEqual({ ok: true });
   });
-  it('SUPPORT имеет доступ к куратору и Zoom', () => {
-    expect(canAccess(supportActor, { kind: 'feature', feature: 'CURATOR' })).toEqual({ ok: true });
+  it('Zoom остаётся доступен по SUPPORT', () => {
     expect(canAccess(supportActor, { kind: 'feature', feature: 'ZOOM' })).toEqual({ ok: true });
+    expect(canAccess(noEnrollActor, { kind: 'feature', feature: 'ZOOM' })).toEqual({
+      ok: false,
+      code: 'PAYMENT_REQUIRED',
+    });
   });
 });
 

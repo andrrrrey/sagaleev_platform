@@ -15,7 +15,6 @@ export default async function StudentLayout({ children }: { children: ReactNode 
   const isStaff = actor.role === 'ADMIN' || actor.role === 'EDITOR';
 
   if (!isStaff) {
-    if (!actor.enrollmentActive) redirect('/pay');
     const profile = await prisma.businessProfile.findUnique({
       where: { userId: actor.id },
       select: { id: true },

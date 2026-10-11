@@ -14,9 +14,7 @@ export type Resource =
   | { kind: 'skill' | 'unit'; minPlan: PlanCode; partialFree?: boolean }
   | { kind: 'feature'; feature: FeatureKey };
 
-export type Decision =
-  | { ok: true }
-  | { ok: false; code: AccessCode; requiredPlan?: PlanCode };
+export type Decision = { ok: true } | { ok: false; code: AccessCode; requiredPlan?: PlanCode };
 
 const ALLOW: Decision = { ok: true };
 
@@ -31,6 +29,9 @@ export function canAccess(actor: Actor | null, res: Resource): Decision {
 
   // ADMIN и EDITOR обходят гейтинг для чтения контента.
   if (isStaff(actor.role)) return ALLOW;
+
+  // Агент-куратор входит в бесплатную часть платформы.
+  if (res.kind === 'feature' && res.feature === 'CURATOR') return ALLOW;
 
   // Требуемый уровень ресурса.
   const requiredPlan: PlanCode =

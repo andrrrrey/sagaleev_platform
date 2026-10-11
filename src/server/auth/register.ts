@@ -1,19 +1,17 @@
 'use server';
 
 import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { AuthError } from 'next-auth';
 import * as argon2 from 'argon2';
 import { prisma } from '@/server/db';
 import { env } from '@/lib/env';
 import { sendMail } from '@/server/mail';
 import { rateLimit } from '@/server/rate-limit';
-import {
-  registerSchema,
-  forgotSchema,
-  resetSchema,
-  CONSENT_VERSION,
-} from '@/lib/schemas';
+import { registerSchema, forgotSchema, resetSchema, CONSENT_VERSION } from '@/lib/schemas';
 import { type ActionState, fieldErrorsFromZod } from '@/lib/action-state';
 import { issueToken, consumeToken } from './tokens';
+import { signIn } from './config';
 
 async function clientKey(salt: string): Promise<string> {
   const h = await headers();
@@ -40,15 +38,14 @@ export async function registerAction(_prev: ActionState, formData: FormData): Pr
   const email = data.email.toLowerCase();
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
-    // Не раскрываем существование email отдельным текстом.
     return {
-      ok: true,
-      message: 'Если email свободен, мы отправили письмо для подтверждения.',
+      ok: false,
+      message: 'Аккаунт с таким email уже существует. Войдите с вашим паролем.',
     };
   }
 
   const passwordHash = await argon2.hash(data.password, { type: argon2.argon2id });
-  const user = await prisma.user.create({
+  await prisma.user.create({
     data: {
       email,
       name: data.name,
@@ -60,20 +57,19 @@ export async function registerAction(_prev: ActionState, formData: FormData): Pr
     },
   });
 
-  const token = await issueToken(user.id, 'EMAIL_VERIFY');
-  const url = `${env.APP_URL}/api/auth/verify-email?token=${token}`;
-  await sendMail({
-    to: email,
-    subject: 'Подтвердите email',
-    text: `Подтвердите адрес, перейдя по ссылке (действует 24 часа):\n${url}`,
-  });
+  try {
+    await signIn('credentials', { email, password: data.password, redirect: false });
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return {
+        ok: true,
+        message: 'Аккаунт создан. Войдите с указанными email и паролем.',
+      };
+    }
+    throw error;
+  }
 
-  return {
-    ok: true,
-    message: 'Мы отправили письмо для подтверждения email.',
-    // В dev показываем ссылку прямо в UI (SMTP не настроен).
-    ...(env.NODE_ENV !== 'production' ? { meta: { verifyUrl: url } } : {}),
-  };
+  redirect('/onboarding');
 }
 
 export async function forgotAction(_prev: ActionState, formData: FormData): Promise<ActionState> {

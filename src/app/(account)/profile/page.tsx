@@ -133,7 +133,8 @@ export default async function ProfilePage({
                 </div>
               ) : null}
               <p className="text-sm font-light text-t600">
-                Агент-куратор и все материалы включены в подписку.
+                Подписка открывает уроки, юзкейсы и полную библиотеку скиллов. Агент-куратор и
+                маршрут доступны и без подписки.
               </p>
               {!enrollment.expiresAt ? (
                 <p className="border border-line bg-surface px-4 py-3 font-mono text-xs text-t600">
