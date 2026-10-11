@@ -18,6 +18,7 @@ import { TelegramPanel } from '@/components/profile/TelegramPanel';
 import { CodexMcpPanel } from '@/components/profile/CodexMcpPanel';
 import { AccountSettingsForm } from '@/components/profile/AccountSettingsForm';
 import { getMcpTokenStatus } from '@/server/mcp/auth';
+import { signOutAction } from '@/server/auth/actions';
 import {
   cancelSubscription,
   resumeSubscription,
@@ -77,6 +78,12 @@ export default async function ProfilePage({
               <Icon name="notebook-linear" />
               Инструкция
             </Link>
+            <form action={signOutAction}>
+              <Button type="submit" variant="secondary" className="self-start">
+                <Icon name="logout-2-linear" />
+                Выйти из аккаунта
+              </Button>
+            </form>
           </div>
         </div>
       </Panel>
