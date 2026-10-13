@@ -289,6 +289,49 @@ model SkillTag {
   @@id([skillId, tagId])
 }
 
+// ───────── Курсы и модули ─────────
+model Course {
+  id        String         @id @default(cuid())
+  slug      String         @unique
+  title     String
+  summary   String?        @db.Text
+  coverUrl  String?
+  state     PublishState   @default(DRAFT)
+  sort      Int            @default(0)
+  modules   CourseModule[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([state, sort])
+}
+
+model CourseModule {
+  id        String       @id @default(cuid())
+  courseId  String
+  course    Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title     String
+  summary   String?      @db.Text
+  sort      Int          @default(0)
+  units     CourseUnit[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@index([courseId, sort])
+}
+
+model CourseUnit {
+  moduleId  String
+  unitId    String
+  module    CourseModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  unit      ContentUnit  @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  sort      Int          @default(0)
+  createdAt DateTime     @default(now())
+
+  @@id([moduleId, unitId])
+  @@index([unitId])
+  @@index([moduleId, sort])
+}
+
 // ───────── Контент-юнит: уроки, юзкейсы, эфиры ─────────
 model ContentUnit {
   id                 String       @id @default(cuid())
@@ -336,8 +379,9 @@ model ContentUnit {
   tags       UnitTag[]
   skillsDemo Skill[]
   progress   Progress[]
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  courses    CourseUnit[]
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
 
   @@index([type, state, sort])
 }

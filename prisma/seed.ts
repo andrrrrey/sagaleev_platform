@@ -1022,6 +1022,66 @@ async function main() {
     }
   }
 
+  // ── Первый курс: перенос прежних блоков уроков в модули ──
+  const defaultCourse = await prisma.course.upsert({
+    where: { slug: 'digital-marketing-department' },
+    create: {
+      id: 'legacy-default-course',
+      slug: 'digital-marketing-department',
+      title: 'Цифровой отдел маркетинга',
+      summary: 'Основная образовательная программа платформы.',
+      state: 'PUBLISHED',
+      sort: 0,
+    },
+    update: {
+      title: 'Цифровой отдел маркетинга',
+      summary: 'Основная образовательная программа платформы.',
+      state: 'PUBLISHED',
+      sort: 0,
+    },
+  });
+
+  const lessonSeeds = units.filter((unit) => unit.type === 'LESSON');
+  const lessonRecords = await prisma.contentUnit.findMany({
+    where: { slug: { in: lessonSeeds.map((unit) => unit.slug) } },
+    select: { id: true, slug: true },
+  });
+  const lessonIdBySlug = new Map(lessonRecords.map((lesson) => [lesson.slug, lesson.id]));
+  const blocks = [...new Set(lessonSeeds.map((lesson) => lesson.block ?? null))].sort(
+    (left, right) => (left ?? 0) - (right ?? 0),
+  );
+
+  for (const block of blocks) {
+    const moduleId = block === null ? 'legacy-default-module-unassigned' : `legacy-default-module-${block}`;
+    const moduleTitle = block === null ? 'Без блока' : `Блок ${block}`;
+    const courseModule = await prisma.courseModule.upsert({
+      where: { id: moduleId },
+      create: {
+        id: moduleId,
+        courseId: defaultCourse.id,
+        title: moduleTitle,
+        sort: block ?? 0,
+      },
+      update: {
+        courseId: defaultCourse.id,
+        title: moduleTitle,
+        sort: block ?? 0,
+      },
+    });
+
+    const moduleLessons = lessonSeeds.filter((lesson) => (lesson.block ?? null) === block);
+    for (const lesson of moduleLessons) {
+      const unitId = lessonIdBySlug.get(lesson.slug);
+      if (!unitId) continue;
+      const sort = lesson.orderInBlock ?? lesson.sort ?? 0;
+      await prisma.courseUnit.upsert({
+        where: { moduleId_unitId: { moduleId: courseModule.id, unitId } },
+        create: { moduleId: courseModule.id, unitId, sort },
+        update: { sort },
+      });
+    }
+  }
+
   // ── Баннеры Главной ──
   const banners = [
     { title: 'Новый юзкейс: SEO-движок на агентах', subtitle: 'Статьи ≥ 82/100 и IndexNow', href: '/usecases/seo-dvizhok-na-agentah', sort: 1 },
