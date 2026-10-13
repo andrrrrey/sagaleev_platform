@@ -11,7 +11,7 @@ import { LockedPanel } from '@/components/ui/LockedPanel';
 import { ContentUnit } from './ContentUnit';
 
 const SECTION: Record<UnitType, { label: string; base: string; kicker: string }> = {
-  LESSON: { label: 'Уроки', base: '/lessons', kicker: 'Урок' },
+  LESSON: { label: 'Курсы', base: '/lessons', kicker: 'Урок' },
   USECASE: { label: 'Юзкейсы', base: '/usecases', kicker: 'Юзкейс' },
   STREAM: { label: 'Эфиры', base: '/streams', kicker: 'Эфир' },
 };

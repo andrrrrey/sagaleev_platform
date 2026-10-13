@@ -93,10 +93,10 @@ export default async function HomePage() {
   const learningTiles = [
     {
       href: '/lessons',
-      label: 'Уроки',
-      description: 'Программа обучения по направлениям',
-      icon: 'videocamera-record-linear',
-      count: hasPaidAccess ? `${lessons.avail} доступно` : 'По подписке',
+      label: 'Курсы',
+      description: 'Программы обучения с модулями и уроками',
+      icon: 'notebook-linear',
+      count: hasPaidAccess ? `${lessons.avail} уроков` : 'По подписке',
     },
     {
       href: '/usecases',

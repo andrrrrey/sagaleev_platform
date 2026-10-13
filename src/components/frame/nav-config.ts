@@ -8,7 +8,7 @@ export type NavItem = {
 export const STUDENT_NAV: NavItem[] = [
   { href: '/', label: 'Главная', icon: 'home-smile-linear' },
   { href: '/route', label: 'Маршрут', icon: 'routing-linear' },
-  { href: '/lessons', label: 'Уроки', icon: 'videocamera-record-linear' },
+  { href: '/lessons', label: 'Курсы', icon: 'notebook-linear' },
   { href: '/usecases', label: 'Юзкейсы', icon: 'chart-2-linear' },
   { href: '/streams', label: 'Эфиры', icon: 'microphone-3-linear' },
   { href: '/skills', label: 'Скиллы', icon: 'bolt-linear' },
@@ -21,7 +21,7 @@ export const STUDENT_NAV: NavItem[] = [
 export const MOBILE_NAV: NavItem[] = [
   { href: '/', label: 'Главная', icon: 'home-smile-linear' },
   { href: '/route', label: 'Маршрут', icon: 'routing-linear' },
-  { href: '/lessons', label: 'Уроки', icon: 'videocamera-record-linear' },
+  { href: '/lessons', label: 'Курсы', icon: 'notebook-linear' },
   { href: '/usecases', label: 'Юзкейсы', icon: 'chart-2-linear' },
   { href: '/streams', label: 'Эфиры', icon: 'microphone-3-linear' },
 ];
