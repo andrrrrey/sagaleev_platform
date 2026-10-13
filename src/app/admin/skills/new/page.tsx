@@ -7,13 +7,16 @@ import { SkillForm } from '@/components/admin/SkillForm';
 export const metadata: Metadata = { title: 'Новый скилл' };
 
 export default async function NewSkillPage() {
-  await requireRole(['ADMIN', 'EDITOR']);
-  const tags = await prisma.tag.findMany({ orderBy: { title: 'asc' }, select: { id: true, title: true } });
+  const actor = await requireRole(['ADMIN', 'EDITOR']);
+  const tags = await prisma.tag.findMany({
+    orderBy: { title: 'asc' },
+    select: { id: true, title: true },
+  });
 
   return (
     <div className="px-6 py-8 md:px-10 md:py-12">
       <PageHeader kicker="Admin · Скиллы" title="Новый скилл" />
-      <SkillForm tags={tags} />
+      <SkillForm tags={tags} defaults={{ state: 'DRAFT' }} canPublish={actor.role === 'ADMIN'} />
     </div>
   );
 }

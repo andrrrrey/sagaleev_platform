@@ -11,20 +11,26 @@ const MCP_URL = 'https://platform.sagaleev.ru/api/mcp';
 export function CodexMcpPanel({
   initialActive,
   initialExpiresAt,
+  role,
 }: {
   initialActive: boolean;
   initialExpiresAt: string | null;
+  role: 'STUDENT' | 'ADMIN' | 'EDITOR' | 'CONTRACTOR';
 }) {
   const [active, setActive] = useState(initialActive);
   const [expiresAt, setExpiresAt] = useState(initialExpiresAt);
   const [token, setToken] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const isEditor = role === 'EDITOR';
+  const isAdmin = role === 'ADMIN';
+  const isStaff = isEditor || isAdmin;
 
   const config = useMemo(
-    () => token
-      ? `[mcp_servers.sagaleev_platform]\nurl = "${MCP_URL}"\nhttp_headers = { Authorization = "Bearer ${token}" }\ndefault_tools_approval_mode = "writes"`
-      : '',
+    () =>
+      token
+        ? `[mcp_servers.sagaleev_platform]\nurl = "${MCP_URL}"\nhttp_headers = { Authorization = "Bearer ${token}" }\ndefault_tools_approval_mode = "writes"`
+        : '',
     [token],
   );
 
@@ -65,18 +71,58 @@ export function CodexMcpPanel({
   return (
     <div className="flex flex-col gap-4">
       <div className="border border-line bg-paper-panel p-5 text-sm font-light leading-relaxed text-t700">
-        <p><strong className="font-medium text-t900">Что это даёт.</strong> Локальный Codex или ChatGPT на компьютере сможет сам прочитать твой текущий день, найти следующий незавершённый шаг, открыть скиллы и сохранить подтверждённый результат.</p>
-        <p className="mt-3"><strong className="font-medium text-t900">Что MCP не получает.</strong> Пароль от платформы, Telegram-токен, API-ключи и пароль VPS ему не передаются.</p>
+        <p>
+          <strong className="font-medium text-t900">Что это даёт.</strong>{' '}
+          {isAdmin
+            ? 'Локальный Codex или ChatGPT сможет создавать и редактировать черновики, проверять их, открывать предпросмотр и после вашего подтверждения публиковать.'
+            : isEditor
+              ? 'Локальный Codex или ChatGPT сможет создавать и редактировать черновики уроков, юзкейсов, эфиров и скиллов, а затем подготовить их к проверке администратором.'
+              : 'Локальный Codex или ChatGPT на компьютере сможет сам прочитать твой текущий день, найти следующий незавершённый шаг, открыть скиллы и сохранить подтверждённый результат.'}
+        </p>
+        {isStaff ? (
+          <p className="mt-3">
+            <strong className="font-medium text-t900">Права.</strong>{' '}
+            {isAdmin
+              ? 'Администратору доступны черновики, автоматическая проверка, предпросмотр и отдельный инструмент публикации.'
+              : 'Эксперт работает только с черновиками. Публикация недоступна и выполняется администратором после проверки.'}
+          </p>
+        ) : null}
+        <p className="mt-3">
+          <strong className="font-medium text-t900">Что MCP не получает.</strong> Пароль от
+          платформы, Telegram-токен, API-ключи и пароль VPS ему не передаются.
+        </p>
       </div>
 
       <div className="border border-line bg-paper-panel p-5">
         <ol className="list-decimal space-y-3 pl-5 text-sm font-light leading-relaxed text-t700">
-          <li>Нажми кнопку «Создать новый токен». Если старый токен был, он сразу перестанет работать.</li>
-          <li>Скопируй готовый блок настроек. Не отправляй его в чат: внутри находится секретный токен.</li>
-          <li>В Codex открой <span className="font-mono text-xs text-t900">Settings → MCP servers → Open config.toml</span>.</li>
+          <li>
+            Нажми кнопку «Создать новый токен». Если старый токен был, он сразу перестанет работать.
+          </li>
+          <li>
+            Скопируй готовый блок настроек. Не отправляй его в чат: внутри находится секретный
+            токен.
+          </li>
+          <li>
+            В Codex открой{' '}
+            <span className="font-mono text-xs text-t900">
+              Settings → MCP servers → Open config.toml
+            </span>
+            .
+          </li>
           <li>Вставь блок в конец файла, сохрани файл и перезапусти Codex/ChatGPT.</li>
-          <li>В новом чате напиши: «Открой мой текущий шаг на Платформе Сагалеева и объясняй по одному действию».</li>
-          <li>Если Codex хочет отметить шаг выполненным, приложение сначала попросит твоё подтверждение.</li>
+          <li>
+            В новом чате напиши:{' '}
+            {isStaff
+              ? '«Подключись к Платформе Сагалеева, покажи структуру курсов и мои черновики».'
+              : '«Открой мой текущий шаг на Платформе Сагалеева и объясняй по одному действию».'}
+          </li>
+          <li>
+            {isAdmin
+              ? 'Перед публикацией агент должен показать проверку и ссылку предпросмотра, а затем запросить ваше явное подтверждение.'
+              : isEditor
+                ? 'Перед передачей администратору попроси агента проверить черновик и показать ссылку предпросмотра.'
+                : 'Если Codex хочет отметить шаг выполненным, приложение сначала попросит твоё подтверждение.'}
+          </li>
         </ol>
       </div>
 
@@ -91,15 +137,21 @@ export function CodexMcpPanel({
           </Button>
         ) : null}
         <span className="font-mono text-[11px] text-t500">
-          {active ? `Доступ включён${expiresAt ? ` до ${new Date(expiresAt).toLocaleDateString('ru-RU')}` : ''}` : 'Доступ выключен'}
+          {active
+            ? `Доступ включён${expiresAt ? ` до ${new Date(expiresAt).toLocaleDateString('ru-RU')}` : ''}`
+            : 'Доступ выключен'}
         </span>
       </div>
 
       {token ? (
         <div className="flex flex-col gap-2">
-          <p className="text-sm font-medium text-t900">Скопируй сейчас: после обновления страницы токен больше не будет показан.</p>
+          <p className="text-sm font-medium text-t900">
+            Скопируй сейчас: после обновления страницы токен больше не будет показан.
+          </p>
           <LinedBlock label="CODEX / CHATGPT — config.toml">
-            <pre className="whitespace-pre-wrap break-all font-mono text-xs leading-6">{config}</pre>
+            <pre className="whitespace-pre-wrap break-all font-mono text-xs leading-6">
+              {config}
+            </pre>
           </LinedBlock>
           <CopyButton text={config} label="Скопировать настройки" />
         </div>
@@ -107,7 +159,8 @@ export function CodexMcpPanel({
 
       {message ? <p className="font-mono text-xs text-t600">{message}</p> : null}
       <p className="text-xs font-light leading-relaxed text-t500">
-        Файл config.toml содержит секрет. Не публикуй его и не прикладывай к обращению в поддержку. Если случайно показал файл другому человеку — нажми «Создать новый токен».
+        Файл config.toml содержит секрет. Не публикуй его и не прикладывай к обращению в поддержку.
+        Если случайно показал файл другому человеку — нажми «Создать новый токен».
       </p>
     </div>
   );

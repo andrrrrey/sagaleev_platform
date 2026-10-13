@@ -217,11 +217,18 @@ export default async function ProfilePage({
   );
 
   const codexTab = (
-    <Panel title="Codex / ChatGPT // Помощник по маршруту">
+    <Panel
+      title={
+        actor.role === 'ADMIN' || actor.role === 'EDITOR'
+          ? 'Codex / ChatGPT // MCP для контента'
+          : 'Codex / ChatGPT // Помощник по маршруту'
+      }
+    >
       <div className="p-6">
         <CodexMcpPanel
           initialActive={mcpToken.active}
           initialExpiresAt={mcpToken.expiresAt?.toISOString() ?? null}
+          role={actor.role}
         />
       </div>
     </Panel>

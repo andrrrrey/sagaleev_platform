@@ -1,11 +1,14 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { requireRole } from '@/server/access/guard';
 import { prisma } from '@/server/db';
+import { publishContent } from '@/server/admin/content';
+import { reviewContentDraft } from '@/server/admin/draft-review';
 import { richToHtml } from '@/lib/rich';
 import { parseTimecodes, parseKpis, parseUsecaseSteps, parseRepoLinks } from '@/lib/content-types';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { ContentForm } from '@/components/admin/ContentForm';
+import { DraftReviewPanel } from '@/components/admin/DraftReviewPanel';
 
 export const metadata: Metadata = { title: 'Редактирование юнита' };
 
@@ -21,31 +24,64 @@ function toLocalInput(d: Date | null): string | undefined {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-export default async function EditContentPage({ params }: { params: Promise<{ id: string }> }) {
-  await requireRole(['ADMIN', 'EDITOR']);
+export default async function EditContentPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ review?: string }>;
+}) {
+  const actor = await requireRole(['ADMIN', 'EDITOR']);
   const { id } = await params;
+  const { review: reviewResult } = await searchParams;
 
-  const [unit, tags, routeDays] = await Promise.all([
+  const [unit, tags, routeDays, courseModules, review] = await Promise.all([
     prisma.contentUnit.findUnique({
       where: { id },
-      include: { tags: { select: { tagId: true } } },
+      include: {
+        tags: { select: { tagId: true } },
+        courses: { orderBy: { createdAt: 'asc' }, take: 1, select: { moduleId: true, sort: true } },
+      },
     }),
     prisma.tag.findMany({ orderBy: { title: 'asc' }, select: { id: true, title: true } }),
     prisma.routeDay.findMany({
       orderBy: { dayNumber: 'asc' },
       select: { id: true, dayNumber: true, title: true },
     }),
+    prisma.courseModule.findMany({
+      orderBy: [{ course: { sort: 'asc' } }, { sort: 'asc' }],
+      select: { id: true, title: true, course: { select: { title: true } } },
+    }),
+    reviewContentDraft(id),
   ]);
-  if (!unit) notFound();
+  if (!unit || !review) notFound();
+  if (actor.role === 'EDITOR' && unit.state !== 'DRAFT') redirect('/admin/content');
+
+  const previewHref = `${BASE[unit.type]}/${unit.slug}`;
 
   return (
     <div className="px-6 py-8 md:px-10 md:py-12">
       <PageHeader kicker="Admin · Контент" title={unit.title} />
+      <DraftReviewPanel
+        review={review}
+        entityId={unit.id}
+        previewHref={previewHref}
+        canPublish={actor.role === 'ADMIN'}
+        published={unit.state === 'PUBLISHED'}
+        publishAction={publishContent}
+        result={reviewResult}
+      />
       <ContentForm
         tags={tags}
         routeDays={routeDays}
+        courseModules={courseModules.map((module) => ({
+          id: module.id,
+          title: module.title,
+          courseTitle: module.course.title,
+        }))}
         assignedTagIds={unit.tags.map((t) => t.tagId)}
-        previewHref={`${BASE[unit.type]}/${unit.slug}`}
+        previewHref={previewHref}
+        canPublish={actor.role === 'ADMIN'}
         defaults={{
           id: unit.id,
           type: unit.type,
@@ -67,6 +103,8 @@ export default async function EditContentPage({ params }: { params: Promise<{ id
           orderInBlock: unit.orderInBlock ?? undefined,
           methodTag: unit.methodTag ?? undefined,
           routeDayId: unit.routeDayId ?? undefined,
+          moduleId: unit.courses[0]?.moduleId,
+          placementSort: unit.courses[0]?.sort,
           caseClient: unit.caseClient ?? undefined,
           goal: unit.goal ?? undefined,
           result: unit.result ?? undefined,

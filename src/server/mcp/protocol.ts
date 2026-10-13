@@ -2,6 +2,7 @@ import type { Actor } from '@/server/access';
 import { prisma } from '@/server/db';
 import { getRouteDay, getRouteOverview, setStepProgress } from '@/server/route/service';
 import { getSkillBySlug, listSkills } from '@/server/skills/service';
+import { ADMIN_MCP_TOOLS, callEditorTool, EDITOR_MCP_TOOLS } from '@/server/mcp/editor-tools';
 
 export const MCP_PROTOCOL_VERSION = '2025-06-18';
 
@@ -14,49 +15,83 @@ type JsonRpcResponse = {
   error?: { code: number; message: string; data?: unknown };
 };
 
-const tools = [
+const studentTools = [
   {
     name: 'get_route_overview',
     title: 'Показать прогресс по маршруту',
-    description: 'Возвращает три дня курса, число шагов и прогресс пользователя. С этого инструмента начинай помощь по маршруту.',
+    description:
+      'Возвращает три дня курса, число шагов и прогресс пользователя. С этого инструмента начинай помощь по маршруту.',
     inputSchema: { type: 'object', properties: {}, additionalProperties: false },
-    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
   },
   {
     name: 'get_route_day',
     title: 'Прочитать день маршрута',
-    description: 'Возвращает все инструкции, промпты, команды и сохранённые результаты выбранного дня. Объясняй только один следующий шаг за раз и обязательно говори, в какое окно вводить текст.',
+    description:
+      'Возвращает все инструкции, промпты, команды и сохранённые результаты выбранного дня. Объясняй только один следующий шаг за раз и обязательно говори, в какое окно вводить текст.',
     inputSchema: {
       type: 'object',
-      properties: { dayNumber: { type: 'integer', minimum: 1, maximum: 3, description: 'Номер дня: 1, 2 или 3' } },
+      properties: {
+        dayNumber: {
+          type: 'integer',
+          minimum: 1,
+          maximum: 3,
+          description: 'Номер дня: 1, 2 или 3',
+        },
+      },
       required: ['dayNumber'],
       additionalProperties: false,
     },
-    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
   },
   {
     name: 'get_current_step',
     title: 'Найти следующий шаг',
-    description: 'Находит первый незавершённый шаг пользователя и возвращает его полную инструкцию. Используй перед советом, чтобы не гадать, где находится ученик.',
+    description:
+      'Находит первый незавершённый шаг пользователя и возвращает его полную инструкцию. Используй перед советом, чтобы не гадать, где находится ученик.',
     inputSchema: { type: 'object', properties: {}, additionalProperties: false },
-    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
   },
   {
     name: 'save_step_result',
     title: 'Сохранить результат шага',
-    description: 'Сохраняет безопасную заметку/ссылку и по явному подтверждению пользователя отмечает шаг выполненным. Никогда не сохраняй пароли, токены, API-ключи, IP-адреса и персональные данные.',
+    description:
+      'Сохраняет безопасную заметку/ссылку и по явному подтверждению пользователя отмечает шаг выполненным. Никогда не сохраняй пароли, токены, API-ключи, IP-адреса и персональные данные.',
     inputSchema: {
       type: 'object',
       properties: {
         stepId: { type: 'string', minLength: 1 },
-        done: { type: 'boolean', description: 'true только если пользователь явно подтвердил выполнение' },
+        done: {
+          type: 'boolean',
+          description: 'true только если пользователь явно подтвердил выполнение',
+        },
         artifactNote: { type: 'string', maxLength: 5000 },
         artifactUrl: { type: 'string', maxLength: 2000 },
       },
       required: ['stepId', 'done'],
       additionalProperties: false,
     },
-    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
   },
   {
     name: 'list_skills',
@@ -64,10 +99,18 @@ const tools = [
     description: 'Ищет опубликованные скиллы платформы по названию, описанию или тегам.',
     inputSchema: {
       type: 'object',
-      properties: { query: { type: 'string', maxLength: 200 }, limit: { type: 'integer', minimum: 1, maximum: 50 } },
+      properties: {
+        query: { type: 'string', maxLength: 200 },
+        limit: { type: 'integer', minimum: 1, maximum: 50 },
+      },
       additionalProperties: false,
     },
-    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
   },
   {
     name: 'get_skill',
@@ -79,19 +122,53 @@ const tools = [
       required: ['slug'],
       additionalProperties: false,
     },
-    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
   },
   {
     name: 'get_business_profile',
     title: 'Прочитать бизнес-профиль',
-    description: 'Возвращает бизнес-контекст пользователя, чтобы советы учитывали его компанию. Не возвращает секреты.',
+    description:
+      'Возвращает бизнес-контекст пользователя, чтобы советы учитывали его компанию. Не возвращает секреты.',
     inputSchema: { type: 'object', properties: {}, additionalProperties: false },
-    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
   },
 ] as const;
 
+const editorToolNames = new Set<string>(EDITOR_MCP_TOOLS.map((tool) => tool.name));
+const adminToolNames = new Set<string>(ADMIN_MCP_TOOLS.map((tool) => tool.name));
+
+function toolsForActor(actor: Actor) {
+  if (actor.role === 'ADMIN') return [...studentTools, ...EDITOR_MCP_TOOLS, ...ADMIN_MCP_TOOLS];
+  if (actor.role === 'EDITOR') return [...studentTools, ...EDITOR_MCP_TOOLS];
+  return [...studentTools];
+}
+
+function instructionsForActor(actor: Actor): string {
+  const studentInstructions =
+    'Ты сопровождаешь нетехнического пользователя по маршруту «Маркетинговый агент за 3 дня». Сначала вызови get_current_step. Объясняй ровно одно действие за раз и всегда называй окно: платформа, ChatGPT/Codex, Telegram, Terminal/PowerShell или SSH на VPS. Не проси пароли, токены, API-ключи, IP-адреса и клиентские персональные данные. Не отмечай шаг выполненным, пока пользователь явно не подтвердил результат.';
+  if (actor.role === 'EDITOR') {
+    return `${studentInstructions} Пользователь — эксперт платформы. Для контента сначала вызови list_course_structure, затем создавай или обновляй только черновики. Перед передачей администратору обязательно вызови validate_draft и preview_draft. Эксперт не может публиковать.`;
+  }
+  if (actor.role === 'ADMIN') {
+    return `${studentInstructions} Пользователь — администратор платформы. Ты можешь работать с черновиками экспертов. Перед publish_draft обязательно вызови get_draft, validate_draft и preview_draft; публикуй только после явного подтверждения администратора.`;
+  }
+  return studentInstructions;
+}
+
 function asObject(value: unknown): Record<string, unknown> {
-  return value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
 }
 
 function textResult(value: unknown) {
@@ -108,13 +185,18 @@ function toolError(message: string) {
 function containsSensitiveValue(value: string): boolean {
   return (
     /\b(?:api[_-]?key|secret|password|парол|токен)\b\s*[:=]/i.test(value) ||
-    /\b(?:sk-[A-Za-z0-9_-]{16,}|xox[baprs]-[A-Za-z0-9-]{16,}|\d{8,12}:[A-Za-z0-9_-]{25,})\b/.test(value) ||
+    /\b(?:sk-[A-Za-z0-9_-]{16,}|xox[baprs]-[A-Za-z0-9-]{16,}|\d{8,12}:[A-Za-z0-9_-]{25,})\b/.test(
+      value,
+    ) ||
     /\b(?:\d{1,3}\.){3}\d{1,3}\b/.test(value)
   );
 }
 
 async function callTool(actor: Actor, name: string, rawArgs: unknown): Promise<unknown> {
   const args = asObject(rawArgs);
+  if (editorToolNames.has(name) || adminToolNames.has(name)) {
+    return callEditorTool(actor, name, rawArgs);
+  }
   if (name === 'get_route_overview') return textResult(await getRouteOverview(actor));
 
   if (name === 'get_route_day') {
@@ -141,15 +223,20 @@ async function callTool(actor: Actor, name: string, rawArgs: unknown): Promise<u
     const stepId = typeof args.stepId === 'string' ? args.stepId : '';
     const done = args.done;
     if (!stepId || typeof done !== 'boolean') return toolError('Нужны stepId и done.');
-    const artifactNote = typeof args.artifactNote === 'string' ? args.artifactNote.trim().slice(0, 5000) : null;
-    const artifactUrl = typeof args.artifactUrl === 'string' ? args.artifactUrl.trim().slice(0, 2000) : null;
+    const artifactNote =
+      typeof args.artifactNote === 'string' ? args.artifactNote.trim().slice(0, 5000) : null;
+    const artifactUrl =
+      typeof args.artifactUrl === 'string' ? args.artifactUrl.trim().slice(0, 2000) : null;
     if (artifactNote && containsSensitiveValue(artifactNote)) {
-      return toolError('Результат похож на секрет, токен, пароль или IP-адрес. Удали чувствительные данные и повтори сохранение.');
+      return toolError(
+        'Результат похож на секрет, токен, пароль или IP-адрес. Удали чувствительные данные и повтори сохранение.',
+      );
     }
     if (artifactUrl) {
       try {
         const parsed = new URL(artifactUrl);
-        if (!['http:', 'https:'].includes(parsed.protocol)) return toolError('Ссылка должна начинаться с http:// или https://.');
+        if (!['http:', 'https:'].includes(parsed.protocol))
+          return toolError('Ссылка должна начинаться с http:// или https://.');
       } catch {
         return toolError('Ссылка имеет неверный формат.');
       }
@@ -169,7 +256,9 @@ async function callTool(actor: Actor, name: string, rawArgs: unknown): Promise<u
     const slug = typeof args.slug === 'string' ? args.slug.trim() : '';
     if (!slug) return toolError('Укажи slug скилла.');
     const skill = await getSkillBySlug(actor, slug);
-    return skill ? textResult(skill) : toolError('Скилл не найден или недоступен на текущем тарифе.');
+    return skill
+      ? textResult(skill)
+      : toolError('Скилл не найден или недоступен на текущем тарифе.');
   }
 
   if (name === 'get_business_profile') {
@@ -188,26 +277,36 @@ function error(id: JsonRpcId, code: number, message: string, data?: unknown): Js
   return { jsonrpc: '2.0', id, error: { code, message, ...(data === undefined ? {} : { data }) } };
 }
 
-export async function handleMcpMessage(actor: Actor, value: unknown): Promise<JsonRpcResponse | null> {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return error(null, -32600, 'Invalid Request');
+export async function handleMcpMessage(
+  actor: Actor,
+  value: unknown,
+): Promise<JsonRpcResponse | null> {
+  if (!value || typeof value !== 'object' || Array.isArray(value))
+    return error(null, -32600, 'Invalid Request');
   const request = value as JsonRpcRequest;
-  const id = typeof request.id === 'string' || typeof request.id === 'number' || request.id === null ? request.id : null;
-  if (request.jsonrpc !== '2.0' || typeof request.method !== 'string') return error(id, -32600, 'Invalid Request');
+  const id =
+    typeof request.id === 'string' || typeof request.id === 'number' || request.id === null
+      ? request.id
+      : null;
+  if (request.jsonrpc !== '2.0' || typeof request.method !== 'string')
+    return error(id, -32600, 'Invalid Request');
 
-  if (request.method === 'notifications/initialized' || request.method.startsWith('notifications/')) return null;
+  if (request.method === 'notifications/initialized' || request.method.startsWith('notifications/'))
+    return null;
   if (request.method === 'initialize') {
     return response(id, {
       protocolVersion: MCP_PROTOCOL_VERSION,
       capabilities: { tools: { listChanged: false } },
       serverInfo: { name: 'sagaleev-platform', title: 'Платформа Сагалеева', version: '1.0.0' },
-      instructions: 'Ты сопровождаешь нетехнического пользователя по маршруту «Маркетинговый агент за 3 дня». Сначала вызови get_current_step. Объясняй ровно одно действие за раз и всегда называй окно: платформа, ChatGPT/Codex, Telegram, Terminal/PowerShell или SSH на VPS. Не проси пароли, токены, API-ключи, IP-адреса и клиентские персональные данные. Не отмечай шаг выполненным, пока пользователь явно не подтвердил результат.',
+      instructions: instructionsForActor(actor),
     });
   }
   if (request.method === 'ping') return response(id, {});
-  if (request.method === 'tools/list') return response(id, { tools });
+  if (request.method === 'tools/list') return response(id, { tools: toolsForActor(actor) });
   if (request.method === 'tools/call') {
     const params = asObject(request.params);
-    if (typeof params.name !== 'string') return error(id, -32602, 'Invalid params: tool name is required');
+    if (typeof params.name !== 'string')
+      return error(id, -32602, 'Invalid params: tool name is required');
     try {
       return response(id, await callTool(actor, params.name, params.arguments));
     } catch (cause) {
@@ -218,7 +317,10 @@ export async function handleMcpMessage(actor: Actor, value: unknown): Promise<Js
   return error(id, -32601, 'Method not found');
 }
 
-export async function handleMcpPayload(actor: Actor, value: unknown): Promise<JsonRpcResponse | JsonRpcResponse[] | null> {
+export async function handleMcpPayload(
+  actor: Actor,
+  value: unknown,
+): Promise<JsonRpcResponse | JsonRpcResponse[] | null> {
   if (!Array.isArray(value)) return handleMcpMessage(actor, value);
   if (value.length === 0) return error(null, -32600, 'Invalid Request');
   const results = await Promise.all(value.map((item) => handleMcpMessage(actor, item)));

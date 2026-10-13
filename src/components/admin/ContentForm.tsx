@@ -25,12 +25,16 @@ export function ContentForm({
   defaults,
   assignedTagIds,
   previewHref,
+  canPublish = false,
+  courseModules = [],
 }: {
   tags: { id: string; title: string }[];
   routeDays: { id: string; dayNumber: number; title: string }[];
   defaults?: Defaults;
   assignedTagIds?: string[];
   previewHref?: string;
+  canPublish?: boolean;
+  courseModules?: Array<{ id: string; title: string; courseTitle: string }>;
 }) {
   const [state, action, pending] = useActionState(saveContent, initialActionState);
   const d = defaults ?? {};
@@ -88,8 +92,8 @@ export function ContentForm({
             <Label htmlFor="state">Статус</Label>
             <Select id="state" name="state" defaultValue={(d.state as string) ?? 'DRAFT'}>
               <option value="DRAFT">Черновик</option>
-              <option value="PUBLISHED">Опубликован</option>
-              <option value="ARCHIVED">Архив</option>
+              {d.state === 'PUBLISHED' ? <option value="PUBLISHED">Опубликован</option> : null}
+              {canPublish ? <option value="ARCHIVED">Архив</option> : null}
             </Select>
           </div>
           <div>
@@ -129,9 +133,11 @@ export function ContentForm({
               )}
             </div>
           </div>
-          <div className="sm:col-span-2">
-            <Checkbox name="notify" label="Уведомить студентов о публикации" />
-          </div>
+          {d.state === 'PUBLISHED' && canPublish ? (
+            <div className="sm:col-span-2">
+              <Checkbox name="notify" label="Уведомить студентов после сохранения" />
+            </div>
+          ) : null}
         </div>
       </Panel>
 
@@ -179,9 +185,37 @@ export function ContentForm({
       {type === 'LESSON' ? (
         <Panel title="Урок // Программа и текстовая версия">
           <div className="grid grid-cols-1 gap-5 p-5 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <Label htmlFor="moduleId">Курс и модуль</Label>
+              <Select id="moduleId" name="moduleId" defaultValue={(d.moduleId as string) ?? ''}>
+                <option value="">— выберите модуль —</option>
+                {courseModules.map((module) => (
+                  <option key={module.id} value={module.id}>
+                    {module.courseTitle} · {module.title}
+                  </option>
+                ))}
+              </Select>
+              {err('moduleId')}
+              <p className="mt-1 text-xs font-light text-t500">
+                Без модуля урок нельзя опубликовать.
+              </p>
+            </div>
             <div>
-              <Label htmlFor="block">Блок 1–10</Label>
+              <Label htmlFor="placementSort">Порядок внутри модуля</Label>
+              <Input
+                id="placementSort"
+                name="placementSort"
+                type="number"
+                mono
+                defaultValue={(d.placementSort as number) ?? (d.orderInBlock as number) ?? 0}
+              />
+            </div>
+            <div>
+              <Label htmlFor="block">Старый номер блока</Label>
               <Input id="block" name="block" type="number" mono defaultValue={d.block as number} />
+              <p className="mt-1 text-xs font-light text-t500">
+                Временно сохранён для совместимости.
+              </p>
             </div>
             <div>
               <Label htmlFor="orderInBlock">Порядок в блоке</Label>

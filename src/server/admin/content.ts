@@ -16,6 +16,7 @@ import {
 } from '@/lib/content-types';
 import { type ActionState, fieldErrorsFromZod } from '@/lib/action-state';
 import { audit } from './audit';
+import { publishReviewedContent } from './draft-review';
 
 const baseSchema = z.object({
   id: z.string().optional(),
@@ -39,6 +40,8 @@ const baseSchema = z.object({
   orderInBlock: z.coerce.number().int().min(0).optional(),
   methodTag: z.string().optional(),
   routeDayId: z.string().optional(),
+  moduleId: z.string().optional(),
+  placementSort: z.coerce.number().int().min(0).optional(),
   // USECASE
   caseClient: z.string().optional(),
   goal: z.string().optional(),
@@ -69,6 +72,33 @@ export async function saveContent(_prev: ActionState, formData: FormData): Promi
   if (!parsed.success) return { ok: false, fieldErrors: fieldErrorsFromZod(parsed.error.issues) };
   const d = parsed.data;
   const tagIds = formData.getAll('tags').map(String).filter(Boolean);
+  const existing = d.id
+    ? await prisma.contentUnit.findUnique({
+        where: { id: d.id },
+        select: { state: true, publishedAt: true },
+      })
+    : null;
+
+  if (actor.role === 'EDITOR') {
+    if (d.id && existing?.state !== 'DRAFT') {
+      return { ok: false, message: 'Эксперт может редактировать только черновики.' };
+    }
+    d.state = 'DRAFT';
+  }
+  if (actor.role === 'ADMIN' && d.state === 'PUBLISHED' && existing?.state !== 'PUBLISHED') {
+    return {
+      ok: false,
+      message:
+        'Сначала сохраните черновик, проверьте предпросмотр и используйте кнопку «Опубликовать».',
+    };
+  }
+  const selectedModule =
+    d.type === 'LESSON' && d.moduleId
+      ? await prisma.courseModule.findUnique({ where: { id: d.moduleId }, select: { id: true } })
+      : null;
+  if (d.type === 'LESSON' && d.moduleId && !selectedModule) {
+    return { ok: false, fieldErrors: { moduleId: 'Модуль курса не найден' } };
+  }
 
   const slug = d.slug?.trim() || slugify(d.title);
   const clash = await prisma.contentUnit.findFirst({
@@ -101,7 +131,7 @@ export async function saveContent(_prev: ActionState, formData: FormData): Promi
     state: d.state,
     partialFreePreview: d.partialFreePreview === 'on' || d.partialFreePreview === 'true',
     sort: d.sort,
-    publishedAt: d.state === 'PUBLISHED' ? new Date() : null,
+    publishedAt: d.state === 'PUBLISHED' ? (existing?.publishedAt ?? new Date()) : null,
     kinescopeId: d.kinescopeId || null,
     durationSec: d.durationSec ?? null,
     timecodes,
@@ -142,6 +172,19 @@ export async function saveContent(_prev: ActionState, formData: FormData): Promi
     });
   }
 
+  if (d.type === 'LESSON' && selectedModule) {
+    await prisma.$transaction([
+      prisma.courseUnit.deleteMany({ where: { unitId } }),
+      prisma.courseUnit.create({
+        data: {
+          moduleId: selectedModule.id,
+          unitId,
+          sort: d.placementSort ?? d.orderInBlock ?? d.sort,
+        },
+      }),
+    ]);
+  }
+
   // Уведомление о новом контенте (опция).
   if (d.state === 'PUBLISHED' && formData.get('notify') === 'on') {
     const base = d.type === 'LESSON' ? '/lessons' : d.type === 'STREAM' ? '/streams' : '/usecases';
@@ -173,7 +216,24 @@ export async function deleteContent(formData: FormData): Promise<void> {
   const actor = await requireRole(['ADMIN', 'EDITOR']);
   const id = String(formData.get('id') ?? '');
   if (!id) return;
+  if (actor.role === 'EDITOR') {
+    const unit = await prisma.contentUnit.findUnique({ where: { id }, select: { state: true } });
+    if (!unit || unit.state !== 'DRAFT') return;
+  }
   await prisma.contentUnit.delete({ where: { id } });
   await audit(actor.id, 'DELETE', 'ContentUnit', id);
   revalidatePath('/admin/content');
+}
+
+export async function publishContent(formData: FormData): Promise<void> {
+  const actor = await requireRole(['ADMIN']);
+  const id = String(formData.get('id') ?? '');
+  if (!id) return;
+  const review = await publishReviewedContent(actor, id);
+  revalidatePath('/admin/content');
+  revalidatePath(`/admin/content/${id}`);
+  revalidatePath('/lessons');
+  revalidatePath('/usecases');
+  revalidatePath('/streams');
+  redirect(`/admin/content/${id}?review=${review.ready ? 'published' : 'failed'}`);
 }

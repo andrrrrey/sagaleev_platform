@@ -8,6 +8,7 @@ import { requireRole } from '@/server/access/guard';
 import { slugify } from '@/lib/utils';
 import { type ActionState, fieldErrorsFromZod } from '@/lib/action-state';
 import { audit } from './audit';
+import { publishReviewedSkill } from './draft-review';
 
 const skillSchema = z.object({
   id: z.string().optional(),
@@ -34,6 +35,23 @@ export async function saveSkill(_prev: ActionState, formData: FormData): Promise
   if (!parsed.success) return { ok: false, fieldErrors: fieldErrorsFromZod(parsed.error.issues) };
   const d = parsed.data;
   const tagIds = formData.getAll('tags').map(String).filter(Boolean);
+  const existing = d.id
+    ? await prisma.skill.findUnique({ where: { id: d.id }, select: { state: true } })
+    : null;
+
+  if (actor.role === 'EDITOR') {
+    if (d.id && existing?.state !== 'DRAFT') {
+      return { ok: false, message: 'Эксперт может редактировать только черновики.' };
+    }
+    d.state = 'DRAFT';
+  }
+  if (actor.role === 'ADMIN' && d.state === 'PUBLISHED' && existing?.state !== 'PUBLISHED') {
+    return {
+      ok: false,
+      message:
+        'Сначала сохраните черновик, проверьте предпросмотр и используйте кнопку «Опубликовать».',
+    };
+  }
 
   const slug = d.slug?.trim() || slugify(d.title);
   const clash = await prisma.skill.findFirst({
@@ -88,8 +106,23 @@ export async function deleteSkill(formData: FormData): Promise<void> {
   const actor = await requireRole(['ADMIN', 'EDITOR']);
   const id = String(formData.get('id') ?? '');
   if (!id) return;
+  if (actor.role === 'EDITOR') {
+    const skill = await prisma.skill.findUnique({ where: { id }, select: { state: true } });
+    if (!skill || skill.state !== 'DRAFT') return;
+  }
   await prisma.skill.delete({ where: { id } });
   await audit(actor.id, 'DELETE', 'Skill', id);
   revalidatePath('/admin/skills');
   revalidatePath('/skills');
+}
+
+export async function publishSkill(formData: FormData): Promise<void> {
+  const actor = await requireRole(['ADMIN']);
+  const id = String(formData.get('id') ?? '');
+  if (!id) return;
+  const review = await publishReviewedSkill(actor, id);
+  revalidatePath('/admin/skills');
+  revalidatePath(`/admin/skills/${id}`);
+  revalidatePath('/skills');
+  redirect(`/admin/skills/${id}?review=${review.ready ? 'published' : 'failed'}`);
 }

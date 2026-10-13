@@ -4,7 +4,7 @@ import { useActionState } from 'react';
 import { saveSkill } from '@/server/admin/skills';
 import { initialActionState } from '@/lib/action-state';
 import { SKILL_GROUPS } from '@/lib/skill-groups';
-import { Button } from '@/components/ui/Button';
+import { Button, buttonClass } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { Panel } from '@/components/ui/Panel';
 import { Label, Input, Textarea, Select, Checkbox, FieldError } from '@/components/ui/Field';
@@ -27,10 +27,14 @@ export function SkillForm({
   tags,
   defaults,
   assignedTagIds,
+  canPublish = false,
+  previewHref,
 }: {
   tags: { id: string; title: string }[];
   defaults?: SkillDefaults;
   assignedTagIds?: string[];
+  canPublish?: boolean;
+  previewHref?: string;
 }) {
   const [state, action, pending] = useActionState(saveSkill, initialActionState);
   const d = defaults ?? {};
@@ -64,7 +68,13 @@ export function SkillForm({
           </div>
           <div className="sm:col-span-2">
             <Label htmlFor="shortDesc">Что делает</Label>
-            <Textarea id="shortDesc" name="shortDesc" rows={2} defaultValue={d.shortDesc} required />
+            <Textarea
+              id="shortDesc"
+              name="shortDesc"
+              rows={2}
+              defaultValue={d.shortDesc}
+              required
+            />
             <FieldError>{state.fieldErrors?.shortDesc}</FieldError>
           </div>
           <div>
@@ -123,8 +133,8 @@ export function SkillForm({
               <Label htmlFor="state">Статус</Label>
               <Select id="state" name="state" defaultValue={d.state ?? 'DRAFT'}>
                 <option value="DRAFT">Черновик</option>
-                <option value="PUBLISHED">Опубликован</option>
-                <option value="ARCHIVED">Архив</option>
+                {d.state === 'PUBLISHED' ? <option value="PUBLISHED">Опубликован</option> : null}
+                {canPublish ? <option value="ARCHIVED">Архив</option> : null}
               </Select>
             </div>
           </div>
@@ -138,6 +148,17 @@ export function SkillForm({
           <Icon name="check-circle-linear" />
           {pending ? 'Сохраняем…' : 'Сохранить скилл'}
         </Button>
+        {previewHref ? (
+          <a
+            href={previewHref}
+            target="_blank"
+            rel="noreferrer"
+            className={buttonClass('secondary')}
+          >
+            <Icon name="eye-linear" />
+            Предпросмотр
+          </a>
+        ) : null}
       </div>
     </form>
   );
