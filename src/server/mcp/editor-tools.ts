@@ -74,6 +74,7 @@ const contentFields = z.object({
   sort: z.number().int().min(0).optional(),
   moduleId: z.string().min(1).optional(),
   placementSort: z.number().int().min(0).optional(),
+  routeDayId: z.string().min(1).optional(),
   tagSlugs: z.array(z.string().min(1).max(200)).max(50).optional(),
 });
 
@@ -131,16 +132,16 @@ const contentProperties = {
   partialFreePreview: { type: 'boolean' },
   sort: { type: 'integer', minimum: 0 },
   moduleId: { type: 'string', description: 'ID модуля из list_course_structure' },
-  placementSort: { type: 'integer', minimum: 0, description: 'Порядок урока внутри модуля' },
+  routeDayId: { type: 'string', description: 'ID дня маршрута из list_course_structure' },
   tagSlugs: { type: 'array', items: { type: 'string' } },
 } as const;
 
 export const EDITOR_MCP_TOOLS = [
   {
     name: 'list_course_structure',
-    title: 'Показать курсы, модули и теги',
+    title: 'Показать курсы, модули, маршрут и теги',
     description:
-      'Возвращает ID курсов и модулей, а также доступные теги. Вызывай перед созданием урока.',
+      'Возвращает ID курсов, модулей и дней маршрута, а также доступные теги. Вызывай перед созданием урока.',
     inputSchema: { type: 'object', properties: {}, additionalProperties: false },
     annotations: {
       readOnlyHint: true,
@@ -397,7 +398,7 @@ async function replaceSkillTags(skillId: string, tagSlugs: string[]) {
   }
 }
 
-async function validateReferences(tagSlugs?: string[], moduleId?: string) {
+async function validateReferences(tagSlugs?: string[], moduleId?: string, routeDayId?: string) {
   if (tagSlugs?.length) {
     const tags = await prisma.tag.findMany({
       where: { slug: { in: tagSlugs } },
@@ -415,20 +416,44 @@ async function validateReferences(tagSlugs?: string[], moduleId?: string) {
     if (!courseModule)
       throw new Error('Модуль курса не найден. Сначала вызовите list_course_structure.');
   }
+  if (routeDayId) {
+    const routeDay = await prisma.routeDay.findUnique({
+      where: { id: routeDayId },
+      select: { id: true },
+    });
+    if (!routeDay)
+      throw new Error('День маршрута не найден. Сначала вызовите list_course_structure.');
+  }
+  if (moduleId && routeDayId)
+    throw new Error('Выберите только одно размещение: модуль курса или маршрут.');
 }
 
-async function attachToModule(unitId: string, moduleId: string, sort: number) {
+async function attachToModule(unitId: string, moduleId: string) {
   const courseModule = await prisma.courseModule.findUnique({
     where: { id: moduleId },
     select: { id: true },
   });
   if (!courseModule)
     throw new Error('Модуль курса не найден. Сначала вызовите list_course_structure.');
-  await prisma.courseUnit.upsert({
-    where: { moduleId_unitId: { moduleId, unitId } },
-    create: { moduleId, unitId, sort },
-    update: { sort },
+  const current = await prisma.courseUnit.findFirst({
+    where: { unitId },
+    select: { moduleId: true, sort: true },
   });
+  const last = await prisma.courseUnit.aggregate({ where: { moduleId }, _max: { sort: true } });
+  await prisma.$transaction([
+    prisma.courseUnit.deleteMany({ where: { unitId } }),
+    prisma.courseUnit.create({
+      data: {
+        moduleId,
+        unitId,
+        sort: current?.moduleId === moduleId ? current.sort : (last._max.sort ?? -1) + 1,
+      },
+    }),
+    prisma.contentUnit.update({
+      where: { id: unitId },
+      data: { routeDayId: null, minPlan: 'SUPPORT' },
+    }),
+  ]);
 }
 
 function createContentData(
@@ -440,7 +465,7 @@ function createContentData(
     slug: input.slug?.trim() || slugify(input.title),
     summary: input.summary?.trim() || null,
     timeToMaster: input.timeToMaster?.trim() || null,
-    minPlan: 'SUPPORT',
+    minPlan: input.type === 'LESSON' && input.routeDayId ? 'SELF' : 'SUPPORT',
     state: 'DRAFT',
     partialFreePreview: input.type === 'STREAM' ? (input.partialFreePreview ?? false) : false,
     sort: input.sort ?? 0,
@@ -450,6 +475,7 @@ function createContentData(
     prompt: input.prompt?.trim() || null,
     promptNote: input.promptNote?.trim() || null,
     methodTag: input.methodTag?.trim() || null,
+    routeDayId: input.type === 'LESSON' ? (input.routeDayId ?? null) : null,
     article: input.articleHtml ? { html: sanitizeRichHtml(input.articleHtml) } : undefined,
     transcript: input.transcript?.trim() || null,
     caseClient: input.type === 'USECASE' ? input.caseClient?.trim() || null : null,
@@ -496,6 +522,10 @@ function updateContentData(
   if (input.airedAt !== undefined) data.airedAt = input.airedAt ? new Date(input.airedAt) : null;
   if (input.partialFreePreview !== undefined) data.partialFreePreview = input.partialFreePreview;
   if (input.sort !== undefined) data.sort = input.sort;
+  if (input.routeDayId !== undefined) {
+    data.routeDayId = input.routeDayId;
+    data.minPlan = 'SELF';
+  }
   return data;
 }
 
@@ -532,7 +562,7 @@ export async function callEditorTool(
 
   try {
     if (name === 'list_course_structure') {
-      const [courses, tags] = await Promise.all([
+      const [courses, routeDays, tags] = await Promise.all([
         prisma.course.findMany({
           orderBy: [{ sort: 'asc' }, { title: 'asc' }],
           select: {
@@ -546,9 +576,13 @@ export async function callEditorTool(
             },
           },
         }),
+        prisma.routeDay.findMany({
+          orderBy: { dayNumber: 'asc' },
+          select: { id: true, dayNumber: true, title: true },
+        }),
         prisma.tag.findMany({ orderBy: { title: 'asc' }, select: { slug: true, title: true } }),
       ]);
-      return textResult({ courses, tags });
+      return textResult({ courses, routeDays, tags });
     }
 
     if (name === 'list_drafts') {
@@ -625,19 +659,22 @@ export async function callEditorTool(
             .join('; '),
         );
       const input = parsed.data;
+      if (input.type !== 'LESSON' && (input.moduleId || input.routeDayId)) {
+        return toolError('В курс или маршрут можно размещать только материал типа LESSON.');
+      }
       const data = createContentData(input);
       await assertSlugAvailable('content', String(data.slug));
       await validateReferences(
         input.tagSlugs,
         input.type === 'LESSON' ? input.moduleId : undefined,
+        input.type === 'LESSON' ? input.routeDayId : undefined,
       );
       const unit = await prisma.contentUnit.create({
         data,
         select: { id: true, slug: true, type: true, title: true },
       });
       if (input.tagSlugs) await replaceContentTags(unit.id, input.tagSlugs);
-      if (input.type === 'LESSON' && input.moduleId)
-        await attachToModule(unit.id, input.moduleId, input.placementSort ?? input.sort ?? 0);
+      if (input.type === 'LESSON' && input.moduleId) await attachToModule(unit.id, input.moduleId);
       await audit(actor.id, 'MCP_CREATE_DRAFT', 'ContentUnit', unit.id, {
         slug: unit.slug,
         type: unit.type,
@@ -661,19 +698,24 @@ export async function callEditorTool(
       const input = parsed.data;
       const existing = await prisma.contentUnit.findFirst({
         where: { id: input.id, state: 'DRAFT' },
-        select: { id: true },
+        select: { id: true, type: true },
       });
       if (!existing) return toolError('Можно обновлять только существующие черновики.');
+      if (existing.type !== 'LESSON' && (input.moduleId || input.routeDayId)) {
+        return toolError('В курс или маршрут можно размещать только материал типа LESSON.');
+      }
       if (input.slug) await assertSlugAvailable('content', input.slug.trim(), input.id);
-      await validateReferences(input.tagSlugs, input.moduleId);
+      await validateReferences(input.tagSlugs, input.moduleId, input.routeDayId);
       const unit = await prisma.contentUnit.update({
         where: { id: input.id },
         data: updateContentData(input),
         select: { id: true, slug: true, type: true, title: true },
       });
       if (input.tagSlugs) await replaceContentTags(unit.id, input.tagSlugs);
-      if (unit.type === 'LESSON' && input.moduleId)
-        await attachToModule(unit.id, input.moduleId, input.placementSort ?? input.sort ?? 0);
+      if (unit.type === 'LESSON' && input.moduleId) await attachToModule(unit.id, input.moduleId);
+      if (unit.type === 'LESSON' && input.routeDayId) {
+        await prisma.courseUnit.deleteMany({ where: { unitId: unit.id } });
+      }
       await audit(actor.id, 'MCP_UPDATE_DRAFT', 'ContentUnit', unit.id, {
         slug: unit.slug,
         type: unit.type,

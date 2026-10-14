@@ -16,6 +16,8 @@ import {
   TimecodesEditor,
 } from './StructuredFieldEditors';
 import type { Kpi, RepoLink, Timecode, UsecaseStep } from '@/lib/content-types';
+import { CoverImageInput } from './CoverImageInput';
+import { TagMultiSelect } from './TagMultiSelect';
 
 type Defaults = Record<string, unknown> & { id?: string };
 
@@ -38,8 +40,10 @@ export function ContentForm({
 }) {
   const [state, action, pending] = useActionState(saveContent, initialActionState);
   const d = defaults ?? {};
-  const assigned = new Set(assignedTagIds ?? []);
   const [type, setType] = useState<string>((d.type as string) ?? 'USECASE');
+  const [placementKind, setPlacementKind] = useState<string>(
+    (d.placementKind as string) ?? (d.moduleId ? 'COURSE' : d.routeDayId ? 'ROUTE' : 'NONE'),
+  );
 
   const err = (k: string) => <FieldError>{state.fieldErrors?.[k]}</FieldError>;
 
@@ -71,9 +75,9 @@ export function ContentForm({
             <Label htmlFor="summary">Краткое описание</Label>
             <Textarea id="summary" name="summary" rows={2} defaultValue={d.summary as string} />
           </div>
-          <div>
-            <Label htmlFor="coverUrl">Обложка (URL)</Label>
-            <Input id="coverUrl" name="coverUrl" mono defaultValue={d.coverUrl as string} />
+          <div className="sm:col-span-2">
+            <Label>Обложка</Label>
+            <CoverImageInput defaultValue={(d.coverUrl as string) ?? ''} />
           </div>
           <div>
             <Label htmlFor="timeToMaster">Примерное время материала</Label>
@@ -96,16 +100,20 @@ export function ContentForm({
               {canPublish ? <option value="ARCHIVED">Архив</option> : null}
             </Select>
           </div>
-          <div>
-            <Label htmlFor="sort">Порядок</Label>
-            <Input
-              id="sort"
-              name="sort"
-              type="number"
-              mono
-              defaultValue={(d.sort as number) ?? 0}
-            />
-          </div>
+          {type !== 'LESSON' ? (
+            <div>
+              <Label htmlFor="sort">Порядок в общем списке</Label>
+              <Input
+                id="sort"
+                name="sort"
+                type="number"
+                mono
+                defaultValue={(d.sort as number) ?? 0}
+              />
+            </div>
+          ) : (
+            <input type="hidden" name="sort" value={String((d.sort as number) ?? 0)} />
+          )}
           {type === 'STREAM' ? (
             <div className="flex items-end">
               <Checkbox
@@ -117,21 +125,7 @@ export function ContentForm({
           ) : null}
           <div className="sm:col-span-2">
             <Label>Теги</Label>
-            <div className="flex flex-wrap gap-3">
-              {tags.length === 0 ? (
-                <span className="font-mono text-xs text-t400">Сначала создайте теги.</span>
-              ) : (
-                tags.map((t) => (
-                  <Checkbox
-                    key={t.id}
-                    name="tags"
-                    value={t.id}
-                    defaultChecked={assigned.has(t.id)}
-                    label={t.title}
-                  />
-                ))
-              )}
-            </div>
+            <TagMultiSelect initialTags={tags} initialSelected={assignedTagIds} />
           </div>
           {d.state === 'PUBLISHED' && canPublish ? (
             <div className="sm:col-span-2">
@@ -186,47 +180,57 @@ export function ContentForm({
         <Panel title="Урок // Программа и текстовая версия">
           <div className="grid grid-cols-1 gap-5 p-5 sm:grid-cols-2">
             <div className="sm:col-span-2">
-              <Label htmlFor="moduleId">Курс и модуль</Label>
-              <Select id="moduleId" name="moduleId" defaultValue={(d.moduleId as string) ?? ''}>
-                <option value="">— выберите модуль —</option>
-                {courseModules.map((module) => (
-                  <option key={module.id} value={module.id}>
-                    {module.courseTitle} · {module.title}
-                  </option>
-                ))}
+              <Label htmlFor="placementKind">Где будет находиться урок</Label>
+              <Select
+                id="placementKind"
+                name="placementKind"
+                value={placementKind}
+                onChange={(event) => setPlacementKind(event.target.value)}
+              >
+                <option value="COURSE">В курсе и модуле</option>
+                <option value="ROUTE">В маршруте «3 дня»</option>
+                <option value="NONE">Пока не размещать</option>
               </Select>
-              {err('moduleId')}
               <p className="mt-1 text-xs font-light text-t500">
-                Без модуля урок нельзя опубликовать.
+                Урок может находиться либо в курсе, либо в маршруте. Порядок уроков настраивается
+                перетаскиванием в визуальном редакторе.
               </p>
             </div>
-            <div>
-              <Label htmlFor="placementSort">Порядок внутри модуля</Label>
-              <Input
-                id="placementSort"
-                name="placementSort"
-                type="number"
-                mono
-                defaultValue={(d.placementSort as number) ?? (d.orderInBlock as number) ?? 0}
-              />
-            </div>
-            <div>
-              <Label htmlFor="block">Старый номер блока</Label>
-              <Input id="block" name="block" type="number" mono defaultValue={d.block as number} />
-              <p className="mt-1 text-xs font-light text-t500">
-                Временно сохранён для совместимости.
-              </p>
-            </div>
-            <div>
-              <Label htmlFor="orderInBlock">Порядок в блоке</Label>
-              <Input
-                id="orderInBlock"
-                name="orderInBlock"
-                type="number"
-                mono
-                defaultValue={d.orderInBlock as number}
-              />
-            </div>
+            {placementKind === 'COURSE' ? (
+              <div className="sm:col-span-2">
+                <Label htmlFor="moduleId">Курс и модуль</Label>
+                <Select id="moduleId" name="moduleId" defaultValue={(d.moduleId as string) ?? ''}>
+                  <option value="">— выберите модуль —</option>
+                  {courseModules.map((module) => (
+                    <option key={module.id} value={module.id}>
+                      {module.courseTitle} · {module.title}
+                    </option>
+                  ))}
+                </Select>
+                {err('moduleId')}
+                <p className="mt-1 text-xs font-light text-t500">
+                  Создавать модули и менять порядок можно в разделе «Курсы».
+                </p>
+              </div>
+            ) : null}
+            {placementKind === 'ROUTE' ? (
+              <div className="sm:col-span-2">
+                <Label htmlFor="routeDayId">День маршрута</Label>
+                <Select
+                  id="routeDayId"
+                  name="routeDayId"
+                  defaultValue={(d.routeDayId as string) ?? ''}
+                >
+                  <option value="">— выберите день —</option>
+                  {routeDays.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      День {r.dayNumber}: {r.title}
+                    </option>
+                  ))}
+                </Select>
+                {err('routeDayId')}
+              </div>
+            ) : null}
             <div>
               <Label htmlFor="methodTag">Принцип метода</Label>
               <Input
@@ -235,21 +239,6 @@ export function ContentForm({
                 defaultValue={d.methodTag as string}
                 placeholder="сегментация ABCDX"
               />
-            </div>
-            <div>
-              <Label htmlFor="routeDayId">День маршрута</Label>
-              <Select
-                id="routeDayId"
-                name="routeDayId"
-                defaultValue={(d.routeDayId as string) ?? ''}
-              >
-                <option value="">— нет —</option>
-                {routeDays.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    День {r.dayNumber}: {r.title}
-                  </option>
-                ))}
-              </Select>
             </div>
             <div className="sm:col-span-2">
               <RichTextEditor

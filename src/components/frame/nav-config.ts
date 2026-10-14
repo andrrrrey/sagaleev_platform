@@ -40,6 +40,7 @@ export const ADMIN_NAV: Array<NavItem & { adminOnly?: boolean }> = [
   { href: '/admin/plans', label: 'Тарифы', icon: 'wallet-money-linear', adminOnly: true },
   { href: '/admin/skills', label: 'Скиллы', icon: 'bolt-linear' },
   { href: '/admin/route', label: 'Маршрут', icon: 'routing-linear' },
+  { href: '/admin/courses', label: 'Курсы', icon: 'notebook-linear' },
   { href: '/admin/content', label: 'Контент', icon: 'document-text-linear' },
   { href: '/admin/tags', label: 'Теги', icon: 'point-on-map-linear' },
   { href: '/admin/banners', label: 'Баннеры', icon: 'graph-new-linear', adminOnly: true },

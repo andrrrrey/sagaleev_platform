@@ -103,6 +103,49 @@ export default async function RouteDayPage({ params }: { params: Promise<{ day: 
         ))}
       </div>
 
+      {view.lessons.length > 0 ? (
+        <section className="mt-10">
+          <div className="mb-4">
+            <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-accent">
+              Материалы дня
+            </div>
+            <h2 className="mt-2 text-2xl font-bold tracking-tight text-t900">
+              Уроки для этого этапа
+            </h2>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            {view.lessons.map((lesson) => (
+              <Link
+                key={lesson.slug}
+                href={`/lessons/${lesson.slug}`}
+                className="group overflow-hidden rounded-2xl border border-line bg-paper shadow-sm transition hover:-translate-y-0.5 hover:border-accent/30"
+              >
+                {lesson.coverUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={lesson.coverUrl} alt="" className="aspect-video w-full object-cover" />
+                ) : null}
+                <div className="p-5">
+                  <h3 className="text-lg font-semibold text-t900 group-hover:text-accent">
+                    {lesson.title}
+                  </h3>
+                  {lesson.summary ? (
+                    <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-t600">
+                      {lesson.summary}
+                    </p>
+                  ) : null}
+                  {lesson.timeToMaster ? (
+                    <span className="mt-3 inline-flex items-center gap-1.5 text-xs text-t500">
+                      <Icon name="clock-circle-linear" />
+                      {lesson.timeToMaster}
+                    </span>
+                  ) : null}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       {allDone ? (
         <Panel className="mt-8" title="День пройден" status={<StatusPill>Готов</StatusPill>}>
           <div className="flex flex-col items-start gap-4 p-6">

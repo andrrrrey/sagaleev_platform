@@ -41,8 +41,9 @@ export async function reviewContentDraft(id: string): Promise<DraftReview | null
   else warning('tags', 'Добавьте хотя бы один тег для поиска и рекомендаций.');
 
   if (unit.type === 'LESSON') {
-    if (unit._count.courses > 0) ok('module', 'Урок добавлен в модуль курса.');
-    else error('module', 'Добавьте урок хотя бы в один модуль курса.');
+    if (unit._count.courses > 0) ok('placement', 'Урок добавлен в модуль курса.');
+    else if (unit.routeDayId) ok('placement', 'Урок добавлен в день маршрута.');
+    else error('placement', 'Выберите модуль курса или день маршрута.');
     if (!unit.kinescopeId && !hasJsonContent(unit.article) && !unit.transcript?.trim()) {
       error('lessonContent', 'Добавьте видео Kinescope, текстовую версию или транскрипт урока.');
     } else {

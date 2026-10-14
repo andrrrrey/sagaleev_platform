@@ -7,7 +7,8 @@ import { SKILL_GROUPS } from '@/lib/skill-groups';
 import { Button, buttonClass } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { Panel } from '@/components/ui/Panel';
-import { Label, Input, Textarea, Select, Checkbox, FieldError } from '@/components/ui/Field';
+import { Label, Input, Textarea, Select, FieldError } from '@/components/ui/Field';
+import { TagMultiSelect } from './TagMultiSelect';
 
 type SkillDefaults = {
   id?: string;
@@ -38,7 +39,6 @@ export function SkillForm({
 }) {
   const [state, action, pending] = useActionState(saveSkill, initialActionState);
   const d = defaults ?? {};
-  const assigned = new Set(assignedTagIds ?? []);
 
   return (
     <form action={action} className="flex flex-col gap-6">
@@ -106,21 +106,7 @@ export function SkillForm({
         <div className="flex flex-col gap-5 p-5">
           <div>
             <Label>Теги</Label>
-            <div className="flex flex-wrap gap-3">
-              {tags.length === 0 ? (
-                <span className="font-mono text-xs text-t400">Сначала создайте теги.</span>
-              ) : (
-                tags.map((t) => (
-                  <Checkbox
-                    key={t.id}
-                    name="tags"
-                    value={t.id}
-                    defaultChecked={assigned.has(t.id)}
-                    label={t.title}
-                  />
-                ))
-              )}
-            </div>
+            <TagMultiSelect initialTags={tags} initialSelected={assignedTagIds} />
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>

@@ -9,7 +9,10 @@ import { slugify } from '@/lib/utils';
 import { type ActionState, fieldErrorsFromZod } from '@/lib/action-state';
 import { audit } from './audit';
 
-const tagSchema = z.object({ title: z.string().min(1, 'Название обязательно'), slug: z.string().optional() });
+const tagSchema = z.object({
+  title: z.string().min(1, 'Название обязательно'),
+  slug: z.string().optional(),
+});
 
 export async function createTag(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const actor = await requireRole(['ADMIN', 'EDITOR']);
@@ -26,6 +29,34 @@ export async function createTag(_prev: ActionState, formData: FormData): Promise
   await audit(actor.id, 'CREATE', 'Tag', tag.id, { slug });
   revalidatePath('/admin/tags');
   return { ok: true, message: 'Тег создан' };
+}
+
+export async function createTagInline(title: string): Promise<{
+  ok: boolean;
+  tag?: { id: string; title: string };
+  message?: string;
+}> {
+  const actor = await requireRole(['ADMIN', 'EDITOR']);
+  if (!canEditContent(actor.role)) return { ok: false, message: 'Нет прав' };
+
+  const cleanTitle = title.trim();
+  if (!cleanTitle) return { ok: false, message: 'Введите название тега' };
+  const slug = slugify(cleanTitle);
+  const existing = await prisma.tag.findUnique({
+    where: { slug },
+    select: { id: true, title: true },
+  });
+  if (existing) return { ok: true, tag: existing };
+
+  const tag = await prisma.tag.create({
+    data: { slug, title: cleanTitle },
+    select: { id: true, title: true },
+  });
+  await audit(actor.id, 'CREATE', 'Tag', tag.id, { slug, source: 'inline' });
+  revalidatePath('/admin/tags');
+  revalidatePath('/admin/content');
+  revalidatePath('/admin/skills');
+  return { ok: true, tag };
 }
 
 export async function deleteTag(formData: FormData): Promise<void> {

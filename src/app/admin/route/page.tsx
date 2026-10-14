@@ -20,12 +20,21 @@ export default async function AdminRoutePage() {
         orderBy: { sort: 'asc' },
         include: { linkedSkill: { select: { title: true } } },
       },
+      units: {
+        where: { type: 'LESSON' },
+        orderBy: [{ sort: 'asc' }, { createdAt: 'asc' }],
+        select: { id: true, title: true, state: true },
+      },
     },
   });
 
   return (
     <div className="px-6 py-8 md:px-10 md:py-12">
-      <PageHeader kicker="Admin" title="Маршрут «3 дня»" description="Редактирование дней и шагов." />
+      <PageHeader
+        kicker="Admin"
+        title="Маршрут «3 дня»"
+        description="Редактирование дней и шагов."
+      />
 
       {days.length === 0 ? (
         <p className="font-mono text-xs text-t500">Дни маршрута ещё не созданы (запустите сид).</p>
@@ -33,7 +42,9 @@ export default async function AdminRoutePage() {
         <div className="flex flex-col gap-8">
           {days.map((day) => (
             <Panel key={day.id} title={`День ${day.dayNumber} // Редактор`}>
-              <DayEditForm day={{ id: day.id, title: day.title, summary: day.summary, artifact: day.artifact }} />
+              <DayEditForm
+                day={{ id: day.id, title: day.title, summary: day.summary, artifact: day.artifact }}
+              />
 
               <div className="border-t border-line/60 p-5">
                 <div className="mb-3 flex items-center justify-between">
@@ -79,7 +90,11 @@ export default async function AdminRoutePage() {
                           </Link>
                           <form action={deleteStep}>
                             <input type="hidden" name="id" value={s.id} />
-                            <button type="submit" className="text-t400 hover:text-accent" title="Удалить">
+                            <button
+                              type="submit"
+                              className="text-t400 hover:text-accent"
+                              title="Удалить"
+                            >
                               <Icon name="trash-bin-minimalistic-linear" className="text-base" />
                             </button>
                           </form>
@@ -87,6 +102,39 @@ export default async function AdminRoutePage() {
                       </li>
                     ))}
                   </ul>
+                )}
+              </div>
+
+              <div className="border-t border-line/60 p-5">
+                <div className="mb-3 flex items-center justify-between">
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-t500">
+                    Уроки дня · {day.units.length}
+                  </span>
+                  <Link
+                    href={`/admin/content/new?type=LESSON&routeDayId=${day.id}`}
+                    className={buttonClass('ghost')}
+                  >
+                    <Icon name="add-circle-linear" />
+                    Добавить урок
+                  </Link>
+                </div>
+                {day.units.length === 0 ? (
+                  <p className="text-sm text-t400">Отдельных уроков в этом дне пока нет.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {day.units.map((unit) => (
+                      <Link
+                        key={unit.id}
+                        href={`/admin/content/${unit.id}`}
+                        className="flex items-center justify-between rounded-xl border border-line bg-surface px-4 py-3 text-sm text-t700 hover:border-accent/30 hover:text-accent"
+                      >
+                        <span>{unit.title}</span>
+                        <span className="text-[10px] uppercase tracking-wide text-t400">
+                          {unit.state === 'PUBLISHED' ? 'Опубликован' : 'Черновик'}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
                 )}
               </div>
             </Panel>

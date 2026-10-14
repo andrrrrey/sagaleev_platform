@@ -37,6 +37,13 @@ export type RouteDayView = {
   summary: string;
   artifact: string;
   steps: RouteStepView[];
+  lessons: Array<{
+    slug: string;
+    title: string;
+    summary: string | null;
+    coverUrl: string | null;
+    timeToMaster: string | null;
+  }>;
   prevDay: number | null;
   nextDay: number | null;
 };
@@ -94,6 +101,17 @@ export async function getRouteDay(actor: Actor, dayNumber: number): Promise<Rout
         orderBy: { sort: 'asc' },
         include: { linkedSkill: { select: { slug: true, title: true, minPlan: true } } },
       },
+      units: {
+        where: { type: 'LESSON', state: 'PUBLISHED' },
+        orderBy: [{ sort: 'asc' }, { createdAt: 'asc' }],
+        select: {
+          slug: true,
+          title: true,
+          summary: true,
+          coverUrl: true,
+          timeToMaster: true,
+        },
+      },
     },
   });
   if (!day) return null;
@@ -114,6 +132,7 @@ export async function getRouteDay(actor: Actor, dayNumber: number): Promise<Rout
     title: day.title,
     summary: day.summary,
     artifact: day.artifact,
+    lessons: day.units,
     prevDay: day.dayNumber > (bounds._min.dayNumber ?? 1) ? day.dayNumber - 1 : null,
     nextDay: day.dayNumber < (bounds._max.dayNumber ?? 1) ? day.dayNumber + 1 : null,
     steps: day.steps.map((s) => {

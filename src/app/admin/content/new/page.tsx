@@ -9,10 +9,10 @@ export const metadata: Metadata = { title: 'Новый юнит' };
 export default async function NewContentPage({
   searchParams,
 }: {
-  searchParams: Promise<{ type?: string }>;
+  searchParams: Promise<{ type?: string; moduleId?: string; routeDayId?: string }>;
 }) {
   const actor = await requireRole(['ADMIN', 'EDITOR']);
-  const { type } = await searchParams;
+  const { type, moduleId, routeDayId } = await searchParams;
 
   const [tags, routeDays, courseModules] = await Promise.all([
     prisma.tag.findMany({ orderBy: { title: 'asc' }, select: { id: true, title: true } }),
@@ -39,7 +39,13 @@ export default async function NewContentPage({
           title: module.title,
           courseTitle: module.course.title,
         }))}
-        defaults={{ type: t, state: 'DRAFT' }}
+        defaults={{
+          type: t,
+          state: 'DRAFT',
+          moduleId,
+          routeDayId,
+          placementKind: moduleId ? 'COURSE' : routeDayId ? 'ROUTE' : 'NONE',
+        }}
         canPublish={actor.role === 'ADMIN'}
       />
     </div>

@@ -24,7 +24,7 @@ const baseSchema = z.object({
   title: z.string().min(1, 'Название обязательно'),
   slug: z.string().optional(),
   summary: z.string().optional(),
-  coverUrl: z.string().optional(),
+  coverUrl: z.string().max(1_000_000, 'Изображение слишком большое').optional(),
   timeToMaster: z.string().optional(),
   minPlan: z.enum(['SELF', 'SUPPORT', 'VIP']),
   state: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']),
@@ -42,6 +42,7 @@ const baseSchema = z.object({
   routeDayId: z.string().optional(),
   moduleId: z.string().optional(),
   placementSort: z.coerce.number().int().min(0).optional(),
+  placementKind: z.enum(['COURSE', 'ROUTE', 'NONE']).optional(),
   // USECASE
   caseClient: z.string().optional(),
   goal: z.string().optional(),
@@ -92,12 +93,20 @@ export async function saveContent(_prev: ActionState, formData: FormData): Promi
         'Сначала сохраните черновик, проверьте предпросмотр и используйте кнопку «Опубликовать».',
     };
   }
+  const placementKind = d.type === 'LESSON' ? (d.placementKind ?? 'NONE') : 'NONE';
   const selectedModule =
-    d.type === 'LESSON' && d.moduleId
+    placementKind === 'COURSE' && d.moduleId
       ? await prisma.courseModule.findUnique({ where: { id: d.moduleId }, select: { id: true } })
       : null;
-  if (d.type === 'LESSON' && d.moduleId && !selectedModule) {
-    return { ok: false, fieldErrors: { moduleId: 'Модуль курса не найден' } };
+  if (placementKind === 'COURSE' && !selectedModule) {
+    return { ok: false, fieldErrors: { moduleId: 'Выберите существующий модуль курса' } };
+  }
+  const selectedRouteDay =
+    placementKind === 'ROUTE' && d.routeDayId
+      ? await prisma.routeDay.findUnique({ where: { id: d.routeDayId }, select: { id: true } })
+      : null;
+  if (placementKind === 'ROUTE' && !selectedRouteDay) {
+    return { ok: false, fieldErrors: { routeDayId: 'Выберите день маршрута' } };
   }
 
   const slug = d.slug?.trim() || slugify(d.title);
@@ -127,7 +136,7 @@ export async function saveContent(_prev: ActionState, formData: FormData): Promi
     summary: d.summary || null,
     coverUrl: d.coverUrl || null,
     timeToMaster: d.timeToMaster || null,
-    minPlan: d.minPlan,
+    minPlan: placementKind === 'ROUTE' ? 'SELF' : d.minPlan,
     state: d.state,
     partialFreePreview: d.partialFreePreview === 'on' || d.partialFreePreview === 'true',
     sort: d.sort,
@@ -137,10 +146,10 @@ export async function saveContent(_prev: ActionState, formData: FormData): Promi
     timecodes,
     prompt: d.prompt || null,
     promptNote: d.promptNote || null,
-    block: d.type === 'LESSON' ? (d.block ?? null) : null,
-    orderInBlock: d.type === 'LESSON' ? (d.orderInBlock ?? null) : null,
+    block: null,
+    orderInBlock: null,
     methodTag: d.methodTag || null,
-    routeDayId: d.routeDayId || null,
+    routeDayId: placementKind === 'ROUTE' ? (selectedRouteDay?.id ?? null) : null,
     caseClient: d.type === 'USECASE' ? d.caseClient || null : null,
     goal: d.type !== 'LESSON' ? d.goal || null : null,
     result: d.type !== 'LESSON' ? d.result || null : null,
@@ -172,17 +181,26 @@ export async function saveContent(_prev: ActionState, formData: FormData): Promi
     });
   }
 
+  const previousPlacement = await prisma.courseUnit.findFirst({
+    where: { unitId },
+    select: { moduleId: true, sort: true },
+  });
+  await prisma.courseUnit.deleteMany({ where: { unitId } });
   if (d.type === 'LESSON' && selectedModule) {
-    await prisma.$transaction([
-      prisma.courseUnit.deleteMany({ where: { unitId } }),
-      prisma.courseUnit.create({
-        data: {
-          moduleId: selectedModule.id,
-          unitId,
-          sort: d.placementSort ?? d.orderInBlock ?? d.sort,
-        },
-      }),
-    ]);
+    const lastPlacement = await prisma.courseUnit.aggregate({
+      where: { moduleId: selectedModule.id },
+      _max: { sort: true },
+    });
+    await prisma.courseUnit.create({
+      data: {
+        moduleId: selectedModule.id,
+        unitId,
+        sort:
+          previousPlacement?.moduleId === selectedModule.id
+            ? previousPlacement.sort
+            : (lastPlacement._max.sort ?? -1) + 1,
+      },
+    });
   }
 
   // Уведомление о новом контенте (опция).
@@ -206,6 +224,7 @@ export async function saveContent(_prev: ActionState, formData: FormData): Promi
   }
 
   revalidatePath('/admin/content');
+  revalidatePath('/admin/courses');
   revalidatePath('/lessons');
   revalidatePath('/usecases');
   revalidatePath('/streams');

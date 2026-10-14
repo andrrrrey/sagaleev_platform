@@ -104,7 +104,7 @@ export default async function EditContentPage({
           methodTag: unit.methodTag ?? undefined,
           routeDayId: unit.routeDayId ?? undefined,
           moduleId: unit.courses[0]?.moduleId,
-          placementSort: unit.courses[0]?.sort,
+          placementKind: unit.courses[0]?.moduleId ? 'COURSE' : unit.routeDayId ? 'ROUTE' : 'NONE',
           caseClient: unit.caseClient ?? undefined,
           goal: unit.goal ?? undefined,
           result: unit.result ?? undefined,
