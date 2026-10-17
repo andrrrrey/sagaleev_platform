@@ -7,14 +7,12 @@ import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { Panel } from '@/components/ui/Panel';
 import { Label, Input, Textarea, Select, FieldError } from '@/components/ui/Field';
-import { CoverImageInput } from './CoverImageInput';
 
 type Defaults = {
   id?: string;
   title?: string;
   slug?: string;
   summary?: string;
-  coverUrl?: string;
   state?: string;
 };
 
@@ -48,12 +46,6 @@ export function CourseForm({ defaults, canPublish }: { defaults?: Defaults; canP
           <div className="md:col-span-2">
             <Label htmlFor="course-summary">Краткое описание</Label>
             <Textarea id="course-summary" name="summary" rows={3} defaultValue={d.summary} />
-          </div>
-          <div className="md:col-span-2">
-            <Label>Обложка курса</Label>
-            <div className="max-w-xl">
-              <CoverImageInput defaultValue={d.coverUrl ?? ''} />
-            </div>
           </div>
         </div>
       </Panel>

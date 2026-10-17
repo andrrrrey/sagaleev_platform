@@ -56,7 +56,6 @@ export async function ContentDetailScreen({
           {detail.title}
         </Heading>
         <div className="mt-4 flex flex-wrap items-center gap-3">
-          {detail.methodTag ? <Tag active>{detail.methodTag}</Tag> : null}
           {detail.tags.map((t) => (
             <Tag key={t.slug}>{t.title}</Tag>
           ))}

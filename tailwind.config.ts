@@ -58,6 +58,14 @@ export default {
         ],
         mono: ['"SFMono-Regular"', '"SF Mono"', 'Consolas', '"Liberation Mono"', 'monospace'],
       },
+      fontSize: {
+        xs: ['0.8125rem', { lineHeight: '1.25rem' }],
+        sm: ['0.9375rem', { lineHeight: '1.5rem' }],
+      },
+      fontWeight: {
+        light: '400',
+        normal: '450',
+      },
       boxShadow: {
         frame: '0 25px 50px -12px rgb(0 0 0 / 0.25)',
         panel: '0 14px 40px rgba(6, 38, 68, 0.07)',

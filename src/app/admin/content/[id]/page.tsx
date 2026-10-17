@@ -101,7 +101,6 @@ export default async function EditContentPage({
           promptNote: unit.promptNote ?? undefined,
           block: unit.block ?? undefined,
           orderInBlock: unit.orderInBlock ?? undefined,
-          methodTag: unit.methodTag ?? undefined,
           routeDayId: unit.routeDayId ?? undefined,
           moduleId: unit.courses[0]?.moduleId,
           placementKind: unit.courses[0]?.moduleId ? 'COURSE' : unit.routeDayId ? 'ROUTE' : 'NONE',

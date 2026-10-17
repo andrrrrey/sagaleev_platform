@@ -12,7 +12,6 @@ type CourseItem = {
   id: string;
   title: string;
   summary: string | null;
-  coverUrl: string | null;
   state: string;
   moduleCount: number;
   lessonCount: number;
@@ -100,25 +99,8 @@ export function CourseCatalogEditor({
               canArrange && 'cursor-grab active:cursor-grabbing',
             )}
           >
-            <Link
-              href={`/admin/courses/${course.id}`}
-              className="grid min-h-52 md:grid-cols-[190px_1fr]"
-            >
-              <div className="bg-paper-tint">
-                {course.coverUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={course.coverUrl}
-                    alt=""
-                    className="h-full min-h-48 w-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-full min-h-48 items-center justify-center text-t300">
-                    <Icon name="notebook-linear" className="text-5xl" />
-                  </div>
-                )}
-              </div>
-              <div className="flex flex-col p-5">
+            <Link href={`/admin/courses/${course.id}`} className="flex min-h-48 flex-col p-5">
+              <div className="flex flex-1 flex-col">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
                     {canArrange ? (

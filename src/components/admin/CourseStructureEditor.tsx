@@ -44,6 +44,7 @@ export function CourseStructureEditor({
   const [unplaced, setUnplaced] = useState(initialUnplaced);
   const [newModule, setNewModule] = useState('');
   const [dragged, setDragged] = useState<DragItem | null>(null);
+  const [collapsedModuleIds, setCollapsedModuleIds] = useState<Set<string>>(() => new Set());
   const [dirty, setDirty] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -53,6 +54,20 @@ export function CourseStructureEditor({
       unplaced.find((lesson) => lesson.id === id) ??
       modules.flatMap((item) => item.units).find((lesson) => lesson.id === id)
     );
+  }
+
+  function markStructureChanged() {
+    setDirty(true);
+    setMessage('Порядок изменён — нажмите «Сохранить порядок».');
+  }
+
+  function toggleModule(moduleId: string) {
+    setCollapsedModuleIds((current) => {
+      const next = new Set(current);
+      if (next.has(moduleId)) next.delete(moduleId);
+      else next.add(moduleId);
+      return next;
+    });
   }
 
   function removeLesson(id: string) {
@@ -81,7 +96,7 @@ export function CourseStructureEditor({
         }),
       );
     }
-    setDirty(true);
+    markStructureChanged();
     setDragged(null);
   }
 
@@ -97,7 +112,22 @@ export function CourseStructureEditor({
       next.splice(to, 0, item);
       return next;
     });
-    setDirty(true);
+    markStructureChanged();
+    setDragged(null);
+  }
+
+  function dropModuleAtEnd() {
+    if (!canArrange || dragged?.kind !== 'module') return;
+    setModules((current) => {
+      const next = [...current];
+      const from = next.findIndex((item) => item.id === dragged.id);
+      if (from < 0 || from === next.length - 1) return current;
+      const [item] = next.splice(from, 1);
+      if (!item) return current;
+      next.push(item);
+      return next;
+    });
+    markStructureChanged();
     setDragged(null);
   }
 
@@ -264,7 +294,12 @@ export function CourseStructureEditor({
               canArrange && 'cursor-grab active:cursor-grabbing',
             )}
           >
-            <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line/70 px-5 py-4">
+            <header
+              className={cn(
+                'flex flex-wrap items-center justify-between gap-3 px-5 py-4',
+                !collapsedModuleIds.has(item.id) && 'border-b border-line/70',
+              )}
+            >
               <div className="flex items-center gap-3">
                 {canArrange ? <Icon name="hamburger-menu-linear" className="text-t400" /> : null}
                 <span className="rounded-full bg-paper-tint px-2.5 py-1 font-mono text-[10px] text-t500">
@@ -274,6 +309,22 @@ export function CourseStructureEditor({
                 <span className="text-xs text-t400">{item.units.length} ур.</span>
               </div>
               <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => toggleModule(item.id)}
+                  className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-t500 hover:bg-paper-hover hover:text-t900"
+                  aria-expanded={!collapsedModuleIds.has(item.id)}
+                  aria-controls={`course-module-${item.id}`}
+                >
+                  <Icon
+                    name="alt-arrow-down-linear"
+                    className={cn(
+                      'transition-transform',
+                      collapsedModuleIds.has(item.id) && '-rotate-90',
+                    )}
+                  />
+                  {collapsedModuleIds.has(item.id) ? 'Развернуть' : 'Свернуть'}
+                </button>
                 <Link
                   href={`/admin/content/new?type=LESSON&moduleId=${item.id}`}
                   className={buttonClass('ghost')}
@@ -303,26 +354,40 @@ export function CourseStructureEditor({
                 ) : null}
               </div>
             </header>
-            <div className="min-h-20 space-y-2 p-3">
-              {item.units.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-line p-5 text-center text-sm text-t400">
-                  Перетащите сюда урок или создайте новый.
-                </div>
-              ) : (
-                item.units.map((lesson, lessonIndex) => (
-                  <LessonRow
-                    key={lesson.id}
-                    lesson={lesson}
-                    index={lessonIndex}
-                    draggable={canArrange}
-                    onDragStart={() => setDragged({ kind: 'lesson', id: lesson.id })}
-                    onDrop={() => dropLesson(item.id, lesson.id)}
-                  />
-                ))
-              )}
-            </div>
+            {!collapsedModuleIds.has(item.id) ? (
+              <div id={`course-module-${item.id}`} className="min-h-20 space-y-2 p-3">
+                {item.units.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-line p-5 text-center text-sm text-t400">
+                    Перетащите сюда урок или создайте новый.
+                  </div>
+                ) : (
+                  item.units.map((lesson, lessonIndex) => (
+                    <LessonRow
+                      key={lesson.id}
+                      lesson={lesson}
+                      index={lessonIndex}
+                      draggable={canArrange}
+                      onDragStart={() => setDragged({ kind: 'lesson', id: lesson.id })}
+                      onDrop={() => dropLesson(item.id, lesson.id)}
+                    />
+                  ))
+                )}
+              </div>
+            ) : null}
           </section>
         ))}
+        {canArrange && modules.length > 1 ? (
+          <div
+            onDragOver={(event) => event.preventDefault()}
+            onDrop={(event) => {
+              event.preventDefault();
+              dropModuleAtEnd();
+            }}
+            className="rounded-xl border border-dashed border-line px-4 py-3 text-center text-xs font-medium text-t400"
+          >
+            Перетащите модуль сюда, чтобы поставить его последним
+          </div>
+        ) : null}
       </div>
 
       <section

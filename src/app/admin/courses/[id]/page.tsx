@@ -63,7 +63,6 @@ export default async function CourseEditorPage({ params }: { params: Promise<{ i
               title: course.title,
               slug: course.slug,
               summary: course.summary ?? undefined,
-              coverUrl: course.coverUrl ?? undefined,
               state: course.state,
             }}
           />

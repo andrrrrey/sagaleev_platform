@@ -59,7 +59,6 @@ const contentFields = z.object({
   timecodes: z.array(timecodeSchema).max(100).optional(),
   prompt: z.string().max(100_000).optional(),
   promptNote: z.string().max(5000).optional(),
-  methodTag: z.string().max(300).optional(),
   articleHtml: z.string().max(500_000).optional(),
   transcript: z.string().max(1_000_000).optional(),
   caseClient: z.string().max(500).optional(),
@@ -115,7 +114,6 @@ const contentProperties = {
   timecodes: { type: 'array', items: { type: 'object' } },
   prompt: { type: 'string', description: 'Промпт для блока «Отправить агенту»' },
   promptNote: { type: 'string' },
-  methodTag: { type: 'string' },
   articleHtml: {
     type: 'string',
     description: 'Текстовая версия или статья; допустим безопасный HTML',
@@ -474,7 +472,6 @@ function createContentData(
     timecodes: input.timecodes ?? [],
     prompt: input.prompt?.trim() || null,
     promptNote: input.promptNote?.trim() || null,
-    methodTag: input.methodTag?.trim() || null,
     routeDayId: input.type === 'LESSON' ? (input.routeDayId ?? null) : null,
     article: input.articleHtml ? { html: sanitizeRichHtml(input.articleHtml) } : undefined,
     transcript: input.transcript?.trim() || null,
@@ -505,7 +502,6 @@ function updateContentData(
   if (input.timecodes !== undefined) data.timecodes = input.timecodes;
   if (input.prompt !== undefined) data.prompt = input.prompt.trim() || null;
   if (input.promptNote !== undefined) data.promptNote = input.promptNote.trim() || null;
-  if (input.methodTag !== undefined) data.methodTag = input.methodTag.trim() || null;
   if (input.articleHtml !== undefined)
     data.article = input.articleHtml ? { html: sanitizeRichHtml(input.articleHtml) } : {};
   if (input.transcript !== undefined) data.transcript = input.transcript.trim() || null;

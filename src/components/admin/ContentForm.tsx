@@ -231,15 +231,6 @@ export function ContentForm({
                 {err('routeDayId')}
               </div>
             ) : null}
-            <div>
-              <Label htmlFor="methodTag">Принцип метода</Label>
-              <Input
-                id="methodTag"
-                name="methodTag"
-                defaultValue={d.methodTag as string}
-                placeholder="сегментация ABCDX"
-              />
-            </div>
             <div className="sm:col-span-2">
               <RichTextEditor
                 name="articleHtml"

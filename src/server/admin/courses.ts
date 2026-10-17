@@ -14,7 +14,6 @@ const courseSchema = z.object({
   title: z.string().trim().min(1, 'Название обязательно'),
   slug: z.string().optional(),
   summary: z.string().optional(),
-  coverUrl: z.string().max(1_000_000, 'Изображение слишком большое').optional(),
   state: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']).default('DRAFT'),
 });
 
@@ -60,7 +59,6 @@ export async function saveCourse(_prev: ActionState, formData: FormData): Promis
         title: d.title,
         slug,
         summary: d.summary || null,
-        coverUrl: d.coverUrl || null,
         state,
       },
     });
@@ -72,7 +70,6 @@ export async function saveCourse(_prev: ActionState, formData: FormData): Promis
         title: d.title,
         slug,
         summary: d.summary || null,
-        coverUrl: d.coverUrl || null,
         state,
         sort: (last._max.sort ?? -1) + 1,
       },

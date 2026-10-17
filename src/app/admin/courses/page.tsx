@@ -48,7 +48,6 @@ export default async function AdminCoursesPage() {
             id: course.id,
             title: course.title,
             summary: course.summary,
-            coverUrl: course.coverUrl,
             state: course.state,
             moduleCount: course.modules.length,
             lessonCount: course.modules.reduce(

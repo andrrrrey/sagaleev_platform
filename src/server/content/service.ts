@@ -39,7 +39,6 @@ export type ContentCard = {
   tags: { slug: string; title: string }[];
   caseClient: string | null;
   block: number | null;
-  methodTag: string | null;
   airedAt: string | null;
   durationSec: number | null;
   minPlan: PlanCode;
@@ -100,7 +99,6 @@ export async function listContent(actor: Actor, filters: ContentFilters): Promis
       tags: u.tags.map((t) => t.tag),
       caseClient: u.caseClient,
       block: u.block,
-      methodTag: u.methodTag,
       airedAt: u.airedAt?.toISOString() ?? null,
       durationSec: u.durationSec,
       minPlan: u.minPlan,
@@ -127,7 +125,6 @@ export type ContentDetail = {
   status: ProgressStatus;
   proofNote: string | null;
   block: number | null;
-  methodTag: string | null;
   caseClient: string | null;
   airedAt: string | null;
   durationSec: number | null;
@@ -178,7 +175,6 @@ export async function getContentBySlug(actor: Actor, slug: string): Promise<Cont
     status: progress?.status ?? 'NONE',
     proofNote: progress?.proofNote ?? null,
     block: u.block,
-    methodTag: u.methodTag,
     caseClient: u.caseClient,
     airedAt: u.airedAt?.toISOString() ?? null,
     durationSec: u.durationSec,

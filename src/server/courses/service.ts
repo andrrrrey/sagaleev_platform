@@ -7,7 +7,6 @@ export type CourseCatalogItem = {
   slug: string;
   title: string;
   summary: string | null;
-  coverUrl: string | null;
   state: PublishState;
   moduleCount: number;
   lessonCount: number;
@@ -36,7 +35,6 @@ function summarizeCourse(
     slug: string;
     title: string;
     summary: string | null;
-    coverUrl: string | null;
     state: PublishState;
     modules: Array<{
       id: string;
@@ -64,7 +62,6 @@ function summarizeCourse(
     slug: course.slug,
     title: course.title,
     summary: course.summary,
-    coverUrl: course.coverUrl,
     state: course.state,
     moduleCount: modules.length,
     lessonCount: lessons.length,

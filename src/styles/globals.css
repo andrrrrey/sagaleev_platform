@@ -123,6 +123,22 @@
 }
 
 @layer utilities {
+  /* Микротекст остаётся компактным, но больше не выглядит слишком мелким. */
+  .text-\[9px\] {
+    font-size: 0.6875rem;
+    line-height: 1rem;
+  }
+
+  .text-\[10px\] {
+    font-size: 0.75rem;
+    line-height: 1rem;
+  }
+
+  .text-\[11px\] {
+    font-size: 0.8125rem;
+    line-height: 1.125rem;
+  }
+
   /* Штриховка мастер-контейнера. */
   .bg-hatch {
     background-image: repeating-linear-gradient(

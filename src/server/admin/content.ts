@@ -38,7 +38,6 @@ const baseSchema = z.object({
   // LESSON
   block: z.coerce.number().int().min(1).max(10).optional(),
   orderInBlock: z.coerce.number().int().min(0).optional(),
-  methodTag: z.string().optional(),
   routeDayId: z.string().optional(),
   moduleId: z.string().optional(),
   placementSort: z.coerce.number().int().min(0).optional(),
@@ -148,7 +147,6 @@ export async function saveContent(_prev: ActionState, formData: FormData): Promi
     promptNote: d.promptNote || null,
     block: null,
     orderInBlock: null,
-    methodTag: d.methodTag || null,
     routeDayId: placementKind === 'ROUTE' ? (selectedRouteDay?.id ?? null) : null,
     caseClient: d.type === 'USECASE' ? d.caseClient || null : null,
     goal: d.type !== 'LESSON' ? d.goal || null : null,
