@@ -1,4 +1,4 @@
-import type { Prisma, PlanCode, ProgressStatus, UnitType } from '@prisma/client';
+import type { Prisma, PlanCode, ProgressStatus, PublishState, UnitType } from '@prisma/client';
 import { prisma } from '@/server/db';
 import { canAccess, assertAccess, type Actor } from '@/server/access';
 import { HttpError } from '@/server/access/errors';
@@ -24,6 +24,28 @@ export function viewedFromPercent(percent: number): boolean {
 function isStaff(actor: Actor): boolean {
   return actor.role === 'ADMIN' || actor.role === 'EDITOR';
 }
+
+/**
+ * Опубликованный урок скрытого курса недоступен студенту даже по прямой ссылке.
+ * Уроки вне курсов (например, в маршруте) зависят только от собственного статуса.
+ */
+export function isPublishedForStudent(unit: {
+  state: PublishState;
+  type: UnitType;
+  courseStates?: PublishState[];
+}): boolean {
+  if (unit.state !== 'PUBLISHED') return false;
+  if (unit.type !== 'LESSON' || !unit.courseStates?.length) return true;
+  return unit.courseStates.includes('PUBLISHED');
+}
+
+const studentCourseVisibilityWhere: Prisma.ContentUnitWhereInput = {
+  OR: [
+    { type: { not: 'LESSON' } },
+    { courses: { none: {} } },
+    { courses: { some: { module: { course: { state: 'PUBLISHED' } } } } },
+  ],
+};
 
 function unitResource(u: { minPlan: PlanCode; partialFreePreview: boolean }) {
   return { kind: 'unit' as const, minPlan: u.minPlan, partialFree: u.partialFreePreview };
@@ -58,7 +80,10 @@ export type ContentFilters = {
 
 export async function listContent(actor: Actor, filters: ContentFilters): Promise<ContentCard[]> {
   const where: Prisma.ContentUnitWhereInput = {};
-  if (!isStaff(actor)) where.state = 'PUBLISHED';
+  if (!isStaff(actor)) {
+    where.state = 'PUBLISHED';
+    where.AND = [studentCourseVisibilityWhere];
+  }
   if (filters.type) where.type = filters.type;
   if (typeof filters.block === 'number') where.block = filters.block;
   if (filters.client) where.caseClient = filters.client;
@@ -149,10 +174,21 @@ export async function getContentBySlug(actor: Actor, slug: string): Promise<Cont
     where: { slug },
     include: {
       tags: { include: { tag: { select: { slug: true, title: true } } } },
+      courses: {
+        select: { module: { select: { course: { select: { state: true } } } } },
+      },
     },
   });
   if (!u) return null;
-  if (u.state !== 'PUBLISHED' && !isStaff(actor)) return null; // 404 для студента
+  if (
+    !isStaff(actor) &&
+    !isPublishedForStudent({
+      state: u.state,
+      type: u.type,
+      courseStates: u.courses.map((placement) => placement.module.course.state),
+    })
+  )
+    return null; // 404 для студента
 
   const decision = canAccess(actor, unitResource(u));
   const progress = await prisma.progress.findUnique({
@@ -171,7 +207,8 @@ export async function getContentBySlug(actor: Actor, slug: string): Promise<Cont
     tags: u.tags.map((t) => t.tag),
     minPlan: u.minPlan,
     locked: !decision.ok,
-    requiredPlan: !decision.ok && decision.code === 'PLAN_REQUIRED' ? decision.requiredPlan : undefined,
+    requiredPlan:
+      !decision.ok && decision.code === 'PLAN_REQUIRED' ? decision.requiredPlan : undefined,
     status: progress?.status ?? 'NONE',
     proofNote: progress?.proofNote ?? null,
     block: u.block,
@@ -187,7 +224,12 @@ export async function getContentBySlug(actor: Actor, slug: string): Promise<Cont
   const related =
     tagIds.length > 0
       ? await prisma.contentUnit.findMany({
-          where: { id: { not: u.id }, state: 'PUBLISHED', tags: { some: { tagId: { in: tagIds } } } },
+          where: {
+            id: { not: u.id },
+            state: 'PUBLISHED',
+            tags: { some: { tagId: { in: tagIds } } },
+            ...(!isStaff(actor) ? { AND: [studentCourseVisibilityWhere] } : {}),
+          },
           take: 3,
           select: { slug: true, title: true, type: true },
         })
@@ -214,9 +256,27 @@ export async function getContentBySlug(actor: Actor, slug: string): Promise<Cont
 async function loadUnitForWrite(actor: Actor, slug: string) {
   const u = await prisma.contentUnit.findUnique({
     where: { slug },
-    select: { id: true, minPlan: true, partialFreePreview: true, state: true },
+    select: {
+      id: true,
+      type: true,
+      minPlan: true,
+      partialFreePreview: true,
+      state: true,
+      courses: {
+        select: { module: { select: { course: { select: { state: true } } } } },
+      },
+    },
   });
-  if (!u || (u.state !== 'PUBLISHED' && !isStaff(actor))) throw new HttpError('UNAUTHENTICATED');
+  if (
+    !u ||
+    (!isStaff(actor) &&
+      !isPublishedForStudent({
+        state: u.state,
+        type: u.type,
+        courseStates: u.courses.map((placement) => placement.module.course.state),
+      }))
+  )
+    throw new HttpError('UNAUTHENTICATED');
   assertAccess(actor, unitResource(u));
   return u;
 }
@@ -228,7 +288,11 @@ export async function sendToAgentUnit(actor: Actor, slug: string): Promise<void>
 }
 
 /** Событие прогресса видео: при ≥ 80% ставит VIEWED один раз. */
-export async function recordVideoProgress(actor: Actor, slug: string, percent: number): Promise<void> {
+export async function recordVideoProgress(
+  actor: Actor,
+  slug: string,
+  percent: number,
+): Promise<void> {
   const u = await loadUnitForWrite(actor, slug);
   if (viewedFromPercent(percent)) await markViewedOnce(actor.id, u.id);
 }
@@ -259,8 +323,10 @@ export async function setContentProgress(
     where: { userId_unitId: { userId: actor.id, unitId: u.id } },
   });
   const from = existing?.status ?? 'NONE';
-  if (!canTransition(from, status, { isAdmin: actor.role === 'ADMIN' })) throw new Error('BAD_TRANSITION');
-  if ((status === 'IMPLEMENTED' || status === 'RESULT') && !proofNote?.trim()) throw new Error('PROOF_REQUIRED');
+  if (!canTransition(from, status, { isAdmin: actor.role === 'ADMIN' }))
+    throw new Error('BAD_TRANSITION');
+  if ((status === 'IMPLEMENTED' || status === 'RESULT') && !proofNote?.trim())
+    throw new Error('PROOF_REQUIRED');
   if (status === 'RESULT') {
     const money = await prisma.moneyEntry.count({ where: { userId: actor.id } });
     if (money === 0) throw new Error('MONEY_REQUIRED');

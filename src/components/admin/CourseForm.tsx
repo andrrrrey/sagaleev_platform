@@ -38,10 +38,14 @@ export function CourseForm({ defaults, canPublish }: { defaults?: Defaults; canP
           <div>
             <Label htmlFor="course-state">Статус</Label>
             <Select id="course-state" name="state" defaultValue={d.state ?? 'DRAFT'}>
-              <option value="DRAFT">Черновик</option>
-              {canPublish ? <option value="PUBLISHED">Опубликован</option> : null}
-              {canPublish ? <option value="ARCHIVED">Архив</option> : null}
+              <option value="DRAFT">Черновик — скрыт от учеников</option>
+              {canPublish ? <option value="PUBLISHED">Опубликован — виден ученикам</option> : null}
+              {canPublish ? <option value="ARCHIVED">Архив — скрыт от учеников</option> : null}
             </Select>
+            <p className="mt-1 text-xs text-t500">
+              Если скрыть курс, ученики не смогут открыть его уроки даже по сохранённым ссылкам.
+              Прогресс не удаляется.
+            </p>
           </div>
           <div className="md:col-span-2">
             <Label htmlFor="course-summary">Краткое описание</Label>

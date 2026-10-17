@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { viewedFromPercent, VIEWED_THRESHOLD } from '@/server/content/service';
+import {
+  isPublishedForStudent,
+  viewedFromPercent,
+  VIEWED_THRESHOLD,
+} from '@/server/content/service';
 import { redactLocked, canAccess, type Actor } from '@/server/access';
 import { sanitizeRichHtml } from '@/lib/rich';
 
@@ -9,6 +13,35 @@ describe('видео → VIEWED при ≥ 80%', () => {
     expect(viewedFromPercent(79.9)).toBe(false);
     expect(viewedFromPercent(80)).toBe(true);
     expect(viewedFromPercent(100)).toBe(true);
+  });
+});
+
+describe('видимость уроков скрытого курса', () => {
+  it('скрывает опубликованный урок чернового или архивного курса', () => {
+    expect(
+      isPublishedForStudent({ state: 'PUBLISHED', type: 'LESSON', courseStates: ['DRAFT'] }),
+    ).toBe(false);
+    expect(
+      isPublishedForStudent({ state: 'PUBLISHED', type: 'LESSON', courseStates: ['ARCHIVED'] }),
+    ).toBe(false);
+  });
+
+  it('показывает урок опубликованного курса', () => {
+    expect(
+      isPublishedForStudent({ state: 'PUBLISHED', type: 'LESSON', courseStates: ['PUBLISHED'] }),
+    ).toBe(true);
+  });
+
+  it('не затрагивает опубликованные уроки вне курсов', () => {
+    expect(isPublishedForStudent({ state: 'PUBLISHED', type: 'LESSON', courseStates: [] })).toBe(
+      true,
+    );
+  });
+
+  it('собственный статус материала остаётся обязательным', () => {
+    expect(
+      isPublishedForStudent({ state: 'DRAFT', type: 'LESSON', courseStates: ['PUBLISHED'] }),
+    ).toBe(false);
   });
 });
 
