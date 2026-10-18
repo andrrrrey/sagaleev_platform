@@ -36,6 +36,20 @@ const lessons = [
       'Создаём Telegram-бота, ограничиваем доступ и включаем круглосуточный запуск Hermes после перезагрузки VPS.',
     timeToMaster: '20–30 минут',
   },
+  {
+    number: 5,
+    slug: 'technical-start-agent-instructions',
+    summary:
+      'Задаём первому агенту роль координатора, постоянную личность, алгоритм работы и безопасные границы.',
+    timeToMaster: '20–30 минут',
+  },
+  {
+    number: 6,
+    slug: 'technical-start-platform-mcp',
+    summary:
+      'Подключаем Hermes к MCP платформы, читаем бизнес-профиль и проверяем поиск и получение скиллов.',
+    timeToMaster: '20–30 минут',
+  },
 ] as const;
 
 function escapeHtml(value: string): string {

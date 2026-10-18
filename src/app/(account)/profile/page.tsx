@@ -220,8 +220,8 @@ export default async function ProfilePage({
     <Panel
       title={
         actor.role === 'ADMIN' || actor.role === 'EDITOR'
-          ? 'Codex / ChatGPT // MCP для контента'
-          : 'Codex / ChatGPT // Помощник по маршруту'
+          ? 'Агенты / MCP // Работа с контентом'
+          : 'Агенты / MCP // Маршрут, профиль и скиллы'
       }
     >
       <div className="p-6">
@@ -300,7 +300,7 @@ export default async function ProfilePage({
           { key: 'business', label: 'Бизнес-профиль', content: businessTab },
           { key: 'billing', label: 'Тариф и оплата', content: billingTab },
           { key: 'telegram', label: 'Telegram', content: telegramTab },
-          { key: 'codex', label: 'Codex / MCP', content: codexTab },
+          { key: 'codex', label: 'Агенты / MCP', content: codexTab },
           { key: 'privacy', label: 'Приватность', content: privacyTab },
         ]}
       />

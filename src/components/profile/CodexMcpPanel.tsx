@@ -33,6 +33,28 @@ export function CodexMcpPanel({
         : '',
     [token],
   );
+  const hermesEnv = useMemo(
+    () => (token ? `SAGALEEV_PLATFORM_MCP_TOKEN=${token}` : ''),
+    [token],
+  );
+  const hermesConfig = `mcp_servers:
+  sagaleev_platform:
+    url: "${MCP_URL}"
+    headers:
+      Authorization: "Bearer \${SAGALEEV_PLATFORM_MCP_TOKEN}"
+    skip_preflight: true
+    trust: "untrusted"
+    tools:
+      include:
+        - get_route_overview
+        - get_route_day
+        - get_current_step
+        - save_step_result
+        - list_skills
+        - get_skill
+        - get_business_profile
+      resources: false
+      prompts: false`;
 
   async function createToken() {
     setPending(true);
@@ -60,7 +82,7 @@ export function CodexMcpPanel({
       setToken(null);
       setActive(false);
       setExpiresAt(null);
-      setMessage('Доступ отключён. Codex больше не сможет читать маршрут этим токеном.');
+      setMessage('Доступ отключён. Подключённые агенты больше не смогут работать этим токеном.');
     } catch {
       setMessage('Не удалось отключить токен. Попробуй ещё раз или напиши в поддержку.');
     } finally {
@@ -77,7 +99,7 @@ export function CodexMcpPanel({
             ? 'Локальный Codex или ChatGPT сможет создавать и редактировать черновики, проверять их, открывать предпросмотр и после вашего подтверждения публиковать.'
             : isEditor
               ? 'Локальный Codex или ChatGPT сможет создавать и редактировать черновики уроков, юзкейсов, эфиров и скиллов, а затем подготовить их к проверке администратором.'
-              : 'Локальный Codex или ChatGPT на компьютере сможет сам прочитать твой текущий день, найти следующий незавершённый шаг, открыть скиллы и сохранить подтверждённый результат.'}
+              : 'Hermes, локальный Codex или ChatGPT сможет прочитать твой текущий день, найти следующий шаг, открыть доступные скиллы, прочитать бизнес-профиль и сохранить подтверждённый результат.'}
         </p>
         {isStaff ? (
           <p className="mt-3">
@@ -103,7 +125,7 @@ export function CodexMcpPanel({
             токен.
           </li>
           <li>
-            В Codex открой{' '}
+            Для Codex открой{' '}
             <span className="font-mono text-xs text-t900">
               Settings → MCP servers → Open config.toml
             </span>
@@ -154,13 +176,39 @@ export function CodexMcpPanel({
             </pre>
           </LinedBlock>
           <CopyButton text={config} label="Скопировать настройки" />
+
+          <p className="mt-5 text-sm font-medium text-t900">Подключение Hermes на VPS</p>
+          <p className="text-sm font-light leading-relaxed text-t600">
+            Первую строку добавь в <span className="font-mono">~/.hermes/.env</span>, а YAML-блок
+            аккуратно объедини с существующим <span className="font-mono">mcp_servers</span> в{' '}
+            <span className="font-mono">~/.hermes/config.yaml</span>. Не создавай второй корневой
+            раздел <span className="font-mono">mcp_servers</span>.
+          </p>
+          <LinedBlock label="HERMES — ~/.hermes/.env">
+            <pre className="whitespace-pre-wrap break-all font-mono text-xs leading-6">
+              {hermesEnv}
+            </pre>
+          </LinedBlock>
+          <CopyButton text={hermesEnv} label="Скопировать переменную" />
+          <LinedBlock label="HERMES — ~/.hermes/config.yaml">
+            <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-6">
+              {hermesConfig}
+            </pre>
+          </LinedBlock>
+          <CopyButton text={hermesConfig} label="Скопировать конфигурацию Hermes" />
+          <p className="text-xs font-light leading-relaxed text-t500">
+            После сохранения выполни{' '}
+            <span className="font-mono">hermes mcp test sagaleev_platform</span> и перезапусти
+            gateway. Подробная безопасная последовательность находится в техническом модуле курса.
+          </p>
         </div>
       ) : null}
 
       {message ? <p className="font-mono text-xs text-t600">{message}</p> : null}
       <p className="text-xs font-light leading-relaxed text-t500">
-        Файл config.toml содержит секрет. Не публикуй его и не прикладывай к обращению в поддержку.
-        Если случайно показал файл другому человеку — нажми «Создать новый токен».
+        Файлы config.toml и ~/.hermes/.env содержат секрет. Не публикуй их и не прикладывай к
+        обращению в поддержку. Если случайно показал токен другому человеку — нажми «Создать новый
+        токен».
       </p>
     </div>
   );
