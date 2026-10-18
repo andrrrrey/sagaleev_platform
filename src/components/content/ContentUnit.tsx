@@ -17,7 +17,7 @@ function Rich({ json }: { json: unknown }) {
   if (!html) return null;
   return (
     <div
-      className="text-[15px] leading-relaxed text-t700 [&_a]:text-accent [&_a]:underline [&_h2]:mt-6 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-t900 [&_h3]:mt-4 [&_h3]:font-semibold [&_h3]:text-t800 [&_ul]:list-disc [&_ul]:pl-5"
+      className="text-[15px] leading-relaxed text-t700 [&_a]:font-medium [&_a]:text-accent [&_a]:underline [&_blockquote]:my-4 [&_blockquote]:border-l-2 [&_blockquote]:border-accent [&_blockquote]:pl-4 [&_blockquote]:text-t800 [&_code]:rounded-md [&_code]:bg-surface [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[13px] [&_h2]:mb-3 [&_h2]:mt-8 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-t900 [&_h3]:mb-2 [&_h3]:mt-6 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:text-t800 [&_h4]:mb-2 [&_h4]:mt-5 [&_h4]:font-semibold [&_h4]:text-t800 [&_li]:mb-1.5 [&_ol]:my-3 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:my-3 [&_pre]:my-4 [&_pre]:overflow-x-auto [&_pre]:rounded-2xl [&_pre]:border [&_pre]:border-line [&_pre]:bg-surface [&_pre]:p-4 [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-6"
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );
