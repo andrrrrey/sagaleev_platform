@@ -93,6 +93,7 @@ export default async function PayPage({
                 <CheckoutButton
                   planCode="SUPPORT"
                   label={`Подписаться за ${formatRubles(plan.priceKopeks)}`}
+                  requireRecurringConsent
                 />
                 <p className="text-xs font-light leading-relaxed text-t500">
                   Нажимая кнопку, вы соглашаетесь на ежемесячное автопродление. Отключить его можно

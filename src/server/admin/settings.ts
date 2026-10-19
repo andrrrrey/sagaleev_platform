@@ -7,6 +7,7 @@ import { prisma } from '@/server/db';
 import { recomputeAllLeaderboard } from '@/server/progress/leaderboard';
 import { SETTING_DEFS, saveSettings } from '@/server/settings/store';
 import { registerTelegramWebhook } from '@/server/telegram/service';
+import { checkYookassaAccount } from '@/server/payments/yookassa';
 import { type ActionState } from '@/lib/action-state';
 import { audit } from './audit';
 
@@ -73,6 +74,35 @@ export async function saveIntegrationSettings(
     ok: true,
     message: `Сохранено. Обновлено ключей: ${changed.length}.${telegramMessage}`,
   };
+}
+
+/** Безопасно проверяет реквизиты через GET /v3/me, не создавая платёж. */
+export async function checkYookassaConnection(
+  _prev: ActionState,
+  _formData: FormData,
+): Promise<ActionState> {
+  const actor = await getActor();
+  if (!actor || actor.role !== 'ADMIN') redirect('/');
+  try {
+    const account = await checkYookassaAccount();
+    await audit(actor.id, 'CHECK', 'YookassaConnection');
+    if (!account.enabled) {
+      return { ok: false, message: 'ЮKassa ответила, но магазин ещё не активирован.' };
+    }
+    const mode = account.test ? 'тестовый' : 'боевой';
+    const methods = account.paymentMethods.length
+      ? ` Способы оплаты: ${account.paymentMethods.join(', ')}.`
+      : '';
+    return {
+      ok: true,
+      message: `Подключение работает: ${mode} магазин активен.${methods}`,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : 'Не удалось проверить ЮKassa.',
+    };
+  }
 }
 
 /** Ручной полный пересчёт лидерборда (страховка). */

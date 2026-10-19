@@ -130,7 +130,11 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
                               <span className="flex items-center gap-2">
                                 <Icon
                                   name={
-                                    lessonDone ? 'check-circle-linear' : 'videocamera-record-linear'
+                                    lessonDone
+                                      ? 'check-circle-linear'
+                                      : lesson.hasVideo
+                                        ? 'videocamera-record-linear'
+                                        : 'document-text-linear'
                                   }
                                   className={lessonDone ? 'text-accent' : 'text-t400'}
                                 />

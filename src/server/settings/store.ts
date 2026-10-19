@@ -2,6 +2,7 @@ import { cache } from 'react';
 import { prisma } from '@/server/db';
 import { env } from '@/lib/env';
 import { maskSecret } from './mask';
+import { openSettingSecret, sealSettingSecret } from './crypto';
 
 export { maskSecret };
 
@@ -118,6 +119,8 @@ export const SETTING_DEFS: SettingDef[] = [
     label: 'ЮKassa Shop ID',
     kind: 'text',
     group: 'Оплата (ЮKassa)',
+    placeholder: 'Идентификатор магазина',
+    hint: 'Идентификатор магазина из личного кабинета ЮKassa.',
     envFallback: () => env.YOOKASSA_SHOP_ID,
   },
   {
@@ -125,6 +128,8 @@ export const SETTING_DEFS: SettingDef[] = [
     label: 'ЮKassa Secret Key',
     kind: 'secret',
     group: 'Оплата (ЮKassa)',
+    placeholder: 'live_… или test_…',
+    hint: 'Секрет не показывается после сохранения и хранится в базе в зашифрованном виде.',
     envFallback: () => env.YOOKASSA_SECRET_KEY,
   },
   {
@@ -148,12 +153,17 @@ export const SETTING_DEFS: SettingDef[] = [
 export const SETTING_KEYS = SETTING_DEFS.map((d) => d.key);
 const DEF_BY_KEY = new Map(SETTING_DEFS.map((d) => [d.key, d]));
 
+function decodeStoredValue(key: string, value: string): string {
+  const def = DEF_BY_KEY.get(key);
+  return def?.kind === 'secret' ? openSettingSecret(value, env.AUTH_SECRET) : value;
+}
+
 /** Все переопределения из БД (за один запрос, кэш на время запроса). */
 const loadOverrides = cache(async (): Promise<Map<string, string>> => {
   const rows = await prisma.appSetting.findMany();
   const map = new Map<string, string>();
   for (const r of rows) {
-    if (r.value.trim().length > 0) map.set(r.key, r.value);
+    if (r.value.trim().length > 0) map.set(r.key, decodeStoredValue(r.key, r.value));
   }
   return map;
 });
@@ -169,7 +179,7 @@ export async function getSetting(key: string): Promise<string | undefined> {
 /** Актуальное значение без request-cache. Нужно сразу после изменения настройки. */
 export async function getSettingFresh(key: string): Promise<string | undefined> {
   const row = await prisma.appSetting.findUnique({ where: { key }, select: { value: true } });
-  if (row?.value.trim()) return row.value;
+  if (row?.value.trim()) return decodeStoredValue(key, row.value);
   return DEF_BY_KEY.get(key)?.envFallback();
 }
 
@@ -254,10 +264,11 @@ export async function saveSettings(
       continue;
     }
 
+    const storedValue = def.kind === 'secret' ? sealSettingSecret(input, env.AUTH_SECRET) : input;
     await prisma.appSetting.upsert({
       where: { key: def.key },
-      create: { key: def.key, value: input, updatedBy: actorId },
-      update: { value: input, updatedBy: actorId },
+      create: { key: def.key, value: storedValue, updatedBy: actorId },
+      update: { value: storedValue, updatedBy: actorId },
     });
     changed.push(def.key);
   }

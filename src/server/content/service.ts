@@ -63,6 +63,7 @@ export type ContentCard = {
   block: number | null;
   airedAt: string | null;
   durationSec: number | null;
+  hasVideo: boolean;
   minPlan: PlanCode;
   locked: boolean;
   requiredPlan?: PlanCode;
@@ -126,6 +127,7 @@ export async function listContent(actor: Actor, filters: ContentFilters): Promis
       block: u.block,
       airedAt: u.airedAt?.toISOString() ?? null,
       durationSec: u.durationSec,
+      hasVideo: Boolean(u.kinescopeId),
       minPlan: u.minPlan,
       locked,
       requiredPlan: locked && decision.code === 'PLAN_REQUIRED' ? decision.requiredPlan : undefined,

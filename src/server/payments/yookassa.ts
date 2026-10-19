@@ -1,4 +1,4 @@
-import { getSetting } from '@/server/settings/store';
+import { getSetting, getSettingFresh } from '@/server/settings/store';
 import type {
   CreatePaymentInput,
   CreatePaymentResult,
@@ -19,6 +19,51 @@ type YookassaPayment = {
   confirmation?: { confirmation_url?: string };
   payment_method?: { id?: string; saved?: boolean };
 };
+
+type YookassaAccount = {
+  account_id?: string;
+  status?: string;
+  test?: boolean;
+  payment_methods?: string[];
+  fiscalization_enabled?: boolean;
+  fiscalization?: { enabled?: boolean };
+};
+
+export type YookassaConnectionStatus = {
+  enabled: boolean;
+  test: boolean;
+  paymentMethods: string[];
+  fiscalizationEnabled: boolean;
+};
+
+/** Проверка реквизитов без создания платежа и без раскрытия данных магазина. */
+export async function checkYookassaAccount(): Promise<YookassaConnectionStatus> {
+  const [shopId, secret] = await Promise.all([
+    getSettingFresh('YOOKASSA_SHOP_ID'),
+    getSettingFresh('YOOKASSA_SECRET_KEY'),
+  ]);
+  if (!shopId || !secret) throw new Error('Сначала заполните Shop ID и Secret Key.');
+
+  const res = await fetch(`${API}/me`, {
+    headers: { Authorization: `Basic ${Buffer.from(`${shopId}:${secret}`).toString('base64')}` },
+    cache: 'no-store',
+  });
+  if (!res.ok) {
+    throw new Error(
+      res.status === 401
+        ? 'ЮKassa отклонила реквизиты. Проверьте Shop ID и Secret Key.'
+        : `ЮKassa временно недоступна (HTTP ${res.status}).`,
+    );
+  }
+  const account = (await res.json()) as YookassaAccount;
+  return {
+    enabled: account.status === 'enabled',
+    test: account.test === true,
+    paymentMethods: Array.isArray(account.payment_methods) ? account.payment_methods : [],
+    fiscalizationEnabled:
+      account.fiscalization?.enabled === true || account.fiscalization_enabled === true,
+  };
+}
 
 function toStatus(s: YookassaPayment['status']): ProviderStatus {
   if (s === 'succeeded') return 'succeeded';
@@ -125,9 +170,7 @@ export class YookassaProvider implements PaymentProvider {
       paid: data.paid,
       raw: data,
       savedPaymentMethodId:
-        data.payment_method?.saved && data.payment_method.id
-          ? data.payment_method.id
-          : undefined,
+        data.payment_method?.saved && data.payment_method.id ? data.payment_method.id : undefined,
     };
   }
 
@@ -142,9 +185,7 @@ export class YookassaProvider implements PaymentProvider {
       paid: data.paid,
       raw: data,
       savedPaymentMethodId:
-        data.payment_method?.saved && data.payment_method.id
-          ? data.payment_method.id
-          : undefined,
+        data.payment_method?.saved && data.payment_method.id ? data.payment_method.id : undefined,
     };
   }
 

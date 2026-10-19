@@ -130,16 +130,24 @@ export function ContentUnit({
     </div>
   );
 
-  const tabItems: TabItem[] = [
-    { key: 'overview', label: detail.type === 'LESSON' ? 'Материалы' : 'Обзор', content: overview },
-  ];
-  if (richToHtml(detail.article)) {
-    tabItems.push({
-      key: 'article',
-      label: detail.type === 'LESSON' ? 'Текст урока' : 'Статья',
-      content: <Rich json={detail.article} />,
-    });
-  }
+  const overviewTab: TabItem = {
+    key: 'overview',
+    label: detail.type === 'LESSON' ? 'Материалы' : 'Обзор',
+    content: overview,
+  };
+  const articleTab: TabItem | null = richToHtml(detail.article)
+    ? {
+        key: 'article',
+        label: detail.type === 'LESSON' ? 'Текст урока' : 'Статья',
+        content: <Rich json={detail.article} />,
+      }
+    : null;
+  // В уроке видео всегда расположено выше, а первым текстовым блоком должен
+  // открываться сам урок. Для юзкейсов и эфиров сохраняем прежний порядок.
+  const tabItems: TabItem[] =
+    detail.type === 'LESSON' && articleTab
+      ? [articleTab, overviewTab]
+      : [overviewTab, ...(articleTab ? [articleTab] : [])];
   if (detail.transcript) {
     tabItems.push({
       key: 'transcript',
