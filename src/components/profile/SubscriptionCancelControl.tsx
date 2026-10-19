@@ -32,14 +32,14 @@ export function SubscriptionCancelControl({ accessUntil }: { accessUntil: string
           Отменить подписку
         </Button>
         <p className="text-sm font-light text-t600">
-          Новых списаний не будет. Доступ сохранится до {accessUntil}.
+          При отмене новых списаний не будет, а доступ сохранится до {accessUntil}.
         </p>
       </div>
 
       <Modal open={open} onClose={() => setOpen(false)} title="Отмена подписки">
         <div className="flex flex-col gap-5">
           <div className="flex h-12 w-12 items-center justify-center rounded-full border border-red-200 bg-red-50 text-red-500">
-            <Icon name="danger-circle-linear" className="text-2xl" />
+            <Icon name="danger-triangle-linear" className="text-2xl" />
           </div>
 
           <div className="space-y-2">
