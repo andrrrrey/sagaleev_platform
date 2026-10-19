@@ -17,10 +17,10 @@ import { ExportProfileButton } from '@/components/profile/ExportProfileButton';
 import { TelegramPanel } from '@/components/profile/TelegramPanel';
 import { CodexMcpPanel } from '@/components/profile/CodexMcpPanel';
 import { AccountSettingsForm } from '@/components/profile/AccountSettingsForm';
+import { SubscriptionCancelControl } from '@/components/profile/SubscriptionCancelControl';
 import { getMcpTokenStatus } from '@/server/mcp/auth';
 import { signOutAction } from '@/server/auth/actions';
 import {
-  cancelSubscription,
   resumeSubscription,
   setLeaderboardVisibility,
   setNotifyPrefs,
@@ -123,8 +123,16 @@ export default async function ProfilePage({
   const billingTab = (
     <div className="flex flex-col gap-4">
       <Panel
-        title="Тариф // Активный"
-        status={enrollment ? <StatusPill>Активен</StatusPill> : <StatusPill muted>Нет</StatusPill>}
+        title="Подписка // Управление"
+        status={
+          enrollment ? (
+            <StatusPill muted={!enrollment.autoRenew}>
+              {enrollment.autoRenew ? 'Автопродление включено' : 'Автопродление отключено'}
+            </StatusPill>
+          ) : (
+            <StatusPill muted>Нет подписки</StatusPill>
+          )
+        }
       >
         <div className="flex flex-col gap-4 p-6">
           {enrollment ? (
@@ -148,18 +156,23 @@ export default async function ProfilePage({
                   Доступ предоставлен без автосписаний.
                 </p>
               ) : enrollment.autoRenew ? (
-                <form action={cancelSubscription}>
-                  <Button type="submit" variant="secondary" className="self-start">
-                    Отключить автопродление
-                  </Button>
-                </form>
+                <SubscriptionCancelControl accessUntil={formatDate(enrollment.expiresAt)} />
               ) : enrollment.paymentMethodId ? (
-                <form action={resumeSubscription}>
-                  <Button type="submit" variant="primary" className="self-start">
-                    <Icon name="wallet-money-linear" />
-                    Возобновить автопродление
-                  </Button>
-                </form>
+                <div className="flex flex-col items-start gap-3">
+                  <p className="border border-line bg-surface px-4 py-3 text-sm text-t700">
+                    Подписка отменена. Новых списаний не будет, а оплаченный доступ сохранится до{' '}
+                    <strong className="font-semibold text-t900">
+                      {formatDate(enrollment.expiresAt)}
+                    </strong>
+                    .
+                  </p>
+                  <form action={resumeSubscription}>
+                    <Button type="submit" variant="primary" className="self-start">
+                      <Icon name="wallet-money-linear" />
+                      Возобновить автопродление
+                    </Button>
+                  </form>
+                </div>
               ) : (
                 <p className="border border-brand-pink/50 bg-brand-pink/10 px-4 py-3 text-sm text-t700">
                   Автопродление не настроено. После окончания оплаченного периода оформите подписку
