@@ -46,6 +46,17 @@ export async function ContentDetailScreen({
         <Link href={s.base} className="hover:text-accent">
           {s.label}
         </Link>
+        {detail.type === 'LESSON' && detail.course ? (
+          <>
+            <Icon name="alt-arrow-right-linear" />
+            <Link
+              href={`/lessons/course/${detail.course.slug}`}
+              className="max-w-[320px] truncate hover:text-accent"
+            >
+              {detail.course.title}
+            </Link>
+          </>
+        ) : null}
         <Icon name="alt-arrow-right-linear" />
         <span className="text-t600">{detail.title}</span>
       </nav>

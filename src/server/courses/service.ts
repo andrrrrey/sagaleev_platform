@@ -18,6 +18,7 @@ export type CourseModuleView = {
   id: string;
   title: string;
   summary: string | null;
+  isVisible: boolean;
   sort: number;
   lessons: ContentCard[];
 };
@@ -40,8 +41,9 @@ function summarizeCourse(
       id: string;
       title: string;
       summary: string | null;
+      isVisible: boolean;
       sort: number;
-      units: Array<{ unit: { slug: string } }>;
+      units: Array<{ isVisible: boolean; unit: { slug: string } }>;
     }>;
   },
   cardsBySlug: Map<string, ContentCard>,
@@ -50,6 +52,7 @@ function summarizeCourse(
     id: module.id,
     title: module.title,
     summary: module.summary,
+    isVisible: module.isVisible,
     sort: module.sort,
     lessons: module.units.flatMap(({ unit }) => {
       const card = cardsBySlug.get(unit.slug);
@@ -72,25 +75,31 @@ function summarizeCourse(
   };
 }
 
-const courseInclude = {
-  modules: {
-    orderBy: [{ sort: 'asc' as const }, { createdAt: 'asc' as const }],
-    include: {
-      units: {
-        where: { unit: { type: 'LESSON' as const } },
-        orderBy: [{ sort: 'asc' as const }, { createdAt: 'asc' as const }],
-        select: { unit: { select: { slug: true } } },
+function courseInclude(staff: boolean) {
+  return {
+    modules: {
+      ...(staff ? {} : { where: { isVisible: true } }),
+      orderBy: [{ sort: 'asc' as const }, { createdAt: 'asc' as const }],
+      include: {
+        units: {
+          where: {
+            unit: { type: 'LESSON' as const },
+            ...(staff ? {} : { isVisible: true }),
+          },
+          orderBy: [{ sort: 'asc' as const }, { createdAt: 'asc' as const }],
+          select: { isVisible: true, unit: { select: { slug: true } } },
+        },
       },
     },
-  },
-};
+  };
+}
 
 export async function listCourses(actor: Actor): Promise<CourseCatalogItem[]> {
   const [courses, cards] = await Promise.all([
     prisma.course.findMany({
       where: isStaff(actor) ? undefined : { state: 'PUBLISHED' },
       orderBy: [{ sort: 'asc' }, { createdAt: 'asc' }],
-      include: courseInclude,
+      include: courseInclude(isStaff(actor)),
     }),
     listContent(actor, { type: 'LESSON' }),
   ]);
@@ -105,7 +114,7 @@ export async function getCourse(actor: Actor, slug: string): Promise<CourseView 
         slug,
         ...(isStaff(actor) ? {} : { state: 'PUBLISHED' as const }),
       },
-      include: courseInclude,
+      include: courseInclude(isStaff(actor)),
     }),
     listContent(actor, { type: 'LESSON' }),
   ]);

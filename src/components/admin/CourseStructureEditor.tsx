@@ -7,16 +7,19 @@ import {
   deleteCourseModule,
   renameCourseModule,
   saveCourseStructure,
+  setCourseLessonVisibility,
+  setCourseModuleVisibility,
 } from '@/server/admin/courses';
 import { Icon } from '@/components/ui/Icon';
 import { buttonClass } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 
-type Lesson = { id: string; title: string; state: string };
+type Lesson = { id: string; title: string; state: string; isVisible: boolean };
 type CourseModuleItem = {
   id: string;
   title: string;
   summary: string | null;
+  isVisible: boolean;
   sort: number;
   units: Lesson[];
 };
@@ -189,6 +192,47 @@ export function CourseStructureEditor({
     });
   }
 
+  function toggleModuleVisibility(item: CourseModuleItem) {
+    const isVisible = !item.isVisible;
+    startTransition(async () => {
+      try {
+        const result = await setCourseModuleVisibility(item.id, isVisible);
+        if (!result.ok) return setMessage(result.message ?? 'Не удалось изменить видимость');
+        setModules((current) =>
+          current.map((moduleItem) =>
+            moduleItem.id === item.id ? { ...moduleItem, isVisible } : moduleItem,
+          ),
+        );
+        setMessage(
+          isVisible ? 'Модуль снова виден ученикам' : 'Модуль и все его уроки скрыты от учеников',
+        );
+      } catch (error) {
+        setMessage(error instanceof Error ? error.message : 'Не удалось изменить видимость');
+      }
+    });
+  }
+
+  function toggleLessonVisibility(moduleId: string, lesson: Lesson) {
+    const isVisible = !lesson.isVisible;
+    startTransition(async () => {
+      try {
+        const result = await setCourseLessonVisibility(moduleId, lesson.id, isVisible);
+        if (!result.ok) return setMessage(result.message ?? 'Не удалось изменить видимость');
+        setModules((current) =>
+          current.map((moduleItem) => ({
+            ...moduleItem,
+            units: moduleItem.units.map((unit) =>
+              unit.id === lesson.id ? { ...unit, isVisible } : unit,
+            ),
+          })),
+        );
+        setMessage(isVisible ? 'Урок снова виден ученикам' : 'Урок скрыт от учеников');
+      } catch (error) {
+        setMessage(error instanceof Error ? error.message : 'Не удалось изменить видимость');
+      }
+    });
+  }
+
   function save() {
     setMessage(null);
     startTransition(async () => {
@@ -201,12 +245,14 @@ export function CourseStructureEditor({
               item.units.map((lesson, index) => ({
                 unitId: lesson.id,
                 moduleId: item.id,
+                isVisible: lesson.isVisible,
                 sort: index,
               })),
             ),
             ...unplaced.map((lesson, index) => ({
               unitId: lesson.id,
               moduleId: null,
+              isVisible: lesson.isVisible,
               sort: index,
             })),
           ],
@@ -307,6 +353,11 @@ export function CourseStructureEditor({
                 </span>
                 <h3 className="font-semibold text-t900">{item.title}</h3>
                 <span className="text-xs text-t400">{item.units.length} ур.</span>
+                {!item.isVisible ? (
+                  <span className="rounded-full bg-paper-tint px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-t500">
+                    Скрыт
+                  </span>
+                ) : null}
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -334,6 +385,19 @@ export function CourseStructureEditor({
                 </Link>
                 {canArrange ? (
                   <>
+                    <button
+                      type="button"
+                      onClick={() => toggleModuleVisibility(item)}
+                      disabled={pending}
+                      className="rounded-lg px-3 py-2 text-xs font-semibold text-t500 hover:bg-paper-hover hover:text-t900"
+                      title={
+                        item.isVisible
+                          ? 'Скрыть модуль и его уроки от учеников'
+                          : 'Показать модуль ученикам'
+                      }
+                    >
+                      {item.isVisible ? 'Скрыть' : 'Показать'}
+                    </button>
                     <button
                       type="button"
                       onClick={() => renameModule(item)}
@@ -369,6 +433,7 @@ export function CourseStructureEditor({
                       draggable={canArrange}
                       onDragStart={() => setDragged({ kind: 'lesson', id: lesson.id })}
                       onDrop={() => dropLesson(item.id, lesson.id)}
+                      onToggleVisibility={() => toggleLessonVisibility(item.id, lesson)}
                     />
                   ))
                 )}
@@ -424,6 +489,7 @@ export function CourseStructureEditor({
                 draggable={canArrange}
                 onDragStart={() => setDragged({ kind: 'lesson', id: lesson.id })}
                 onDrop={() => dropLesson(null, lesson.id)}
+                onToggleVisibility={undefined}
               />
             ))
           )}
@@ -439,12 +505,14 @@ function LessonRow({
   draggable,
   onDragStart,
   onDrop,
+  onToggleVisibility,
 }: {
   lesson: Lesson;
   index: number;
   draggable: boolean;
   onDragStart: () => void;
   onDrop: () => void;
+  onToggleVisibility?: () => void;
 }) {
   return (
     <div
@@ -476,6 +544,21 @@ function LessonRow({
       <span className="shrink-0 rounded-full bg-paper-tint px-2 py-1 text-[10px] uppercase tracking-wide text-t500">
         {STATE_LABEL[lesson.state] ?? lesson.state}
       </span>
+      {onToggleVisibility ? (
+        <button
+          type="button"
+          onClick={onToggleVisibility}
+          className={cn(
+            'shrink-0 rounded-full border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide transition-colors',
+            lesson.isVisible
+              ? 'border-line text-t500 hover:border-accent/30 hover:text-accent'
+              : 'border-accent/20 bg-accent/10 text-accent',
+          )}
+          title={lesson.isVisible ? 'Скрыть урок от учеников' : 'Показать урок ученикам'}
+        >
+          {lesson.isVisible ? 'Скрыть' : 'Скрыт · Показать'}
+        </button>
+      ) : null}
     </div>
   );
 }

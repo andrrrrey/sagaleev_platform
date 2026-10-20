@@ -82,10 +82,14 @@ export default async function CourseEditorPage({ params }: { params: Promise<{ i
             id: moduleItem.id,
             title: moduleItem.title,
             summary: moduleItem.summary,
+            isVisible: moduleItem.isVisible,
             sort: moduleItem.sort,
-            units: moduleItem.units.map((placement) => placement.unit),
+            units: moduleItem.units.map((placement) => ({
+              ...placement.unit,
+              isVisible: placement.isVisible,
+            })),
           }))}
-          initialUnplaced={unplaced}
+          initialUnplaced={unplaced.map((lesson) => ({ ...lesson, isVisible: true }))}
         />
 
         {actor.role === 'ADMIN' ? (

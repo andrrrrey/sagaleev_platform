@@ -32,18 +32,34 @@ function isStaff(actor: Actor): boolean {
 export function isPublishedForStudent(unit: {
   state: PublishState;
   type: UnitType;
-  courseStates?: PublishState[];
+  coursePlacements?: Array<{
+    courseState: PublishState;
+    moduleVisible: boolean;
+    placementVisible: boolean;
+  }>;
 }): boolean {
   if (unit.state !== 'PUBLISHED') return false;
-  if (unit.type !== 'LESSON' || !unit.courseStates?.length) return true;
-  return unit.courseStates.includes('PUBLISHED');
+  if (unit.type !== 'LESSON' || !unit.coursePlacements?.length) return true;
+  return unit.coursePlacements.some(
+    (placement) =>
+      placement.courseState === 'PUBLISHED' &&
+      placement.moduleVisible &&
+      placement.placementVisible,
+  );
 }
 
 const studentCourseVisibilityWhere: Prisma.ContentUnitWhereInput = {
   OR: [
     { type: { not: 'LESSON' } },
     { courses: { none: {} } },
-    { courses: { some: { module: { course: { state: 'PUBLISHED' } } } } },
+    {
+      courses: {
+        some: {
+          isVisible: true,
+          module: { isVisible: true, course: { state: 'PUBLISHED' } },
+        },
+      },
+    },
   ],
 };
 
@@ -169,6 +185,7 @@ export type ContentDetail = {
   transcript?: string | null;
   steps?: UsecaseStep[];
   related?: { slug: string; title: string; type: UnitType }[];
+  course?: { slug: string; title: string } | null;
 };
 
 export async function getContentBySlug(actor: Actor, slug: string): Promise<ContentDetail | null> {
@@ -177,7 +194,15 @@ export async function getContentBySlug(actor: Actor, slug: string): Promise<Cont
     include: {
       tags: { include: { tag: { select: { slug: true, title: true } } } },
       courses: {
-        select: { module: { select: { course: { select: { state: true } } } } },
+        select: {
+          isVisible: true,
+          module: {
+            select: {
+              isVisible: true,
+              course: { select: { state: true, slug: true, title: true } },
+            },
+          },
+        },
       },
     },
   });
@@ -187,7 +212,11 @@ export async function getContentBySlug(actor: Actor, slug: string): Promise<Cont
     !isPublishedForStudent({
       state: u.state,
       type: u.type,
-      courseStates: u.courses.map((placement) => placement.module.course.state),
+      coursePlacements: u.courses.map((placement) => ({
+        courseState: placement.module.course.state,
+        moduleVisible: placement.module.isVisible,
+        placementVisible: placement.isVisible,
+      })),
     })
   )
     return null; // 404 для студента
@@ -217,6 +246,13 @@ export async function getContentBySlug(actor: Actor, slug: string): Promise<Cont
     caseClient: u.caseClient,
     airedAt: u.airedAt?.toISOString() ?? null,
     durationSec: u.durationSec,
+    course:
+      u.type === 'LESSON' && u.courses[0]
+        ? {
+            slug: u.courses[0].module.course.slug,
+            title: u.courses[0].module.course.title,
+          }
+        : null,
   };
 
   if (!decision.ok) return base; // превью без закрытых полей
@@ -265,7 +301,10 @@ async function loadUnitForWrite(actor: Actor, slug: string) {
       partialFreePreview: true,
       state: true,
       courses: {
-        select: { module: { select: { course: { select: { state: true } } } } },
+        select: {
+          isVisible: true,
+          module: { select: { isVisible: true, course: { select: { state: true } } } },
+        },
       },
     },
   });
@@ -275,7 +314,11 @@ async function loadUnitForWrite(actor: Actor, slug: string) {
       !isPublishedForStudent({
         state: u.state,
         type: u.type,
-        courseStates: u.courses.map((placement) => placement.module.course.state),
+        coursePlacements: u.courses.map((placement) => ({
+          courseState: placement.module.course.state,
+          moduleVisible: placement.module.isVisible,
+          placementVisible: placement.isVisible,
+        })),
       }))
   )
     throw new HttpError('UNAUTHENTICATED');

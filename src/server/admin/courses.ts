@@ -105,7 +105,7 @@ export async function createCourseModule(courseId: string, title: string) {
   });
   const moduleItem = await prisma.courseModule.create({
     data: { courseId, title: cleanTitle, sort: (last._max.sort ?? -1) + 1 },
-    select: { id: true, title: true, summary: true, sort: true },
+    select: { id: true, title: true, summary: true, isVisible: true, sort: true },
   });
   await audit(actor.id, 'CREATE', 'CourseModule', moduleItem.id, { courseId });
   revalidatePath(`/admin/courses/${courseId}`);
@@ -126,6 +126,43 @@ export async function renameCourseModule(moduleId: string, title: string) {
   await prisma.courseModule.update({ where: { id: moduleId }, data: { title: cleanTitle } });
   await audit(actor.id, 'UPDATE', 'CourseModule', moduleId, { title: cleanTitle });
   revalidatePath(`/admin/courses/${moduleItem.courseId}`);
+  revalidatePath('/lessons');
+  return { ok: true };
+}
+
+export async function setCourseModuleVisibility(moduleId: string, isVisible: boolean) {
+  const actor = await requireRole(['ADMIN', 'EDITOR']);
+  const moduleItem = await prisma.courseModule.findUnique({
+    where: { id: moduleId },
+    select: { courseId: true },
+  });
+  if (!moduleItem) return { ok: false, message: 'Модуль не найден' };
+  await assertCourseEditable(moduleItem.courseId, actor.role);
+  await prisma.courseModule.update({ where: { id: moduleId }, data: { isVisible } });
+  await audit(actor.id, 'UPDATE', 'CourseModule', moduleId, { isVisible });
+  revalidatePath(`/admin/courses/${moduleItem.courseId}`);
+  revalidatePath('/lessons');
+  return { ok: true };
+}
+
+export async function setCourseLessonVisibility(
+  moduleId: string,
+  unitId: string,
+  isVisible: boolean,
+) {
+  const actor = await requireRole(['ADMIN', 'EDITOR']);
+  const placement = await prisma.courseUnit.findUnique({
+    where: { moduleId_unitId: { moduleId, unitId } },
+    select: { moduleId: true, module: { select: { courseId: true } } },
+  });
+  if (!placement) return { ok: false, message: 'Урок не включён в курс' };
+  await assertCourseEditable(placement.module.courseId, actor.role);
+  await prisma.courseUnit.update({
+    where: { moduleId_unitId: { moduleId, unitId } },
+    data: { isVisible },
+  });
+  await audit(actor.id, 'UPDATE', 'CourseUnit', `${placement.moduleId}:${unitId}`, { isVisible });
+  revalidatePath(`/admin/courses/${placement.module.courseId}`);
   revalidatePath('/lessons');
   return { ok: true };
 }
@@ -152,6 +189,7 @@ const structureSchema = z.object({
     z.object({
       unitId: z.string(),
       moduleId: z.string().nullable(),
+      isVisible: z.boolean(),
       sort: z.number().int().min(0),
     }),
   ),
@@ -194,7 +232,8 @@ export async function saveCourseStructure(input: z.infer<typeof structureSchema>
   }
 
   const placed = d.lessons.filter(
-    (item): item is { unitId: string; moduleId: string; sort: number } => Boolean(item.moduleId),
+    (item): item is { unitId: string; moduleId: string; isVisible: boolean; sort: number } =>
+      Boolean(item.moduleId),
   );
   await prisma.$transaction([
     ...d.modules.map((item) =>
@@ -207,6 +246,7 @@ export async function saveCourseStructure(input: z.infer<typeof structureSchema>
             data: placed.map((item) => ({
               moduleId: item.moduleId,
               unitId: item.unitId,
+              isVisible: item.isVisible,
               sort: item.sort,
             })),
           }),

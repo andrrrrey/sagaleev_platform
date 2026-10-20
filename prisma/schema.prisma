@@ -73,6 +73,15 @@ enum PublishState {
   ARCHIVED
 }
 
+enum ContractorRequestStatus {
+  NEW
+  IN_REVIEW
+  CONTACTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELED
+}
+
 // ───────── Пользователи ─────────
 model User {
   id                String    @id @default(cuid())
@@ -95,20 +104,21 @@ model User {
   deletedAt         DateTime?
   blockedAt         DateTime? // блокировка доступа админом
 
-  businessProfile BusinessProfile?
-  enrollments     Enrollment[]
-  payments        Payment[]
-  progress        Progress[]
-  routeProgress   RouteStepProgress[]
-  cohortId        String?
-  cohort          Cohort?             @relation(fields: [cohortId], references: [id])
-  moneyEntries    MoneyEntry[]
-  weeklyReports   WeeklyReport[]
-  curatorNotes    CuratorNote[]
-  leaderboard     LeaderboardEntry?
-  auditLogs       AuditLog[]
-  notifications   Notification[]
-  authTokens      AuthToken[]
+  businessProfile    BusinessProfile?
+  enrollments        Enrollment[]
+  payments           Payment[]
+  progress           Progress[]
+  routeProgress      RouteStepProgress[]
+  cohortId           String?
+  cohort             Cohort?             @relation(fields: [cohortId], references: [id])
+  moneyEntries       MoneyEntry[]
+  weeklyReports      WeeklyReport[]
+  curatorNotes       CuratorNote[]
+  leaderboard        LeaderboardEntry?
+  auditLogs          AuditLog[]
+  notifications      Notification[]
+  authTokens         AuthToken[]
+  contractorRequests ContractorRequest[]
 }
 
 model BusinessProfile {
@@ -312,6 +322,7 @@ model CourseModule {
   course    Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
   title     String
   summary   String?      @db.Text
+  isVisible Boolean      @default(true)
   sort      Int          @default(0)
   units     CourseUnit[]
   createdAt DateTime     @default(now())
@@ -325,12 +336,30 @@ model CourseUnit {
   unitId    String
   module    CourseModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   unit      ContentUnit  @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  isVisible Boolean      @default(true)
   sort      Int          @default(0)
   createdAt DateTime     @default(now())
 
   @@id([moduleId, unitId])
   @@index([unitId])
   @@index([moduleId, sort])
+}
+
+// ───────── Задачи и подрядчики ─────────
+model ContractorRequest {
+  id          String                  @id @default(cuid())
+  userId      String
+  user        User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category    String
+  description String                  @db.Text
+  status      ContractorRequestStatus @default(NEW)
+  adminNote   String?                 @db.Text
+  canceledAt  DateTime?
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
 }
 
 // ───────── Контент-юнит: уроки, юзкейсы, эфиры ─────────

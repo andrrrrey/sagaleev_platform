@@ -19,28 +19,71 @@ describe('видео → VIEWED при ≥ 80%', () => {
 describe('видимость уроков скрытого курса', () => {
   it('скрывает опубликованный урок чернового или архивного курса', () => {
     expect(
-      isPublishedForStudent({ state: 'PUBLISHED', type: 'LESSON', courseStates: ['DRAFT'] }),
+      isPublishedForStudent({
+        state: 'PUBLISHED',
+        type: 'LESSON',
+        coursePlacements: [{ courseState: 'DRAFT', moduleVisible: true, placementVisible: true }],
+      }),
     ).toBe(false);
     expect(
-      isPublishedForStudent({ state: 'PUBLISHED', type: 'LESSON', courseStates: ['ARCHIVED'] }),
+      isPublishedForStudent({
+        state: 'PUBLISHED',
+        type: 'LESSON',
+        coursePlacements: [
+          { courseState: 'ARCHIVED', moduleVisible: true, placementVisible: true },
+        ],
+      }),
     ).toBe(false);
   });
 
   it('показывает урок опубликованного курса', () => {
     expect(
-      isPublishedForStudent({ state: 'PUBLISHED', type: 'LESSON', courseStates: ['PUBLISHED'] }),
+      isPublishedForStudent({
+        state: 'PUBLISHED',
+        type: 'LESSON',
+        coursePlacements: [
+          { courseState: 'PUBLISHED', moduleVisible: true, placementVisible: true },
+        ],
+      }),
     ).toBe(true);
   });
 
+  it('скрывает урок внутри скрытого модуля и отдельно скрытый урок', () => {
+    expect(
+      isPublishedForStudent({
+        state: 'PUBLISHED',
+        type: 'LESSON',
+        coursePlacements: [
+          { courseState: 'PUBLISHED', moduleVisible: false, placementVisible: true },
+        ],
+      }),
+    ).toBe(false);
+    expect(
+      isPublishedForStudent({
+        state: 'PUBLISHED',
+        type: 'LESSON',
+        coursePlacements: [
+          { courseState: 'PUBLISHED', moduleVisible: true, placementVisible: false },
+        ],
+      }),
+    ).toBe(false);
+  });
+
   it('не затрагивает опубликованные уроки вне курсов', () => {
-    expect(isPublishedForStudent({ state: 'PUBLISHED', type: 'LESSON', courseStates: [] })).toBe(
-      true,
-    );
+    expect(
+      isPublishedForStudent({ state: 'PUBLISHED', type: 'LESSON', coursePlacements: [] }),
+    ).toBe(true);
   });
 
   it('собственный статус материала остаётся обязательным', () => {
     expect(
-      isPublishedForStudent({ state: 'DRAFT', type: 'LESSON', courseStates: ['PUBLISHED'] }),
+      isPublishedForStudent({
+        state: 'DRAFT',
+        type: 'LESSON',
+        coursePlacements: [
+          { courseState: 'PUBLISHED', moduleVisible: true, placementVisible: true },
+        ],
+      }),
     ).toBe(false);
   });
 });
