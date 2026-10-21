@@ -113,6 +113,8 @@ export class YookassaProvider implements PaymentProvider {
                   quantity: i.quantity.toString(),
                   amount: { value: (i.amountKopeks / 100).toFixed(2), currency: 'RUB' },
                   vat_code: i.vatCode,
+                  payment_mode: 'full_payment',
+                  payment_subject: 'service',
                 })),
               },
             }
@@ -154,6 +156,8 @@ export class YookassaProvider implements PaymentProvider {
                   quantity: i.quantity.toString(),
                   amount: { value: (i.amountKopeks / 100).toFixed(2), currency: 'RUB' },
                   vat_code: i.vatCode,
+                  payment_mode: 'full_payment',
+                  payment_subject: 'service',
                 })),
               },
             }

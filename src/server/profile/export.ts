@@ -21,8 +21,7 @@ export function businessProfileMarkdown(p: BusinessProfile): string {
     '## Клиент',
     p.audience,
     '',
-    '## Голос бренда',
-    p.brandVoice,
+    p.brandVoice ? `## Голос бренда\n${p.brandVoice}` : null,
     p.goals ? `\n## Цель\n${p.goals}` : null,
     p.monthlyRevenueBand ? `\n**Ориентир по выручке:** ${p.monthlyRevenueBand}` : null,
   ].filter((l): l is string => l !== null);

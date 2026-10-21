@@ -7,8 +7,6 @@ import {
   deleteCourseModule,
   renameCourseModule,
   saveCourseStructure,
-  setCourseLessonVisibility,
-  setCourseModuleVisibility,
 } from '@/server/admin/courses';
 import { Icon } from '@/components/ui/Icon';
 import { buttonClass } from '@/components/ui/Button';
@@ -59,9 +57,9 @@ export function CourseStructureEditor({
     );
   }
 
-  function markStructureChanged() {
+  function markStructureChanged(message = 'Есть несохранённые изменения.') {
     setDirty(true);
-    setMessage('Порядок изменён — нажмите «Сохранить порядок».');
+    setMessage(message);
   }
 
   function toggleModule(moduleId: string) {
@@ -194,43 +192,37 @@ export function CourseStructureEditor({
 
   function toggleModuleVisibility(item: CourseModuleItem) {
     const isVisible = !item.isVisible;
-    startTransition(async () => {
-      try {
-        const result = await setCourseModuleVisibility(item.id, isVisible);
-        if (!result.ok) return setMessage(result.message ?? 'Не удалось изменить видимость');
-        setModules((current) =>
-          current.map((moduleItem) =>
-            moduleItem.id === item.id ? { ...moduleItem, isVisible } : moduleItem,
-          ),
-        );
-        setMessage(
-          isVisible ? 'Модуль снова виден ученикам' : 'Модуль и все его уроки скрыты от учеников',
-        );
-      } catch (error) {
-        setMessage(error instanceof Error ? error.message : 'Не удалось изменить видимость');
-      }
-    });
+    setModules((current) =>
+      current.map((moduleItem) =>
+        moduleItem.id === item.id ? { ...moduleItem, isVisible } : moduleItem,
+      ),
+    );
+    markStructureChanged(
+      isVisible
+        ? 'Модуль будет показан после сохранения изменений.'
+        : 'Модуль и его уроки будут скрыты после сохранения изменений.',
+    );
   }
 
   function toggleLessonVisibility(moduleId: string, lesson: Lesson) {
     const isVisible = !lesson.isVisible;
-    startTransition(async () => {
-      try {
-        const result = await setCourseLessonVisibility(moduleId, lesson.id, isVisible);
-        if (!result.ok) return setMessage(result.message ?? 'Не удалось изменить видимость');
-        setModules((current) =>
-          current.map((moduleItem) => ({
-            ...moduleItem,
-            units: moduleItem.units.map((unit) =>
-              unit.id === lesson.id ? { ...unit, isVisible } : unit,
-            ),
-          })),
-        );
-        setMessage(isVisible ? 'Урок снова виден ученикам' : 'Урок скрыт от учеников');
-      } catch (error) {
-        setMessage(error instanceof Error ? error.message : 'Не удалось изменить видимость');
-      }
-    });
+    setModules((current) =>
+      current.map((moduleItem) =>
+        moduleItem.id === moduleId
+          ? {
+              ...moduleItem,
+              units: moduleItem.units.map((unit) =>
+                unit.id === lesson.id ? { ...unit, isVisible } : unit,
+              ),
+            }
+          : moduleItem,
+      ),
+    );
+    markStructureChanged(
+      isVisible
+        ? 'Урок будет показан после сохранения изменений.'
+        : 'Урок будет скрыт после сохранения изменений.',
+    );
   }
 
   function save() {
@@ -239,7 +231,11 @@ export function CourseStructureEditor({
       try {
         const result = await saveCourseStructure({
           courseId,
-          modules: modules.map((item, index) => ({ id: item.id, sort: index })),
+          modules: modules.map((item, index) => ({
+            id: item.id,
+            isVisible: item.isVisible,
+            sort: index,
+          })),
           lessons: [
             ...modules.flatMap((item) =>
               item.units.map((lesson, index) => ({
@@ -283,7 +279,7 @@ export function CourseStructureEditor({
               className={buttonClass('primary')}
             >
               <Icon name="diskette-linear" />
-              {pending ? 'Сохраняем…' : dirty ? 'Сохранить порядок' : 'Порядок сохранён'}
+              {pending ? 'Сохраняем…' : dirty ? 'Сохранить изменения' : 'Всё сохранено'}
             </button>
           ) : null}
         </div>

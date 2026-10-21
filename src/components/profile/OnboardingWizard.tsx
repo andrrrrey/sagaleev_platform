@@ -10,12 +10,12 @@ import { StatusPill } from '@/components/ui/StatusPill';
 import { SegmentedProgress } from '@/components/ui/ProgressBar';
 import { Label, Input, Textarea, Select, FieldError } from '@/components/ui/Field';
 
-const STEPS = ['Кто ты', 'Продукт', 'Клиент', 'Голос бренда'] as const;
+const STEPS = ['Контакты и компания', 'Продукт', 'Клиент', 'Цели'] as const;
 const STEP_FIELDS = [
-  ['companyName', 'niche', 'websiteUrl', 'whoAmI'],
+  ['phone', 'telegramUsername', 'companyName', 'niche', 'websiteUrl', 'whoAmI'],
   ['product'],
   ['audience'],
-  ['brandVoice', 'monthlyRevenueBand', 'goals'],
+  ['monthlyRevenueBand', 'goals'],
 ] as const;
 
 export function OnboardingWizard({
@@ -101,6 +101,35 @@ export function OnboardingWizard({
 
         {/* Шаг 1 */}
         <div className={step === 0 ? 'flex flex-col gap-5' : 'hidden'}>
+          <div className="grid gap-5 sm:grid-cols-2">
+            <div>
+              <Label htmlFor="phone">Номер телефона</Label>
+              <Input
+                id="phone"
+                name="phone"
+                type="tel"
+                autoComplete="tel"
+                placeholder="+7 999 123-45-67"
+                defaultValue={d.phone}
+                required
+              />
+              <FieldError>{state.fieldErrors?.phone}</FieldError>
+            </div>
+            <div>
+              <Label htmlFor="telegramUsername">Аккаунт Telegram</Label>
+              <Input
+                id="telegramUsername"
+                name="telegramUsername"
+                autoComplete="off"
+                placeholder="@username"
+                defaultValue={d.telegramUsername}
+                pattern="@?[A-Za-z0-9_]{5,32}"
+                required
+              />
+              <p className="mt-1.5 text-xs text-t500">Укажите имя пользователя, начиная с @.</p>
+              <FieldError>{state.fieldErrors?.telegramUsername}</FieldError>
+            </div>
+          </div>
           <div>
             <Label htmlFor="companyName">Компания</Label>
             <Input id="companyName" name="companyName" defaultValue={d.companyName} required />
@@ -143,19 +172,6 @@ export function OnboardingWizard({
 
         {/* Шаг 4 */}
         <div className={step === 3 ? 'flex flex-col gap-5' : 'hidden'}>
-          <div>
-            <Label htmlFor="brandVoice">
-              Голос бренда: тон, слова-маркеры, чего избегать, примеры
-            </Label>
-            <Textarea
-              id="brandVoice"
-              name="brandVoice"
-              rows={4}
-              defaultValue={d.brandVoice}
-              required
-            />
-            <FieldError>{state.fieldErrors?.brandVoice}</FieldError>
-          </div>
           <div>
             <Label htmlFor="monthlyRevenueBand">Ориентир по выручке (необязательно)</Label>
             <Select

@@ -78,25 +78,30 @@ export async function createCheckout(input: {
     },
   });
 
-  const result = await provider.createPayment({
-    amountKopeks: charge.amountKopeks,
-    description: 'Единая подписка на платформу на один месяц',
-    returnUrl: `${env.APP_URL}/pay/result?paymentId=${payment.id}`,
-    idempotenceKey,
-    metadata: { paymentId: payment.id, userId: input.userId },
-    receipt: {
-      customerEmail: input.userEmail,
-      items: [
-        {
-          description: 'Ежемесячная подписка на обучающую платформу',
-          amountKopeks: charge.amountKopeks,
-          quantity: 1,
-          vatCode: 1, // без НДС / по настройке налогообложения
-        },
-      ],
-    },
-    savePaymentMethod: true,
-  });
+  const result = await provider
+    .createPayment({
+      amountKopeks: charge.amountKopeks,
+      description: 'Единая подписка на платформу на один месяц',
+      returnUrl: `${env.APP_URL}/pay/result?paymentId=${payment.id}`,
+      idempotenceKey,
+      metadata: { paymentId: payment.id, userId: input.userId },
+      receipt: {
+        customerEmail: input.userEmail,
+        items: [
+          {
+            description: 'Ежемесячная подписка на обучающую платформу',
+            amountKopeks: charge.amountKopeks,
+            quantity: 1,
+            vatCode: 1, // без НДС / по настройке налогообложения
+          },
+        ],
+      },
+      savePaymentMethod: true,
+    })
+    .catch(async (error: unknown) => {
+      await prisma.payment.update({ where: { id: payment.id }, data: { status: 'FAILED' } });
+      throw error;
+    });
 
   await prisma.payment.update({
     where: { id: payment.id },
@@ -153,7 +158,11 @@ export async function applyPaymentConfirmation(input: {
   if (!payment) return { handled: false };
 
   // Идемпотентность: уже терминальный статус — ничего не делаем.
-  if (payment.status === 'SUCCEEDED' || payment.status === 'CANCELED' || payment.status === 'FAILED') {
+  if (
+    payment.status === 'SUCCEEDED' ||
+    payment.status === 'CANCELED' ||
+    payment.status === 'FAILED'
+  ) {
     return { handled: true };
   }
 
@@ -211,8 +220,7 @@ export async function applyPaymentConfirmation(input: {
     const paymentMethodId = savedPaymentMethodId(input.raw);
 
     if (payment.kind === 'RENEWAL' && active) {
-      const periodStart =
-        active.expiresAt && active.expiresAt > paidAt ? active.expiresAt : paidAt;
+      const periodStart = active.expiresAt && active.expiresAt > paidAt ? active.expiresAt : paidAt;
       await tx.enrollment.update({
         where: { id: active.id },
         data: {

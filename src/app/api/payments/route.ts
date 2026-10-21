@@ -9,7 +9,10 @@ const bodySchema = z.object({ planCode: z.literal('SUPPORT') });
 export async function POST(req: Request) {
   const user = await getCurrentUser();
   if (!user) {
-    return NextResponse.json({ error: { code: 'UNAUTHENTICATED', message: 'Требуется вход' } }, { status: 401 });
+    return NextResponse.json(
+      { error: { code: 'UNAUTHENTICATED', message: 'Требуется вход' } },
+      { status: 401 },
+    );
   }
   if (!rateLimit(`payments:${user.id}`, 10, 60 * 60 * 1000)) {
     return NextResponse.json(
@@ -21,7 +24,10 @@ export async function POST(req: Request) {
   const json = await req.json().catch(() => null);
   const parsed = bodySchema.safeParse(json);
   if (!parsed.success) {
-    return NextResponse.json({ error: { code: 'BAD_REQUEST', message: 'Некорректный тариф' } }, { status: 400 });
+    return NextResponse.json(
+      { error: { code: 'BAD_REQUEST', message: 'Некорректный тариф' } },
+      { status: 400 },
+    );
   }
 
   try {
@@ -32,7 +38,15 @@ export async function POST(req: Request) {
     });
     return NextResponse.json(result);
   } catch (e) {
-    const message = e instanceof Error ? e.message : 'Ошибка создания платежа';
-    return NextResponse.json({ error: { code: 'PAYMENT_ERROR', message } }, { status: 400 });
+    console.error('[payments.create]', e);
+    return NextResponse.json(
+      {
+        error: {
+          code: 'PAYMENT_ERROR',
+          message: 'Не удалось перейти к оплате. Попробуйте ещё раз или обратитесь в поддержку.',
+        },
+      },
+      { status: 400 },
+    );
   }
 }

@@ -184,7 +184,9 @@ export async function deleteCourseModule(moduleId: string) {
 
 const structureSchema = z.object({
   courseId: z.string(),
-  modules: z.array(z.object({ id: z.string(), sort: z.number().int().min(0) })),
+  modules: z.array(
+    z.object({ id: z.string(), isVisible: z.boolean(), sort: z.number().int().min(0) }),
+  ),
   lessons: z.array(
     z.object({
       unitId: z.string(),
@@ -237,7 +239,10 @@ export async function saveCourseStructure(input: z.infer<typeof structureSchema>
   );
   await prisma.$transaction([
     ...d.modules.map((item) =>
-      prisma.courseModule.update({ where: { id: item.id }, data: { sort: item.sort } }),
+      prisma.courseModule.update({
+        where: { id: item.id },
+        data: { sort: item.sort, isVisible: item.isVisible },
+      }),
     ),
     prisma.courseUnit.deleteMany({ where: { unitId: { in: unitIds } } }),
     ...(placed.length > 0

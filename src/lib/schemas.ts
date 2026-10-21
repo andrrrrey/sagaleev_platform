@@ -29,12 +29,21 @@ export const resetSchema = z.object({
 });
 
 export const businessProfileSchema = z.object({
+  phone: z
+    .string()
+    .trim()
+    .min(7, 'Укажите номер телефона')
+    .max(30, 'Слишком длинный номер телефона')
+    .refine((value) => value.replace(/\D/g, '').length >= 7, 'Укажите корректный номер телефона'),
+  telegramUsername: z
+    .string()
+    .trim()
+    .regex(/^@?[a-zA-Z0-9_]{5,32}$/, 'Укажите Telegram в формате @username'),
   companyName: z.string().min(1, 'Укажите компанию'),
   niche: z.string().min(1, 'Укажите нишу'),
   whoAmI: z.string().min(1, 'Расскажите о себе'),
   product: z.string().min(1, 'Опишите продукт'),
   audience: z.string().min(1, 'Опишите клиента'),
-  brandVoice: z.string().min(1, 'Опишите голос бренда'),
   goals: z.string().optional(),
   monthlyRevenueBand: z.string().optional(),
   websiteUrl: z.string().url('Некорректная ссылка').optional().or(z.literal('')),
@@ -42,7 +51,11 @@ export const businessProfileSchema = z.object({
 
 export const accountSettingsSchema = z.object({
   name: z.string().trim().min(2, 'Укажите имя').max(100, 'Слишком длинное имя'),
-  email: z.string().trim().email('Некорректный email').transform((value) => value.toLowerCase()),
+  email: z
+    .string()
+    .trim()
+    .email('Некорректный email')
+    .transform((value) => value.toLowerCase()),
   phone: z.string().trim().max(30, 'Слишком длинный номер').optional(),
   currentPassword: z.string().min(1, 'Введите текущий пароль'),
 });

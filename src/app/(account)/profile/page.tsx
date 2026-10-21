@@ -109,7 +109,10 @@ export default async function ProfilePage({
                 whoAmI: profile.whoAmI,
                 product: profile.product,
                 audience: profile.audience,
-                brandVoice: profile.brandVoice,
+                phone: user.phone ?? undefined,
+                telegramUsername: user.telegramUsername
+                  ? `@${user.telegramUsername.replace(/^@/, '')}`
+                  : undefined,
                 goals: profile.goals ?? undefined,
                 monthlyRevenueBand: profile.monthlyRevenueBand ?? undefined,
                 websiteUrl: profile.websiteUrl ?? undefined,

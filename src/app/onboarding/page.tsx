@@ -15,7 +15,13 @@ export default async function OnboardingPage() {
   if (actor.role === 'ADMIN' || actor.role === 'EDITOR') redirect('/admin');
 
   // Если профиль уже собран — на Главную.
-  const existing = await prisma.businessProfile.findUnique({ where: { userId: actor.id } });
+  const [existing, user] = await Promise.all([
+    prisma.businessProfile.findUnique({ where: { userId: actor.id } }),
+    prisma.user.findUnique({
+      where: { id: actor.id },
+      select: { phone: true, telegramUsername: true },
+    }),
+  ]);
   if (existing) redirect('/');
 
   return (
@@ -26,7 +32,15 @@ export default async function OnboardingPage() {
         description="Эти данные агент загрузит в память на Дне 1 маршрута. Контакты не используются куратором."
       />
       <div className="max-w-2xl">
-        <OnboardingWizard redirectTo="/" />
+        <OnboardingWizard
+          redirectTo="/"
+          defaults={{
+            phone: user?.phone ?? undefined,
+            telegramUsername: user?.telegramUsername
+              ? `@${user.telegramUsername.replace(/^@/, '')}`
+              : undefined,
+          }}
+        />
       </div>
     </div>
   );

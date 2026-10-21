@@ -12,15 +12,22 @@ export async function upsertBusinessProfile(
     whoAmI: data.whoAmI,
     product: data.product,
     audience: data.audience,
-    brandVoice: data.brandVoice,
     goals: data.goals || null,
     monthlyRevenueBand: data.monthlyRevenueBand || null,
     websiteUrl: data.websiteUrl || null,
   };
 
-  await prisma.businessProfile.upsert({
-    where: { userId },
-    create: { userId, ...values },
-    update: values,
-  });
+  const telegramUsername = data.telegramUsername.replace(/^@/, '');
+
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: userId },
+      data: { phone: data.phone, telegramUsername },
+    }),
+    prisma.businessProfile.upsert({
+      where: { userId },
+      create: { userId, ...values, brandVoice: '' },
+      update: values,
+    }),
+  ]);
 }

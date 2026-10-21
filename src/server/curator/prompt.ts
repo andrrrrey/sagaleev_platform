@@ -34,7 +34,7 @@ export function buildCuratorUserPrompt(ctx: CuratorContext): string {
     `Кто он: ${ctx.business.whoAmI}`,
     `Продукт: ${ctx.business.product}`,
     `Клиент: ${ctx.business.audience}`,
-    `Голос бренда: ${ctx.business.brandVoice}`,
+    ctx.business.brandVoice ? `Голос бренда: ${ctx.business.brandVoice}` : null,
     ctx.business.goals ? `Цель: ${ctx.business.goals}` : null,
     ctx.business.monthlyRevenueBand ? `Ориентир выручки: ${ctx.business.monthlyRevenueBand}` : null,
     '',
