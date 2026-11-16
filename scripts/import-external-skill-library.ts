@@ -88,7 +88,7 @@ async function main() {
         sort: skill.sort,
         prompt: skill.prompt,
         tags: {
-          create: skill.tags.flatMap((slug) => {
+          create: [...new Set(skill.tags)].flatMap((slug) => {
             const tagId = tagIds.get(slug);
             return tagId ? [{ tagId }] : [];
           }),
